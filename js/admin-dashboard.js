@@ -1,23 +1,24 @@
-// Admin Dashboard - Separate for Master and Sub Admin
+// Admin Dashboard - Complete with Invitation Code System
 
 let currentUserData = [];
 let currentTasks = [];
 let pendingWithdrawals = [];
 let adminType = '';
+let adminId = '';
+let adminName = '';
 
 document.addEventListener('DOMContentLoaded', function() {
     const isAdmin = localStorage.getItem('isAdminLoggedIn');
     adminType = localStorage.getItem('adminType') || 'sub';
+    adminId = localStorage.getItem('adminId') || '';
+    adminName = localStorage.getItem('adminUsername') || '';
     
     if (!isAdmin || isAdmin !== 'true') {
         window.location.href = 'admin-login.html';
         return;
     }
     
-    // Load sidebar based on admin type
     loadSidebar();
-    
-    // Load default dashboard
     loadDashboard();
     
     document.getElementById('logoutBtn').addEventListener('click', logout);
@@ -29,14 +30,12 @@ function loadSidebar() {
     const sidebarNav = document.getElementById('sidebarNav');
     const adminBadge = document.getElementById('adminTypeBadge');
     
-    // Set admin badge
     if (adminType === 'master') {
         adminBadge.textContent = '👑 MASTER';
     } else {
         adminBadge.textContent = '📋 SUB ADMIN';
     }
     
-    // Common menu for all admins
     let menuHtml = `
         <button class="nav-item active" data-page="dashboard">📊 Dashboard</button>
         <button class="nav-item" data-page="users">👥 User Management</button>
@@ -47,16 +46,15 @@ function loadSidebar() {
         <button class="nav-item" data-page="vip">⭐ VIP Settings</button>
         <button class="nav-item" data-page="service">📞 Service Settings</button>
         <button class="nav-item" data-page="wallet">🏦 Wallet Settings</button>
+        <button class="nav-item" data-page="invitecodes">🔑 Invitation Codes</button>
     `;
     
-    // Only Master Admin sees Admin Management
     if (adminType === 'master') {
         menuHtml += `<button class="nav-item" data-page="admins">👑 Admin Management</button>`;
     }
     
     sidebarNav.innerHTML = menuHtml;
     
-    // Add event listeners to menu items
     document.querySelectorAll('.nav-item').forEach(function(btn) {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.nav-item').forEach(function(b) {
@@ -77,6 +75,7 @@ function loadSidebar() {
                 case 'vip': loadVIPSettings(); break;
                 case 'service': loadServiceSettings(); break;
                 case 'wallet': loadWalletSettings(); break;
+                case 'invitecodes': loadInvitationCodes(); break;
                 case 'admins': 
                     if (adminType === 'master') {
                         loadAdminManagement();
@@ -93,20 +92,31 @@ function logout() {
     localStorage.removeItem('isAdminLoggedIn');
     localStorage.removeItem('adminType');
     localStorage.removeItem('adminUsername');
+    localStorage.removeItem('adminId');
     window.location.href = 'admin-login.html';
 }
 
 function loadDashboard() {
     const content = document.getElementById('adminContent');
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    let allUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    
+    let filteredUsers = [];
+    if (adminType === 'master') {
+        filteredUsers = allUsers;
+    } else {
+        filteredUsers = allUsers.filter(function(u) {
+            return u.assignedAdminId === adminId;
+        });
+    }
+    
     const withdrawals = JSON.parse(localStorage.getItem('pendingWithdrawals') || '[]');
-    const totalBalance = registeredUsers.reduce(function(sum, user) {
+    const totalBalance = filteredUsers.reduce(function(sum, user) {
         return sum + (parseFloat(user.balance) || 0);
     }, 0);
     
     content.innerHTML = `
         <div class="stats-grid">
-            <div class="stat-card"><h3>Total Users</h3><div class="stat-value">${registeredUsers.length || 1}</div></div>
+            <div class="stat-card"><h3>Total Users</h3><div class="stat-value">${filteredUsers.length || 0}</div></div>
             <div class="stat-card"><h3>Total Balance</h3><div class="stat-value">${totalBalance.toFixed(2)} USDT</div></div>
             <div class="stat-card"><h3>Pending Withdrawals</h3><div class="stat-value">${withdrawals.length}</div></div>
             <div class="stat-card"><h3>Total Tasks</h3><div class="stat-value">${currentTasks.length || 5}</div></div>
@@ -119,28 +129,22 @@ function loadDashboard() {
 }
 
 function loadUserManagement() {
-    let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    let allUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
     
-    if (registeredUsers.length === 0) {
-        registeredUsers = [{
-            id: '2017184817424166914',
-            username: 'Jefram',
-            email: 'jefram@example.com',
-            phone: '+1 234 567 8900',
-            walletAddress: 'TXh8QpFqZ5zX7nL3mR9vK2wJ4bN6cM1aP0d',
-            balance: '201.16',
-            frozenAmount: '0',
-            commission: '7.62',
-            vip: 'VIP 1',
-            status: 'active',
-            joinedDate: '2024-01-01',
-            assignedWhatsapp: '+1 234 567 8900',
-            assignedTelegram: '@ClutchSupport'
-        }];
-        localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+    let filteredUsers = [];
+    if (adminType === 'master') {
+        filteredUsers = allUsers;
+    } else {
+        filteredUsers = allUsers.filter(function(u) {
+            return u.assignedAdminId === adminId;
+        });
     }
     
-    currentUserData = registeredUsers;
+    if (filteredUsers.length === 0 && adminType !== 'master') {
+        filteredUsers = [];
+    }
+    
+    currentUserData = filteredUsers;
     
     const content = document.getElementById('adminContent');
     
@@ -151,18 +155,19 @@ function loadUserManagement() {
         <div class="table-container">
             <table class="data-table">
                 <thead>
-                    <tr><th>ID</th><th>Username</th><th>Email</th><th>Balance</th><th>Frozen</th><th>Available</th><th>Status</th><th>Actions</th></tr>
+                    <tr><th>ID</th><th>Username</th><th>Email</th><th>Invite Code</th><th>Balance</th><th>Frozen</th><th>Available</th><th>Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
     `;
     
-    registeredUsers.forEach(function(user) {
+    filteredUsers.forEach(function(user) {
         const available = (parseFloat(user.balance) - parseFloat(user.frozenAmount || 0)).toFixed(2);
         usersHtml += `
             <tr>
                 <td>${user.id}</td>
                 <td>${user.username}</td>
                 <td>${user.email || 'Not set'}</td>
+                <td><span style="color:#ffd700;">${user.inviteCode || 'N/A'}</span></td>
                 <td>${user.balance} USDT</td>
                 <td>${user.frozenAmount || 0} USDT</td>
                 <td style="color: #00ff00;">${available} USDT</td>
@@ -174,12 +179,16 @@ function loadUserManagement() {
                     <button class="edit-btn" onclick="freezeAmount('${user.id}')">❄️Freeze</button>
                     <button class="save-btn" onclick="unfreezeAmount('${user.id}')">🔥Unfreeze</button>
                     <button class="edit-btn" onclick="assignServiceAccount('${user.id}')">📞Assign CS</button>
-                 </td>
+                  </td>
             </tr>
         `;
     });
     
-    usersHtml += `</tbody> </table> </div>`;
+    if (filteredUsers.length === 0) {
+        usersHtml += `<tr><td colspan="9" style="text-align: center; color: #888;">No users found</td></tr>`;
+    }
+    
+    usersHtml += `</tbody></table></div>`;
     content.innerHTML = usersHtml;
     
     window.viewUserDetails = viewUserDetails;
@@ -220,6 +229,8 @@ function viewUserDetails(userId) {
                 <p><strong style="color:#888;">User ID:</strong> <span style="color:white;">${user.id}</span></p>
                 <p><strong style="color:#888;">Username:</strong> <span style="color:white;">${user.username}</span></p>
                 <p><strong style="color:#888;">Email:</strong> <span style="color:white;">${user.email || 'Not set'}</span></p>
+                <p><strong style="color:#888;">Invitation Code:</strong> <span style="color:#ffd700;">${user.inviteCode || 'N/A'}</span></p>
+                <p><strong style="color:#888;">Invited By:</strong> <span style="color:white;">${user.invitedBy || 'N/A'}</span></p>
                 <p><strong style="color:#888;">Phone Number:</strong> <span style="color:white;">${savedPhone}</span></p>
                 <p><strong style="color:#888;">Wallet Address:</strong> <span style="color:white; word-break:break-all;">${savedWallet}</span></p>
                 <p><strong style="color:#888;">Total Balance:</strong> <span style="color:#ffd700;">${user.balance} USDT</span></p>
@@ -228,6 +239,7 @@ function viewUserDetails(userId) {
                 <p><strong style="color:#888;">Commission Earned:</strong> <span style="color:#ffd700;">${user.commission} USDT</span></p>
                 <p><strong style="color:#888;">VIP Level:</strong> <span style="color:#ffd700;">${user.vip}</span></p>
                 <p><strong style="color:#888;">Status:</strong> <span style="color:${user.status === 'active' ? '#00ff00' : '#ff6666'};">${user.status}</span></p>
+                <p><strong style="color:#888;">Joined Date:</strong> <span style="color:white;">${user.joinedDate}</span></p>
             </div>
             <button id="closeModalBtn" style="margin-top:20px; width:100%; padding:12px; background:#ffd700; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Close</button>
         </div>
@@ -449,11 +461,21 @@ function addNewUser() {
         return;
     }
     
+    const inviteCode = prompt('Enter invitation code for this user:');
+    if (!inviteCode) {
+        alert('Invitation code required');
+        return;
+    }
+    
     const newUser = {
         id: 'UID' + Date.now(),
         username: username,
         email: email,
         password: password,
+        inviteCode: inviteCode.toUpperCase(),
+        assignedAdminId: adminId,
+        assignedAdminName: adminName,
+        invitedBy: adminName,
         balance: '0.00',
         frozenAmount: '0',
         commission: '0.00',
@@ -464,8 +486,9 @@ function addNewUser() {
         assignedTelegram: '@ClutchSupport'
     };
     
-    currentUserData.push(newUser);
-    localStorage.setItem('registeredUsers', JSON.stringify(currentUserData));
+    let allUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    allUsers.push(newUser);
+    localStorage.setItem('registeredUsers', JSON.stringify(allUsers));
     loadUserManagement();
     alert('User added successfully!');
 }
@@ -477,19 +500,15 @@ function loadTaskManagement() {
         tasks = [{
             id: 'TSK001',
             taskId: 'TSK001',
-            productName: 'New Product',
-            productStyle: 'Style',
-            price: '0.00',
-            promoCode: 'PROMO',
-            rating: '5.0',
-            boosts: '0',
-            profit: '0.10',
+            productName: 'Sample Product',
+            price: '25.99',
+            profit: '0.75',
             image1: '',
             image2: '',
             image3: '',
             taskDateTime: new Date().toISOString(),
             nextTaskDateTime: '',
-            status: 'active'
+            completed: false
         }];
         localStorage.setItem('allTasks', JSON.stringify(tasks));
     }
@@ -526,7 +545,7 @@ function loadTaskManagement() {
         `;
     });
     
-    tasksHtml += `</tbody> </table> </div>`;
+    tasksHtml += `</tbody></table></div>`;
     content.innerHTML = tasksHtml;
     
     window.editTask = editTask;
@@ -559,11 +578,7 @@ function editTask(taskId) {
             
             <div class="form-group"><label>Task ID</label><input type="text" id="editTaskId" value="${task.taskId}"></div>
             <div class="form-group"><label>Product Name</label><input type="text" id="editProductName" value="${task.productName}"></div>
-            <div class="form-group"><label>Product Style</label><input type="text" id="editProductStyle" value="${task.productStyle}"></div>
             <div class="form-group"><label>Price (USD)</label><input type="number" id="editPrice" value="${task.price}" step="0.01"></div>
-            <div class="form-group"><label>Promo Code</label><input type="text" id="editPromoCode" value="${task.promoCode}"></div>
-            <div class="form-group"><label>Rating</label><input type="text" id="editRating" value="${task.rating}"></div>
-            <div class="form-group"><label>Boosts</label><input type="text" id="editBoosts" value="${task.boosts}"></div>
             <div class="form-group"><label>Profit (USDT)</label><input type="number" id="editProfit" value="${task.profit}" step="0.01"></div>
             <div class="form-group"><label>Task Date/Time</label><input type="datetime-local" id="editTaskDateTime" value="${task.taskDateTime ? task.taskDateTime.slice(0, 16) : ''}"></div>
             
@@ -628,11 +643,7 @@ function editTask(taskId) {
     document.getElementById('saveTaskBtn').addEventListener('click', function() {
         task.taskId = document.getElementById('editTaskId').value;
         task.productName = document.getElementById('editProductName').value;
-        task.productStyle = document.getElementById('editProductStyle').value;
         task.price = document.getElementById('editPrice').value;
-        task.promoCode = document.getElementById('editPromoCode').value;
-        task.rating = document.getElementById('editRating').value;
-        task.boosts = document.getElementById('editBoosts').value;
         task.profit = document.getElementById('editProfit').value;
         task.taskDateTime = document.getElementById('editTaskDateTime').value;
         
@@ -662,18 +673,14 @@ function addNewTask() {
         id: 'TSK' + Date.now(),
         taskId: 'TSK' + Date.now(),
         productName: 'New Product',
-        productStyle: 'Style',
         price: '0.00',
-        promoCode: 'PROMO',
-        rating: '5.0',
-        boosts: '0',
         profit: '0.10',
         image1: '',
         image2: '',
         image3: '',
         taskDateTime: new Date().toISOString(),
         nextTaskDateTime: '',
-        status: 'active'
+        completed: false
     };
     
     currentTasks.push(newTask);
@@ -694,7 +701,7 @@ function loadWithdrawalRequests() {
     `;
     
     withdrawals.forEach(function(w) {
-        withdrawalsHtml += `<tr><td>${w.id}</td><td>${w.username || 'Jefram'}</td><td>${w.amount} USDT</td><td>${new Date(w.requestDate).toLocaleString()}</td>
+        withdrawalsHtml += `<tr><td>${w.id}</td><td>${w.username || 'Unknown'}</td><td>${w.amount} USDT</td><td>${new Date(w.requestDate).toLocaleString()}</td>
         <td><button class="approve-btn" onclick="approveWithdrawal('${w.id}')">Approve</button><button class="reject-btn" onclick="rejectWithdrawal('${w.id}')">Reject</button></td></tr>`;
     });
     
@@ -702,19 +709,19 @@ function loadWithdrawalRequests() {
         withdrawalsHtml += `<tr><td colspan="5" style="text-align: center;">No pending withdrawals</td></tr>`;
     }
     
-    withdrawalsHtml += `</tbody> </table> </div>`;
+    withdrawalsHtml += `</tbody></table></div>`;
     withdrawalsHtml += `<h3 style="color: #ffd700; margin: 30px 0 15px;">Withdrawal History</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Username</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>`;
     
     withdrawalRecords.forEach(function(w) {
-        withdrawalsHtml += `<tr><td>${w.id}</td><td>${w.username || 'Jefram'}</td><td>${w.amount} USDT</td><td>${w.status}</td><td>${new Date(w.requestDate).toLocaleString()}</td></tr>`;
+        withdrawalsHtml += `<td><td>${w.id}</td><td>${w.username || 'Unknown'}</td><td>${w.amount} USDT</td><td>${w.status}</td><td>${new Date(w.requestDate).toLocaleString()}</td></tr>`;
     });
     
     if (withdrawalRecords.length === 0) {
         withdrawalsHtml += `<tr><td colspan="5" style="text-align: center;">No withdrawal history</td></tr>`;
     }
     
-    withdrawalsHtml += `</tbody> </table> </div>`;
+    withdrawalsHtml += `</tbody></table></div>`;
     content.innerHTML = withdrawalsHtml;
     
     window.approveWithdrawal = approveWithdrawal;
@@ -752,14 +759,14 @@ function loadDepositRecords() {
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Username</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>`;
     
     deposits.forEach(function(d) {
-        depositsHtml += `<tr><td>${d.id}</td><td>${d.username || 'Jefram'}</td><td>${d.amount} USDT</td><td>${d.status || 'confirmed'}</td><td>${d.date}</td></tr>`;
+        depositsHtml += `<tr><td>${d.id}</td><td>${d.username || 'Unknown'}</td><td>${d.amount} USDT</td><td>${d.status || 'confirmed'}</td><td>${d.date}</td></tr>`;
     });
     
     if (deposits.length === 0) {
         depositsHtml += `<tr><td colspan="5" style="text-align: center;">No deposit records</td></tr>`;
     }
     
-    depositsHtml += `</tbody> </table> </div>`;
+    depositsHtml += `</tbody></table></div>`;
     content.innerHTML = depositsHtml;
     document.getElementById('manualDepositBtn').addEventListener('click', manualDeposit);
 }
@@ -888,6 +895,162 @@ function loadWalletSettings() {
     });
 }
 
+// ============ INVITATION CODE MANAGEMENT ============
+
+function loadInvitationCodes() {
+    const adminType = localStorage.getItem('adminType');
+    const adminId = localStorage.getItem('adminId');
+    const adminName = localStorage.getItem('adminUsername');
+    
+    const today = new Date().toISOString().split('T')[0];
+    let allCodes = JSON.parse(localStorage.getItem('dailyInvitationCodes') || '[]');
+    
+    let displayCodes = [];
+    if (adminType === 'master') {
+        displayCodes = allCodes;
+    } else {
+        displayCodes = allCodes.filter(function(c) {
+            return c.adminId === adminId;
+        });
+    }
+    
+    const todaysCode = displayCodes.find(function(c) {
+        return c.date === today;
+    });
+    
+    const content = document.getElementById('adminContent');
+    
+    let html = `
+        <div style="margin-bottom: 30px; padding: 20px; background: rgba(255,215,0,0.1); border-radius: 16px; border: 1px solid rgba(255,215,0,0.3);">
+            <h3 style="color: #ffd700; margin-bottom: 15px;">📋 Today's Invitation Code</h3>
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <div style="flex: 1;">
+                    <p><strong style="color:#888;">Date:</strong> ${today}</p>
+                    <p><strong style="color:#888;">Current Code:</strong> <span style="color:#ffd700; font-size: 24px; font-weight: bold;">${todaysCode ? todaysCode.code : 'Not set'}</span></p>
+                    <p><strong style="color:#888;">Assigned Admin:</strong> ${todaysCode ? todaysCode.adminName : 'None'}</p>
+                </div>
+                <div>
+                    <button class="save-btn" id="generateCodeBtn">🔑 Generate New Code</button>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: #ffd700;">📜 Invitation Code History</h3>
+            <button class="edit-btn" id="showAllCodesBtn" style="margin-top: 10px;">Show All Codes</button>
+        </div>
+        
+        <div id="codesList" style="display: none;">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Date</th><th>Invitation Code</th><th>Assigned Admin</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+    `;
+    
+    displayCodes.forEach(function(code) {
+        html += `
+            <tr>
+                <td>${code.date}</td>
+                <td><span style="color:#ffd700; font-weight: bold;">${code.code}</span></td>
+                <td>${code.adminName}</td>
+                <td>${code.active ? 'Active' : 'Expired'}</td>
+                <td>
+                    <button class="delete-btn" onclick="deactivateCode('${code.id}')">Deactivate</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (displayCodes.length === 0) {
+        html += `<tr><td colspan="5" style="text-align: center; color: #888;">No invitation codes generated yet</td></tr>`;
+    }
+    
+    html += `
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+    
+    document.getElementById('generateCodeBtn').addEventListener('click', generateInvitationCode);
+    
+    const showBtn = document.getElementById('showAllCodesBtn');
+    if (showBtn) {
+        showBtn.addEventListener('click', function() {
+            const codesList = document.getElementById('codesList');
+            if (codesList.style.display === 'none') {
+                codesList.style.display = 'block';
+                showBtn.textContent = 'Hide Codes';
+            } else {
+                codesList.style.display = 'none';
+                showBtn.textContent = 'Show All Codes';
+            }
+        });
+    }
+    
+    window.deactivateCode = deactivateCode;
+}
+
+function generateInvitationCode() {
+    const adminId = localStorage.getItem('adminId');
+    const adminName = localStorage.getItem('adminUsername');
+    const today = new Date().toISOString().split('T')[0];
+    
+    let allCodes = JSON.parse(localStorage.getItem('dailyInvitationCodes') || '[]');
+    
+    const existingCode = allCodes.find(function(c) {
+        return c.date === today && c.adminId === adminId;
+    });
+    
+    if (existingCode) {
+        alert(`You already have an invitation code for today: ${existingCode.code}`);
+        return;
+    }
+    
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    const newCode = {
+        id: 'CODE' + Date.now(),
+        code: code,
+        date: today,
+        adminId: adminId,
+        adminName: adminName,
+        active: true,
+        createdAt: new Date().toISOString()
+    };
+    
+    allCodes.push(newCode);
+    localStorage.setItem('dailyInvitationCodes', JSON.stringify(allCodes));
+    
+    alert(`Invitation code generated!\n\nCode: ${code}\nDate: ${today}\nValid for today only.`);
+    
+    loadInvitationCodes();
+}
+
+function deactivateCode(codeId) {
+    if (!confirm('Deactivate this invitation code? It will no longer work for registration.')) return;
+    
+    let allCodes = JSON.parse(localStorage.getItem('dailyInvitationCodes') || '[]');
+    allCodes = allCodes.map(function(c) {
+        if (c.id === codeId) {
+            c.active = false;
+        }
+        return c;
+    });
+    localStorage.setItem('dailyInvitationCodes', JSON.stringify(allCodes));
+    
+    loadInvitationCodes();
+    alert('Code deactivated.');
+}
+
 // ============ MASTER ADMIN ONLY - ADMIN MANAGEMENT ============
 
 function loadAdminManagement() {
@@ -947,7 +1110,7 @@ function loadAdminManagement() {
         html += `<tr><td colspan="6" style="text-align: center; color: #888;">No sub admins created yet</td></tr>`;
     }
     
-    html += `</tbody> <tr> </div>`;
+    html += `</tbody></table></div>`;
     content.innerHTML = html;
     
     document.getElementById('createAdminBtn').addEventListener('click', createSubAdmin);

@@ -11,23 +11,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         removeMessages();
         
-        // Get registered users
         let users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
         
-        // Check if admin login
         const adminUsers = JSON.parse(localStorage.getItem('adminUsers') || '[]');
         const masterAdmin = JSON.parse(localStorage.getItem('masterAdmin') || 'null');
         
-        // Check master admin first
         if (masterAdmin && (identifier === masterAdmin.username || identifier === masterAdmin.email) && password === masterAdmin.password) {
             localStorage.setItem('isAdminLoggedIn', 'true');
             localStorage.setItem('adminType', 'master');
             localStorage.setItem('adminUsername', masterAdmin.username);
+            localStorage.setItem('adminId', masterAdmin.id);
             window.location.href = 'admin-dashboard.html';
             return;
         }
         
-        // Check sub admins
         const subAdmin = adminUsers.find(function(a) {
             return (a.username === identifier || a.email === identifier) && a.password === password;
         });
@@ -36,11 +33,11 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('isAdminLoggedIn', 'true');
             localStorage.setItem('adminType', 'sub');
             localStorage.setItem('adminUsername', subAdmin.username);
+            localStorage.setItem('adminId', subAdmin.id);
             window.location.href = 'admin-dashboard.html';
             return;
         }
         
-        // Check regular users
         const user = users.find(function(u) {
             return (u.username === identifier || u.email === identifier) && u.password === password;
         });
@@ -50,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('username', user.username);
             localStorage.setItem('userEmail', user.email);
             localStorage.setItem('userId', user.id);
+            localStorage.setItem('userInviteCode', user.inviteCode);
             localStorage.setItem('walletBalance', user.balance);
             localStorage.setItem('commission', user.commission);
             window.location.href = 'dashboard.html';

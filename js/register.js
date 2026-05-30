@@ -1,4 +1,4 @@
-// Registration Page - Complete
+// Registration Page - With Invitation Code
 
 document.addEventListener('DOMContentLoaded', function() {
     const registerForm = document.getElementById('registerForm');
@@ -6,12 +6,18 @@ document.addEventListener('DOMContentLoaded', function() {
     registerForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
+        const inviteCode = document.getElementById('regInviteCode').value.trim().toUpperCase();
         const username = document.getElementById('regUsername').value.trim();
         const email = document.getElementById('regEmail').value.trim();
         const password = document.getElementById('regPassword').value;
         const confirmPassword = document.getElementById('regConfirmPassword').value;
         
         removeMessages();
+        
+        if (!inviteCode) {
+            showError('Invitation code is required');
+            return;
+        }
         
         if (!username || username.length < 3) {
             showError('Username must be at least 3 characters');
@@ -33,6 +39,18 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Check if invitation code is valid for today
+        const today = new Date().toISOString().split('T')[0];
+        const validCodes = JSON.parse(localStorage.getItem('dailyInvitationCodes') || '[]');
+        const isValidCode = validCodes.find(function(c) {
+            return c.code === inviteCode && c.date === today && c.active === true;
+        });
+        
+        if (!isValidCode) {
+            showError('Invalid or expired invitation code. Please contact your admin.');
+            return;
+        }
+        
         // Get existing users
         let users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
         
@@ -46,19 +64,22 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Create new user
+        // Create new user with invitation code and assigned admin
         const newUser = {
             id: 'UID' + Date.now(),
             username: username,
             email: email,
             password: password,
+            inviteCode: inviteCode,
+            assignedAdminId: isValidCode.adminId,
+            assignedAdminName: isValidCode.adminName,
             balance: '0.00',
             commission: '0.00',
             frozenAmount: '0',
             vip: 'VIP 1',
             status: 'active',
-            joinedDate: new Date().toISOString().split('T')[0],
-            emailVerified: false
+            joinedDate: today,
+            invitedBy: isValidCode.adminName
         };
         
         users.push(newUser);

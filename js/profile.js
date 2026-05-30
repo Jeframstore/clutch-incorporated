@@ -1,4 +1,4 @@
-// Profile Page - Complete
+// Profile Page - Complete with Invitation Code
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -8,18 +8,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     const username = localStorage.getItem('username') || 'Jefram';
+    const inviteCode = localStorage.getItem('userInviteCode') || 'A4832E73';
+    
     document.getElementById('profileUserName').textContent = username;
+    document.getElementById('inviteCode').textContent = inviteCode;
     
     let balance = localStorage.getItem('walletBalance');
     if (!balance) {
-        balance = '201.16';
+        balance = '0.00';
         localStorage.setItem('walletBalance', balance);
     }
     document.getElementById('profileBalance').textContent = parseFloat(balance).toFixed(2) + ' USDT';
     
     let profits = localStorage.getItem('commission');
     if (!profits) {
-        profits = '7.62';
+        profits = '0.00';
         localStorage.setItem('commission', profits);
     }
     document.getElementById('profileProfits').textContent = parseFloat(profits).toFixed(2) + ' USDT';
@@ -31,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Menu buttons
     document.getElementById('depositBtn').addEventListener('click', function() {
         window.location.href = 'deposit.html';
     });
@@ -55,6 +57,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('logoutBtn').addEventListener('click', function() {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('username');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userInviteCode');
+        localStorage.removeItem('walletBalance');
+        localStorage.removeItem('commission');
         window.location.href = 'index.html';
     });
 });
