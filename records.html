@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Clutch Incorporated - Records</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/records.css">
+</head>
+<body>
+    <div class="records-container">
+        <div class="records-header">
+            <div class="top-bar">
+                <div class="logo-section">
+                    <div class="big-c">C</div>
+                    <div class="logo-text">
+                        <span class="clutch">Clutch</span>
+                        <span class="incorporated">Incorporated</span>
+                    </div>
+                </div>
+                <button class="back-btn" id="backBtn">←</button>
+            </div>
+            <h1 class="page-title">Transaction Records</h1>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="all">All</button>
+            <button class="tab-btn" data-tab="deposit">Deposit</button>
+            <button class="tab-btn" data-tab="withdraw">Withdraw</button>
+        </div>
+
+        <!-- Records List -->
+        <div class="records-list" id="recordsList">
+            <!-- Records will be inserted here -->
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="home">
+                <span>🏠</span>
+                <span>Home</span>
+            </button>
+            <button class="nav-btn" data-page="starting">
+                <span>🚀</span>
+                <span>Starting</span>
+            </button>
+            <button class="nav-btn active" data-page="records">
+                <span>📊</span>
+                <span>Records</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/records.js"></script>
+</body>
+</html>

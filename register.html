@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Clutch Incorporated - Register</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/register.css">
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-card">
+            <div class="logo-section">
+                <div class="big-c">C</div>
+                <div class="logo-text">
+                    <span class="clutch">Clutch</span>
+                    <span class="incorporated">Incorporated</span>
+                </div>
+            </div>
+            <h1 class="register-title">Create Account</h1>
+            
+            <form id="registerForm">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" placeholder="Choose a username" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="regEmail" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Create a password" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="regConfirmPassword" placeholder="Confirm your password" required>
+                </div>
+                
+                <button type="submit" class="register-btn">Sign Up</button>
+            </form>
+            
+            <div class="login-link">
+                Already have an account? <a href="index.html">Sign in</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/register.js"></script>
+</body>
+</html>

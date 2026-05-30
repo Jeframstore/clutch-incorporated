@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Clutch Incorporated - Profile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+<body>
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="top-bar">
+                <div class="logo-section">
+                    <div class="big-c">C</div>
+                    <div class="logo-text">
+                        <span class="clutch">Clutch</span>
+                        <span class="incorporated">Incorporated</span>
+                    </div>
+                </div>
+                <button class="back-btn" id="backBtn">←</button>
+            </div>
+            <h1 class="revenue-title">Revenue</h1>
+        </div>
+
+        <!-- User Info -->
+        <div class="user-info-card">
+            <h2><span id="profileUserName">Jefram</span>-VIP 1</h2>
+            <p>Invitation Code: <span id="inviteCode">A4832E73</span></p>
+            <p>Personal Account</p>
+            <div class="credit-score">
+                <span>Credit score</span>
+                <span class="score-value" id="creditScore">97%</span>
+            </div>
+        </div>
+
+        <!-- Balance Info -->
+        <div class="balance-info">
+            <div class="balance-row">
+                <span>Account Balance</span>
+                <span class="balance-value" id="profileBalance">201.16 USDT</span>
+            </div>
+            <div class="balance-row">
+                <span>Total Profits</span>
+                <span class="profit-value" id="profileProfits">7.62 USDT</span>
+            </div>
+        </div>
+
+        <!-- Menu List -->
+        <div class="menu-list">
+            <button class="menu-list-item" id="depositBtn">💳 Deposit</button>
+            <button class="menu-list-item" id="withdrawBtn">💰 Withdraw</button>
+            <button class="menu-list-item" id="changePasswordBtn">🔐 Change passwords</button>
+            <button class="menu-list-item" id="bindWalletBtn">🔗 Bind Wallet Address</button>
+            <button class="menu-list-item" id="contactUsBtn">📞 Contact us</button>
+            <button class="menu-list-item" id="logoutBtn">🚪 Log Out</button>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="home">
+                <span>🏠</span>
+                <span>Home</span>
+            </button>
+            <button class="nav-btn" data-page="starting">
+                <span>🚀</span>
+                <span>Starting</span>
+            </button>
+            <button class="nav-btn" data-page="records">
+                <span>📊</span>
+                <span>Records</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+</html>

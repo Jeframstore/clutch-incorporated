@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Clutch Incorporated - Starting</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/starting.css">
+</head>
+<body>
+    <div class="starting-container">
+        <div class="starting-header">
+            <div class="top-bar">
+                <div class="logo-section">
+                    <div class="big-c">C</div>
+                    <div class="logo-text">
+                        <span class="clutch">Clutch</span>
+                        <span class="incorporated">Incorporated</span>
+                    </div>
+                </div>
+                <button class="back-btn" id="backBtn">←</button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <p class="stat-label">Wallet Balance</p>
+                <p class="stat-value" id="walletBalance">198.16 <span>USDT</span></p>
+                <p class="stat-note">Profits will be added here</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Commission</p>
+                <p class="stat-value" id="commission">4.62 <span>USDT</span></p>
+                <p class="stat-note">Commission Earned</p>
+            </div>
+        </div>
+
+        <!-- Task Progress -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span>Task Progress</span>
+                <span class="task-count" id="taskCount">0/40</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Timer / Reminder Section -->
+        <div class="timer-section" id="timerSection" style="display: none;">
+            <div class="timer-card">
+                <p>⏰ Next Task Available In:</p>
+                <div class="countdown" id="countdown">--:--:--</div>
+                <p class="next-task-time" id="nextTaskTime"></p>
+            </div>
+        </div>
+
+        <!-- Current Task Card -->
+        <div class="task-card" id="taskCard">
+            <!-- Image Slider / Carousel -->
+            <div class="task-image-slider" id="taskImageSlider">
+                <button class="slider-btn prev" id="prevBtn">❮</button>
+                <div class="slider-container">
+                    <img id="sliderImage" class="slider-image" src="" alt="Product Image">
+                </div>
+                <button class="slider-btn next" id="nextBtn">❯</button>
+                <div class="slider-dots" id="sliderDots"></div>
+            </div>
+            <div class="task-info">
+                <div class="rating" id="taskRating">5.0 ★ (0 boosts)</div>
+                <h3 class="product-name" id="productName">New Product</h3>
+                <p class="product-style" id="productStyle">Style</p>
+                <div class="promo-code" id="promoCode">PROMO PROMO</div>
+                <div class="price-section">
+                    <span class="price-label">Total Price:</span>
+                    <span class="price-value" id="productPrice">$0.00</span>
+                </div>
+                <div class="task-meta">
+                    <span>Task ID: <span id="taskId">TSK001</span></span>
+                    <span>Available: <span id="taskTime">--:-- --</span></span>
+                    <span>Profit: <span id="taskProfit">+0.00 USDT</span></span>
+                </div>
+                <div class="task-status" id="taskStatus">
+                    <span class="status-badge" id="statusBadge">Available</span>
+                </div>
+                <button class="start-btn" id="startTaskBtn" disabled>Start Optimization</button>
+            </div>
+        </div>
+
+        <!-- Notice - READ ONLY, Written by ADMIN -->
+        <div class="notice" id="noticeArea">
+            <p>NOTICE</p>
+            <p id="noticeText">Online Support Hours: 10:00 - 22:00</p>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="home">
+                <span>🏠</span>
+                <span>Home</span>
+            </button>
+            <button class="nav-btn active" data-page="starting">
+                <span>🚀</span>
+                <span>Starting</span>
+            </button>
+            <button class="nav-btn" data-page="records">
+                <span>📊</span>
+                <span>Records</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/starting.js"></script>
+</body>
+</html>

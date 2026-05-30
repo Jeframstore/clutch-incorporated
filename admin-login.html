@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Admin Login - Clutch Incorporated</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="admin-login-container">
+        <div class="admin-login-card">
+            <div class="admin-logo">
+                <div class="big-c">C</div>
+                <h2>Clutch Incorporated</h2>
+                <p>Admin Panel</p>
+            </div>
+            
+            <form id="adminLoginForm">
+                <div class="input-group">
+                    <label>Username or Email</label>
+                    <input type="text" id="adminIdentifier" placeholder="Enter username or email" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="adminPassword" placeholder="Enter password" required>
+                </div>
+                
+                <!-- 2FA Section - Only shows for Master Admin -->
+                <div id="otpSection" style="display: none;">
+                    <div class="input-group">
+                        <label>2FA Verification Code</label>
+                        <input type="text" id="otpCode" placeholder="Enter 6-digit code" maxlength="6">
+                        <p class="otp-hint" id="otpHint" style="font-size: 11px; color: #ffd700; margin-top: 5px;"></p>
+                    </div>
+                </div>
+                
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+            
+            <div id="loginMessage" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <script src="js/admin-login.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Admin Dashboard - Clutch Incorporated</title>
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-sidebar">
+            <div class="sidebar-header">
+                <div class="small-c">C</div>
+                <h3>Clutch Admin</h3>
+                <span class="admin-badge" id="adminTypeBadge"></span>
+            </div>
+            <nav class="sidebar-nav" id="sidebarNav">
+                <!-- Menu will be loaded dynamically based on admin type -->
+            </nav>
+            <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
+        </div>
+
+        <div class="admin-main">
+            <div class="admin-header">
+                <h1 id="pageTitle">Dashboard</h1>
+                <button class="logout-mobile" id="logoutMobileBtn">🚪</button>
+            </div>
+            <div class="admin-content" id="adminContent"></div>
+        </div>
+    </div>
+    <script src="js/admin-dashboard.js"></script>
+</body>
+</html>

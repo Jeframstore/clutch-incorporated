@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Clutch Incorporated - Withdraw</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/withdraw.css">
+</head>
+<body>
+    <div class="withdraw-container">
+        <div class="withdraw-header">
+            <div class="top-bar">
+                <div class="logo-section">
+                    <div class="big-c">C</div>
+                    <div class="logo-text">
+                        <span class="clutch">Clutch</span>
+                        <span class="incorporated">Incorporated</span>
+                    </div>
+                </div>
+                <button class="back-btn" id="backBtn">←</button>
+            </div>
+            <h1 class="revenue-title">Revenue</h1>
+            <h2 class="page-title">Withdraw</h2>
+        </div>
+
+        <div class="balance-section">
+            <p class="balance-label">Balance:</p>
+            <p class="balance-value" id="withdrawBalance">198.25 USDT</p>
+        </div>
+
+        <div class="withdraw-form">
+            <input type="number" id="withdrawAmount" placeholder="$ Amount to withdraw" step="0.01" min="1">
+            <button class="submit-btn" id="submitWithdrawBtn">Submit Withdraw</button>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="home">
+                <span>🏠</span>
+                <span>Home</span>
+            </button>
+            <button class="nav-btn" data-page="starting">
+                <span>🚀</span>
+                <span>Starting</span>
+            </button>
+            <button class="nav-btn" data-page="records">
+                <span>📊</span>
+                <span>Records</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/withdraw.js"></script>
+</body>
+</html>

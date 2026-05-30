@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Clutch Incorporated - About</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/about.css">
+</head>
+<body>
+    <div class="about-container">
+        <div class="about-header">
+            <div class="top-bar">
+                <div class="logo-section">
+                    <div class="big-c">C</div>
+                    <div class="logo-text">
+                        <span class="clutch">Clutch</span>
+                        <span class="incorporated">Incorporated</span>
+                    </div>
+                </div>
+                <button class="back-btn" id="backBtn">←</button>
+            </div>
+            <h1 class="page-title">About Us</h1>
+        </div>
+
+        <div class="about-content" id="aboutContent">
+            <div class="pdf-viewer" id="pdfViewer">
+                <div class="no-pdf-placeholder" id="noPdfPlaceholder">
+                    <span>📄</span>
+                    <p>No document uploaded yet</p>
+                    <p class="small-text">Admin will upload company information here</p>
+                </div>
+                <iframe id="pdfFrame" class="pdf-frame" src=""></iframe>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="home">
+                <span>🏠</span>
+                <span>Home</span>
+            </button>
+            <button class="nav-btn" data-page="starting">
+                <span>🚀</span>
+                <span>Starting</span>
+            </button>
+            <button class="nav-btn" data-page="records">
+                <span>📊</span>
+                <span>Records</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/about.js"></script>
+</body>
+</html>

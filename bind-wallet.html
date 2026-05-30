@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Clutch Incorporated - Bind Wallet</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/bind-wallet.css">
+</head>
+<body>
+    <div class="bind-container">
+        <div class="bind-header">
+            <h1 class="revenue-title">Revenue</h1>
+            <h2 class="page-title">Bind Wallet Address</h2>
+        </div>
+
+        <div class="user-info-card">
+            <div class="user-info">
+                <p class="user-name" id="userName">Collins-VIP 1</p>
+                <p class="invite-code">Invitation Code: <span id="inviteCode">A4832E73</span></p>
+                <p class="personal-account">Personal Account</p>
+            </div>
+            <div class="credit-score">
+                <p>Credit score</p>
+                <p class="score-value" id="creditScore">97%</p>
+            </div>
+        </div>
+
+        <div class="balance-card">
+            <div class="balance-item">
+                <p>Account Balance</p>
+                <p class="balance-amount" id="accountBalance">198.25 USDT</p>
+            </div>
+            <div class="balance-item">
+                <p>Total Profits</p>
+                <p class="profit-amount" id="totalProfits">4.70 USDT</p>
+            </div>
+        </div>
+
+        <div class="bind-form">
+            <div class="input-group">
+                <label for="phoneNumber">Phone number with country code</label>
+                <input type="tel" id="phoneNumber" placeholder="+1 234 567 8900">
+            </div>
+
+            <div class="input-group">
+                <label for="walletAddress">Wallet Address (USDT)</label>
+                <input type="text" id="walletAddress" placeholder="Enter or paste your USDT wallet address">
+            </div>
+
+            <div class="input-group">
+                <label for="withdrawPassword">Withdraw Password</label>
+                <input type="password" id="withdrawPassword" placeholder="Set your withdraw password">
+            </div>
+
+            <button class="submit-btn" id="submitBindBtn">Submit</button>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="home">
+                <span>🏠</span>
+                <span>Home</span>
+            </button>
+            <button class="nav-btn" data-page="starting">
+                <span>🚀</span>
+                <span>Starting</span>
+            </button>
+            <button class="nav-btn" data-page="records">
+                <span>📊</span>
+                <span>Records</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/bind-wallet.js"></script>
+</body>
+</html>

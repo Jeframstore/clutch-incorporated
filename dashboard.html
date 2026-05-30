@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Clutch Incorporated - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header with Logo and Profile Icon -->
+        <div class="dashboard-header">
+            <div class="top-bar">
+                <div class="logo-section">
+                    <div class="big-c">C</div>
+                    <div class="logo-text">
+                        <span class="clutch">Clutch</span>
+                        <span class="incorporated">Incorporated</span>
+                    </div>
+                </div>
+                <button class="profile-icon" id="profileIconBtn">👤</button>
+            </div>
+            <div class="welcome-section">
+                <h2>Hi, <span id="usernameDisplay">Collins</span></h2>
+                <p>Welcome back</p>
+                <div class="marquee-container">
+                    <div class="marquee-text" id="welcomeMarquee">
+                        Dear users, welcome to join us. The daily working hours are from 10:00 am to 23:00 pm EST
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Menu Popup -->
+        <div class="profile-menu" id="profileMenu" style="display: none;">
+            <button class="profile-menu-item" id="profileMenuItem">👤 Profile</button>
+            <button class="profile-menu-item" id="logoutMenuItem">🚪 Log Out</button>
+        </div>
+
+        <!-- Menu Buttons Row 1 -->
+        <div class="menu-buttons-row">
+            <button class="menu-btn" data-page="service">
+                <span class="menu-icon">🔧</span>
+                <span>SERVICE</span>
+            </button>
+            <button class="menu-btn" data-page="withdraw">
+                <span class="menu-icon">💰</span>
+                <span>WITHDRAW</span>
+            </button>
+            <button class="menu-btn" data-page="deposit">
+                <span class="menu-icon">💳</span>
+                <span>DEPOSIT</span>
+            </button>
+            <button class="menu-btn" data-page="terms">
+                <span class="menu-icon">📋</span>
+                <span>T&C</span>
+            </button>
+        </div>
+
+        <!-- Menu Buttons Row 2 -->
+        <div class="menu-buttons-row">
+            <button class="menu-btn" data-page="certificate">
+                <span class="menu-icon">📜</span>
+                <span>CERTIFICATE</span>
+            </button>
+            <button class="menu-btn" data-page="faqs">
+                <span class="menu-icon">❓</span>
+                <span>FAQS</span>
+            </button>
+            <button class="menu-btn" data-page="about">
+                <span class="menu-icon">ℹ️</span>
+                <span>ABOUT</span>
+            </button>
+        </div>
+
+        <!-- Continuous Sign In -->
+        <div class="signin-section">
+            <div class="signin-header">
+                <h3>CONTINUOUS SIGN IN</h3>
+                <span class="signin-counter">SIGN IN NOW (0/15)</span>
+            </div>
+            <div class="reward-grid">
+                <div class="reward-item">USDT +300</div>
+                <div class="reward-item">USDT +150</div>
+                <div class="reward-item">USDT +500</div>
+                <div class="reward-item">USDT +1000</div>
+                <div class="reward-item">USDT +50</div>
+                <div class="reward-item">USDT +300</div>
+                <div class="reward-item">USDT +300</div>
+            </div>
+            <div class="base-salary">
+                Base salary: <span id="baseSalary">0.0</span> USDT
+            </div>
+        </div>
+
+        <!-- VIP Levels -->
+        <div class="vip-section">
+            <div class="vip-header">
+                <h3>Vip Levels</h3>
+                <a href="#" class="view-more">View more</a>
+            </div>
+            <div class="vip-grid">
+                <div class="vip-card">
+                    <h4>VIP 1</h4>
+                    <p>0.5% commission.</p>
+                    <p>40 orders per round.</p>
+                </div>
+                <div class="vip-card">
+                    <h4>VIP 2</h4>
+                    <p>1% commission.</p>
+                    <p>45 orders per round.</p>
+                </div>
+                <div class="vip-card">
+                    <h4>VIP 3</h4>
+                    <p>1.5% commission.</p>
+                    <p>50 orders per round.</p>
+                </div>
+                <div class="vip-card">
+                    <h4>VIP 4</h4>
+                    <p>2% commission.</p>
+                    <p>55 orders per round.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-btn active" data-page="home">
+                <span>🏠</span>
+                <span>Home</span>
+            </button>
+            <button class="nav-btn" data-page="starting">
+                <span>🚀</span>
+                <span>Starting</span>
+            </button>
+            <button class="nav-btn" data-page="records">
+                <span>📊</span>
+                <span>Records</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
