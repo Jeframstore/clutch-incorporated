@@ -1,4 +1,4 @@
-// Starting Page - Complete with Image Slider and Admin-Only Notice
+// Starting Page - Final Version
 
 let currentImageIndex = 0;
 let currentImages = [];
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    loadNotice(); // Notice is READ ONLY for client, only admin can edit via admin panel
+    loadNotice();
     loadUserStats();
     loadCurrentTask();
     loadTaskProgress();
@@ -24,13 +24,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Slider buttons
-    document.getElementById('prevBtn').addEventListener('click', prevImage);
-    document.getElementById('nextBtn').addEventListener('click', nextImage);
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    if (prevBtn) prevBtn.addEventListener('click', prevImage);
+    if (nextBtn) nextBtn.addEventListener('click', nextImage);
 });
 
 function loadNotice() {
-    // Notice is set by admin only - client cannot edit
     let notice = localStorage.getItem('taskNotice');
     if (!notice) {
         notice = 'Online Support Hours: 10:00 - 22:00';
@@ -39,7 +39,6 @@ function loadNotice() {
     const noticeElement = document.getElementById('noticeText');
     if (noticeElement) {
         noticeElement.textContent = notice;
-        // Make it NOT editable by client
         noticeElement.setAttribute('contenteditable', 'false');
     }
 }
@@ -74,29 +73,32 @@ function loadCurrentTask() {
     
     if (!currentTask) {
         const now = new Date();
-        const defaultTaskTime = new Date(now.getTime() + 3600000);
+        const futureTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
         
         currentTask = {
             id: 'TSK001',
             taskId: 'TSK001',
-            productName: 'New Product',
-            productStyle: 'Style',
+            productName: 'Product Name',
             price: '0.00',
-            promoCode: 'PROMO',
-            rating: '5.0',
-            boosts: '0',
             profit: '0.10',
             image1: '',
             image2: '',
             image3: '',
-            taskDateTime: defaultTaskTime.toISOString(),
-            nextTaskDateTime: '',
-            status: 'pending',
+            taskDateTime: now.toISOString(),
+            nextTaskDateTime: futureTime.toISOString(),
             completed: false
         };
         localStorage.setItem('currentTask', JSON.stringify(currentTask));
     } else {
         currentTask = JSON.parse(currentTask);
+        
+        const taskTime = new Date(currentTask.taskDateTime);
+        const now = new Date();
+        
+        if (now > taskTime && !currentTask.completed) {
+            currentTask.taskDateTime = now.toISOString();
+            localStorage.setItem('currentTask', JSON.stringify(currentTask));
+        }
     }
     
     displayTask(currentTask);
@@ -164,10 +166,7 @@ function nextImage() {
 function displayTask(task) {
     document.getElementById('taskId').textContent = task.taskId;
     document.getElementById('productName').textContent = task.productName;
-    document.getElementById('productStyle').textContent = task.productStyle;
-    document.getElementById('promoCode').textContent = task.promoCode;
     document.getElementById('productPrice').textContent = '$' + task.price;
-    document.getElementById('taskRating').innerHTML = task.rating + ' ★ (' + task.boosts + ' boosts)';
     document.getElementById('taskProfit').textContent = '+' + task.profit + ' USDT';
     
     if (task.taskDateTime) {
@@ -225,11 +224,17 @@ function checkTaskAvailability() {
         return;
     }
     
-    if (now > taskTime && !currentTask.completed) {
-        startBtn.disabled = true;
-        statusBadge.textContent = 'Expired';
-        statusBadge.className = 'status-badge expired';
+    const isAvailable = now >= taskTime;
+    
+    if (isAvailable) {
+        startBtn.disabled = false;
+        statusBadge.textContent = 'Available';
+        statusBadge.className = 'status-badge available';
         timerSection.style.display = 'none';
+        
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
         return;
     }
     
@@ -240,15 +245,6 @@ function checkTaskAvailability() {
         timerSection.style.display = 'block';
         startCountdown(taskTime);
         return;
-    }
-    
-    startBtn.disabled = false;
-    statusBadge.textContent = 'Available';
-    statusBadge.className = 'status-badge available';
-    timerSection.style.display = 'none';
-    
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
     }
 }
 

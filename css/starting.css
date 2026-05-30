@@ -194,7 +194,6 @@ body {
     border: 1px solid rgba(255, 215, 0, 0.15);
 }
 
-/* Image Slider / Carousel - Full width, moving right to left */
 .task-image-slider {
     position: relative;
     width: 100%;
@@ -284,33 +283,10 @@ body {
     padding: 18px;
 }
 
-.rating {
-    color: #ffd700;
-    font-size: 12px;
-    margin-bottom: 10px;
-}
-
 .product-name {
     color: white;
     font-size: 16px;
-    margin-bottom: 5px;
-}
-
-.product-style {
-    color: #aaa;
-    font-size: 12px;
     margin-bottom: 10px;
-}
-
-.promo-code {
-    background: rgba(255, 215, 0, 0.12);
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    color: #ffd700;
-    font-size: 11px;
-    font-weight: 600;
-    margin-bottom: 12px;
 }
 
 .price-section {
@@ -400,7 +376,6 @@ body {
     box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
 }
 
-/* Notice - READ ONLY, Admin editable only */
 .notice {
     background: rgba(255, 215, 0, 0.05);
     border-radius: 12px;
