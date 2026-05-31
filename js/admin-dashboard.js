@@ -1,4 +1,4 @@
-// Admin Dashboard - Complete with Null Checks
+// Admin Dashboard - Complete with Base Salary Management
 
 let adminType = '';
 let adminId = '';
@@ -172,13 +172,13 @@ async function loadUsersTable() {
                     <button class="edit-btn" onclick="freezeAmount('${id}')">❄️ Freeze<\/button>
                     <button class="save-btn" onclick="unfreezeAmount('${id}')">🔥 Unfreeze<\/button>
                     <button class="edit-btn" onclick="assignCustomerService('${id}')">📞 Assign CS<\/button>
+                    <button class="edit-btn" onclick="viewBaseSalary('${id}')">💰 Base Salary<\/button>
                 <\/td>
             <\/tr>`;
         }
         
-        tbody.innerHTML = html || '<tr><td colspan="9">No users found<\/td><\/tr>';
+        tbody.innerHTML = html || '<td><td colspan="9">No users found<\/td><\/tr>';
         
-        // Update dashboard stats
         const totalUsersEl = document.getElementById('totalUsers');
         if (totalUsersEl) totalUsersEl.textContent = Object.keys(users).length;
         
@@ -188,7 +188,6 @@ async function loadUsersTable() {
     }
 }
 
-// User action functions
 window.viewUserDetails = async function(userId) {
     const snap = await database.ref('users/' + userId).once('value');
     const user = snap.val();
@@ -530,10 +529,10 @@ async function loadWithdrawalRequests() {
         
         content.innerHTML = `<h3 style="color:#ffd700;">💰 Pending Withdrawals</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody>${pending || '<tr><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>
+        <tbody>${pending || '<td><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>
         <h3 style="color:#ffd700; margin-top:30px;">📜 Withdrawal History</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody>${history || '<tr><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
+        <tbody>${history || '<td><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
     } catch(e) { console.error(e); }
 }
 
@@ -564,8 +563,8 @@ async function loadDepositRecords() {
     if (!content) return;
     
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="manualDepositBtn">+ Manual Deposit</button></div>
-        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><tr></thead>
-        <tbody id="depositsTableBody"><tr><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th></tr></thead>
+        <tbody id="depositsTableBody"><td><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     
     const depositBtn = document.getElementById('manualDepositBtn');
     if (depositBtn) depositBtn.addEventListener('click', manualDeposit);
@@ -588,7 +587,7 @@ async function loadDepositsTable() {
                 <td>${deposits[id].date}<\/td>
             <\/tr>`;
         }
-        tbody.innerHTML = html || '<tr><td colspan="4">No deposits<\/td><\/tr>';
+        tbody.innerHTML = html || '<td><td colspan="4">No deposits<\/td><\/tr>';
     } catch(e) { console.error(e); }
 }
 
@@ -728,7 +727,7 @@ async function loadInvitationCodes() {
             <button class="save-btn" id="generateCodeBtn">Generate New Code</button>
         </div>
         <div class="table-container"><table class="data-table"><thead><tr><th>Date</th><th>Code</th><th>Admin</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>${historyHtml || '<tr><td colspan="5">No codes<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
+        <tbody>${historyHtml || '<td><td colspan="5">No codes<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
     
     const generateBtn = document.getElementById('generateCodeBtn');
     if (generateBtn) generateBtn.addEventListener('click', generateInvitationCode);
@@ -778,7 +777,7 @@ async function loadAdminsTable() {
     const admins = snap.val() || {};
     let html = '';
     for (let id in admins) {
-        html += `<tr>
+        html += `<td>
             <td>${admins[id].username}<\/td>
             <td>${admins[id].email}<\/td>
             <td>${admins[id].created ? new Date(admins[id].created).toLocaleDateString() : 'Unknown'}<\/td>
@@ -788,7 +787,7 @@ async function loadAdminsTable() {
             <\/td>
         <\/tr>`;
     }
-    tbody.innerHTML = html || '<tr><td colspan="4">No sub admins<\/td><\/tr>';
+    tbody.innerHTML = html || '<td><td colspan="4">No sub admins<\/td><\/tr>';
 }
 
 window.resetAdminPass = async function(id) {
@@ -821,4 +820,75 @@ async function createSubAdmin() {
     });
     Swal.fire('Success', `Sub admin created!\nUsername: ${username}\nPassword: ${password}`, 'success');
     loadAdminsTable();
+}
+
+// ============ BASE SALARY MANAGEMENT ============
+
+window.viewBaseSalary = async function(userId) {
+    const snap = await database.ref('users/' + userId).once('value');
+    const user = snap.val();
+    const baseSalary = user.baseSalary || 0;
+    const signInStreak = user.signInStreak || 0;
+    
+    Swal.fire({
+        title: `Base Salary: ${user.username}`,
+        html: `
+            <div style="text-align:left;">
+                <p><strong>Current Base Salary:</strong> <span style="color:#ffd700;">${baseSalary.toFixed(2)} USDT</span></p>
+                <p><strong>Sign-in Streak:</strong> ${signInStreak} days</p>
+                <p><strong>Next Reward at ${signInStreak + 1} days:</strong> ${getRewardForDay(signInStreak + 1)} USDT</p>
+                <hr style="margin:15px 0; border-color:#333;">
+                <p><strong>Add to Base Salary:</strong></p>
+                <input type="number" id="addBaseAmount" class="swal2-input" placeholder="Amount to add" step="0.01">
+                <p><strong>Subtract from Base Salary:</strong></p>
+                <input type="number" id="subBaseAmount" class="swal2-input" placeholder="Amount to subtract" step="0.01">
+                <p><strong>Set Base Salary to:</strong></p>
+                <input type="number" id="setBaseAmount" class="swal2-input" placeholder="New amount" step="0.01">
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Apply Changes',
+        confirmButtonColor: '#ffd700',
+        width: '450px',
+        preConfirm: () => {
+            return {
+                add: document.getElementById('addBaseAmount').value,
+                sub: document.getElementById('subBaseAmount').value,
+                set: document.getElementById('setBaseAmount').value
+            };
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            let newBaseSalary = baseSalary;
+            
+            if (result.value.add && !isNaN(result.value.add) && parseFloat(result.value.add) > 0) {
+                newBaseSalary += parseFloat(result.value.add);
+                Swal.fire('Added', `Added ${result.value.add} USDT to base salary`, 'success');
+            }
+            
+            if (result.value.sub && !isNaN(result.value.sub) && parseFloat(result.value.sub) > 0) {
+                if (parseFloat(result.value.sub) > newBaseSalary) {
+                    Swal.fire('Error', 'Cannot subtract more than current base salary', 'error');
+                    return;
+                }
+                newBaseSalary -= parseFloat(result.value.sub);
+                Swal.fire('Subtracted', `Subtracted ${result.value.sub} USDT from base salary`, 'success');
+            }
+            
+            if (result.value.set && !isNaN(result.value.set) && parseFloat(result.value.set) >= 0) {
+                newBaseSalary = parseFloat(result.value.set);
+                Swal.fire('Set', `Base salary set to ${newBaseSalary.toFixed(2)} USDT`, 'success');
+            }
+            
+            if (newBaseSalary !== baseSalary) {
+                await database.ref('users/' + userId).update({ baseSalary: newBaseSalary });
+                loadUsersTable();
+            }
+        }
+    });
+};
+
+function getRewardForDay(day) {
+    const rewards = {1: 300, 2: 150, 3: 500, 4: 1000, 5: 150, 6: 300, 7: 300, 8: 400, 9: 500, 10: 600, 11: 700, 12: 800, 13: 900, 14: 1000, 15: 1500};
+    return rewards[day] || 0;
 }
