@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Favicon</title>
+</head>
+<body>
+    <canvas id="canvas" width="64" height="64"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Draw gold circle
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(32, 32, 28, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Draw white C
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('C', 32, 38);
+        
+        // Convert to data URL
+        const dataURL = canvas.toDataURL();
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = 'favicon.png';
+        link.href = dataURL;
+        link.click();
+        
+        document.body.innerHTML = '<h1>Favicon created! Check your downloads folder.</h1><img src="' + dataURL + '">';
+    </script>
+</body>
+</html>
