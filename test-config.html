@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Firebase Config</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+</head>
+<body>
+    <h1>Testing Firebase Config</h1>
+    <div id="status">Checking...</div>
+    
+    <script>
+        if (typeof database !== 'undefined') {
+            document.getElementById('status').innerHTML = '✅ Firebase config loaded successfully! Database is ready.';
+            
+            // Test write
+            database.ref('test/config').set({
+                message: 'Config working',
+                time: new Date().toISOString()
+            }).then(() => {
+                console.log('Write successful');
+            }).catch(err => {
+                console.error('Write error:', err);
+            });
+        } else {
+            document.getElementById('status').innerHTML = '❌ Firebase config failed to load';
+        }
+    </script>
+</body>
+</html>
