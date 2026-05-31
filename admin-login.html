@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Admin Login - Clutch Incorporated</title>
     <style>
         * {
@@ -133,107 +133,76 @@
     </div>
 
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBwf-rkEWsNJRkh_TJeMSoNDc1iwO1c6tI",
-            authDomain: "clutch-incorporated.firebaseapp.com",
-            projectId: "clutch-incorporated",
-            storageBucket: "clutch-incorporated.firebasestorage.app",
-            messagingSenderId: "515595231583",
-            appId: "1:515595231583:web:73ff8c3cdc123dcbce16ea",
-            databaseURL: "https://clutch-incorporated-default-rtdb.firebaseio.com"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
-        console.log("Firebase initialized");
-        
         const loginForm = document.getElementById('adminLoginForm');
-        const identifierInput = document.getElementById('adminIdentifier');
-        const passwordInput = document.getElementById('adminPassword');
+        const adminIdentifier = document.getElementById('adminIdentifier');
+        const adminPassword = document.getElementById('adminPassword');
         const otpSection = document.getElementById('otpSection');
-        const otpInput = document.getElementById('otpCode');
+        const otpCodeInput = document.getElementById('otpCode');
         const otpHint = document.getElementById('otpHint');
         const messageDiv = document.getElementById('loginMessage');
         
-        let masterAdmin = null;
-        
-        // Load master admin data from correct path (admins/)
-        async function loadMasterAdmin() {
-            try {
-                const snapshot = await database.ref('admins').once('value');
-                masterAdmin = snapshot.val();
-                console.log("Master admin loaded:", masterAdmin);
-            } catch (error) {
-                console.error("Error loading master admin:", error);
-            }
-        }
-        
-        // Check if entered credentials match master admin
-        async function checkIfMaster() {
-            const identifier = identifierInput.value.trim();
+        function checkIfMaster() {
+            const identifier = adminIdentifier.value.trim();
             
-            if (masterAdmin && (identifier === masterAdmin.username || identifier === masterAdmin.email)) {
+            // Check if entering master admin credentials
+            if (identifier === 'master' || identifier === 'admin@clutch.com') {
                 otpSection.style.display = 'block';
                 otpHint.textContent = 'Test 2FA Code: 123456';
             } else {
                 otpSection.style.display = 'none';
-                if (otpInput) otpInput.value = '';
+                if (otpCodeInput) otpCodeInput.value = '';
             }
         }
         
-        // Load master admin on page load
-        loadMasterAdmin();
+        adminIdentifier.addEventListener('input', checkIfMaster);
+        adminPassword.addEventListener('input', checkIfMaster);
         
-        identifierInput.addEventListener('input', checkIfMaster);
-        passwordInput.addEventListener('input', checkIfMaster);
-        
-        loginForm.addEventListener('submit', async function(e) {
+        loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const identifier = identifierInput.value.trim();
-            const password = passwordInput.value;
-            const otpCode = otpInput ? otpInput.value : '';
+            const identifier = adminIdentifier.value.trim();
+            const password = adminPassword.value;
+            const otpCode = otpCodeInput ? otpCodeInput.value : '';
             
             messageDiv.innerHTML = '';
             
-            try {
-                // Ensure masterAdmin is loaded
-                if (!masterAdmin) {
-                    await loadMasterAdmin();
-                }
-                
-                // Check master admin
-                if (masterAdmin && (identifier === masterAdmin.username || identifier === masterAdmin.email)) {
-                    // Check password
-                    if (password !== masterAdmin.password) {
-                        messageDiv.innerHTML = '<div class="error-message">Invalid password</div>';
-                        return;
-                    }
-                    
-                    // Check 2FA (test code: 123456)
-                    if (!otpCode || otpCode !== '123456') {
-                        messageDiv.innerHTML = '<div class="error-message">Invalid 2FA code. Use: 123456</div>';
-                        return;
-                    }
-                    
-                    // Login successful
-                    localStorage.setItem('isAdminLoggedIn', 'true');
-                    localStorage.setItem('adminType', 'master');
-                    localStorage.setItem('adminUsername', masterAdmin.username);
-                    localStorage.setItem('adminId', 'master');
-                    window.location.href = 'admin-dashboard.html';
+            // Check Master Admin
+            if (identifier === 'master' || identifier === 'admin@clutch.com') {
+                if (password !== 'Master@2024') {
+                    messageDiv.innerHTML = '<div class="error-message">Invalid password</div>';
                     return;
                 }
                 
-                // Check sub admins (if any exist in future)
-                messageDiv.innerHTML = '<div class="error-message">Invalid credentials</div>';
+                if (otpCode !== '123456') {
+                    messageDiv.innerHTML = '<div class="error-message">Invalid 2FA code. Use: 123456</div>';
+                    return;
+                }
                 
-            } catch (error) {
-                console.error("Login error:", error);
-                messageDiv.innerHTML = '<div class="error-message">Database error: ' + error.message + '</div>';
+                // Login successful
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                localStorage.setItem('adminType', 'master');
+                localStorage.setItem('adminUsername', 'master');
+                localStorage.setItem('adminId', 'master');
+                window.location.href = 'admin-dashboard.html';
+                return;
             }
+            
+            // Check Sub Admins
+            let subAdmins = JSON.parse(localStorage.getItem('adminUsers') || '[]');
+            const subAdmin = subAdmins.find(function(a) {
+                return (a.username === identifier || a.email === identifier) && a.password === password;
+            });
+            
+            if (subAdmin) {
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                localStorage.setItem('adminType', 'sub');
+                localStorage.setItem('adminUsername', subAdmin.username);
+                localStorage.setItem('adminId', subAdmin.id);
+                window.location.href = 'admin-dashboard.html';
+                return;
+            }
+            
+            messageDiv.innerHTML = '<div class="error-message">Invalid admin credentials</div>';
         });
     </script>
 </body>
