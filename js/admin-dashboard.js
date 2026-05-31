@@ -1,4 +1,4 @@
-// Admin Dashboard - COMPLETE VERSION with ALL Features
+// Admin Dashboard - Complete with Null Checks
 
 let adminType = '';
 let adminId = '';
@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadSidebar();
     loadDashboard();
     
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
     const logoutMobile = document.getElementById('logoutMobileBtn');
     if (logoutMobile) logoutMobile.addEventListener('click', logout);
 });
@@ -31,7 +32,10 @@ function logout() {
 function loadSidebar() {
     const sidebarNav = document.getElementById('sidebarNav');
     const adminBadge = document.getElementById('adminTypeBadge');
-    adminBadge.textContent = adminType === 'master' ? '👑 MASTER' : '📋 SUB ADMIN';
+    
+    if (adminBadge) {
+        adminBadge.textContent = adminType === 'master' ? '👑 MASTER' : '📋 SUB ADMIN';
+    }
     
     let menuHtml = `
         <button class="nav-item active" data-page="dashboard">📊 Dashboard</button>
@@ -50,14 +54,15 @@ function loadSidebar() {
         menuHtml += `<button class="nav-item" data-page="admins">👑 Admin Management</button>`;
     }
     
-    sidebarNav.innerHTML = menuHtml;
+    if (sidebarNav) sidebarNav.innerHTML = menuHtml;
     
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const page = this.getAttribute('data-page');
-            document.getElementById('pageTitle').textContent = this.textContent.trim();
+            const pageTitle = document.getElementById('pageTitle');
+            if (pageTitle) pageTitle.textContent = this.textContent.trim();
             
             if (page === 'dashboard') loadDashboard();
             else if (page === 'users') loadUserManagement();
@@ -76,6 +81,8 @@ function loadSidebar() {
 
 async function loadDashboard() {
     const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     content.innerHTML = `<div class="stats-grid">
         <div class="stat-card"><h3>Total Users</h3><div class="stat-value" id="totalUsers">0</div></div>
         <div class="stat-card"><h3>Total Balance</h3><div class="stat-value" id="totalBalance">0 USDT</div></div>
@@ -97,36 +104,47 @@ async function loadDashboardStats() {
             userCount++;
             totalBalance += parseFloat(users[id].balance || 0);
         }
-        document.getElementById('totalUsers').textContent = userCount;
-        document.getElementById('totalBalance').textContent = totalBalance.toFixed(2) + ' USDT';
+        
+        const totalUsersEl = document.getElementById('totalUsers');
+        const totalBalanceEl = document.getElementById('totalBalance');
+        if (totalUsersEl) totalUsersEl.textContent = userCount;
+        if (totalBalanceEl) totalBalanceEl.textContent = totalBalance.toFixed(2) + ' USDT';
         
         const withdrawalsSnap = await database.ref('withdrawals').once('value');
         const withdrawals = withdrawalsSnap.val() || {};
         let pending = 0;
         for (let id in withdrawals) if (withdrawals[id].status === 'pending') pending++;
-        document.getElementById('pendingWithdrawals').textContent = pending;
+        
+        const pendingEl = document.getElementById('pendingWithdrawals');
+        if (pendingEl) pendingEl.textContent = pending;
         
         const tasksSnap = await database.ref('tasks').once('value');
         const tasks = tasksSnap.val() || {};
-        document.getElementById('totalTasks').textContent = Object.keys(tasks).length;
+        const tasksEl = document.getElementById('totalTasks');
+        if (tasksEl) tasksEl.textContent = Object.keys(tasks).length;
+        
     } catch(e) { console.error(e); }
 }
 
-// ============ USER MANAGEMENT ============
-
 async function loadUserManagement() {
     const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="refreshUsersBtn">🔄 Refresh Users</button></div>
         <div class="table-container"><table class="data-table"><thead>
             <tr><th>ID</th><th>Username</th><th>Email</th><th>Balance</th><th>Frozen</th><th>Available</th><th>Invite Code</th><th>Status</th><th>Actions</th></tr>
         </thead>
-        <tbody id="usersTableBody"><tr><td colspan="9">Loading...</td></tr></tbody></table></div>`;
+        <tbody id="usersTableBody"><tr><td colspan="9">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     
-    document.getElementById('refreshUsersBtn').addEventListener('click', () => loadUsersTable());
+    const refreshBtn = document.getElementById('refreshUsersBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => loadUsersTable());
     await loadUsersTable();
 }
 
 async function loadUsersTable() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    
     try {
         const usersSnap = await database.ref('users').once('value');
         const users = usersSnap.val() || {};
@@ -139,32 +157,38 @@ async function loadUsersTable() {
             const available = (parseFloat(balance) - parseFloat(frozen)).toFixed(2);
             
             html += `<tr>
-                <td>${id.substring(0, 15)}...</td>
-                <td><strong>${user.username || 'Unknown'}</strong></td>
-                <td>${user.email || 'N/A'}</td>
-                <td style="color:#ffd700;">${balance} USDT</td>
-                <td style="color:#ff6666;">${frozen} USDT</td>
-                <td style="color:#00ff00;">${available} USDT</td>
-                <td style="color:#ffd700;">${user.inviteCode || 'N/A'}</td>
-                <td>${user.status || 'active'}</td>
+                <td>${id.substring(0, 15)}...<\/td>
+                <td><strong>${user.username || 'Unknown'}<\/strong><\/td>
+                <td>${user.email || 'N/A'}<\/td>
+                <td style="color:#ffd700;">${balance} USDT<\/td>
+                <td style="color:#ff6666;">${frozen} USDT<\/td>
+                <td style="color:#00ff00;">${available} USDT<\/td>
+                <td style="color:#ffd700;">${user.inviteCode || 'N/A'}<\/td>
+                <td>${user.status || 'active'}<\/td>
                 <td>
-                    <button class="edit-btn" onclick="viewUserDetails('${id}')">👁️ View</button>
-                    <button class="edit-btn" onclick="addFunds('${id}')">➕ Add</button>
-                    <button class="delete-btn" onclick="subtractFunds('${id}')">➖ Sub</button>
-                    <button class="edit-btn" onclick="freezeAmount('${id}')">❄️ Freeze</button>
-                    <button class="save-btn" onclick="unfreezeAmount('${id}')">🔥 Unfreeze</button>
-                    <button class="edit-btn" onclick="assignCustomerService('${id}')">📞 Assign CS</button>
-                </td>
-            </tr>`;
+                    <button class="edit-btn" onclick="viewUserDetails('${id}')">👁️ View<\/button>
+                    <button class="edit-btn" onclick="addFunds('${id}')">➕ Add<\/button>
+                    <button class="delete-btn" onclick="subtractFunds('${id}')">➖ Sub<\/button>
+                    <button class="edit-btn" onclick="freezeAmount('${id}')">❄️ Freeze<\/button>
+                    <button class="save-btn" onclick="unfreezeAmount('${id}')">🔥 Unfreeze<\/button>
+                    <button class="edit-btn" onclick="assignCustomerService('${id}')">📞 Assign CS<\/button>
+                <\/td>
+            <\/tr>`;
         }
         
-        document.getElementById('usersTableBody').innerHTML = html || '<tr><td colspan="9">No users found</td></tr>';
+        tbody.innerHTML = html || '<tr><td colspan="9">No users found<\/td><\/tr>';
+        
+        // Update dashboard stats
+        const totalUsersEl = document.getElementById('totalUsers');
+        if (totalUsersEl) totalUsersEl.textContent = Object.keys(users).length;
+        
     } catch(e) { 
         console.error(e);
-        document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="9">Error loading users</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9">Error loading users<\/td><\/tr>';
     }
 }
 
+// User action functions
 window.viewUserDetails = async function(userId) {
     const snap = await database.ref('users/' + userId).once('value');
     const user = snap.val();
@@ -177,17 +201,13 @@ window.viewUserDetails = async function(userId) {
             <p><strong>Username:</strong> ${user.username}</p>
             <p><strong>Email:</strong> ${user.email || 'Not set'}</p>
             <p><strong>Phone:</strong> ${user.phone || 'Not set'}</p>
-            <p><strong>Wallet Address:</strong> ${user.walletAddress || 'Not bound'}</p>
-            <p><strong>Invitation Code:</strong> ${user.inviteCode || 'N/A'}</p>
+            <p><strong>Wallet:</strong> ${user.walletAddress || 'Not bound'}</p>
+            <p><strong>Invite Code:</strong> ${user.inviteCode || 'N/A'}</p>
             <p><strong>Balance:</strong> ${user.balance || '0'} USDT</p>
             <p><strong>Frozen:</strong> ${user.frozenAmount || '0'} USDT</p>
             <p><strong>Available:</strong> ${available} USDT</p>
             <p><strong>Commission:</strong> ${user.commission || '0'} USDT</p>
-            <p><strong>VIP:</strong> ${user.vip || 'VIP 1'}</p>
             <p><strong>Status:</strong> ${user.status || 'active'}</p>
-            <p><strong>Joined:</strong> ${user.joinedDate || 'N/A'}</p>
-            <p><strong>Assigned WhatsApp:</strong> ${user.assignedWhatsapp || 'Default'}</p>
-            <p><strong>Assigned Telegram:</strong> ${user.assignedTelegram || 'Default'}</p>
         </div>`,
         icon: 'info',
         confirmButtonColor: '#ffd700'
@@ -303,19 +323,23 @@ window.assignCustomerService = async function(userId) {
     }
 };
 
-// ============ TASK MANAGEMENT ============
-
 async function loadTaskManagement() {
     const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="addTaskBtn">+ Add New Task</button></div>
         <div class="table-container"><table class="data-table"><thead><tr><th>Task ID</th><th>Product Name</th><th>Price</th><th>Commission</th><th>Special</th><th>Images</th><th>Actions</th></tr></thead>
-        <tbody id="tasksTableBody"><tr><td colspan="7">Loading...</td></tr></tbody></table></div>`;
+        <tbody id="tasksTableBody"><td><td colspan="7">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     
-    document.getElementById('addTaskBtn').addEventListener('click', addNewTask);
+    const addBtn = document.getElementById('addTaskBtn');
+    if (addBtn) addBtn.addEventListener('click', addNewTask);
     await loadTasksTable();
 }
 
 async function loadTasksTable() {
+    const tbody = document.getElementById('tasksTableBody');
+    if (!tbody) return;
+    
     try {
         const tasksSnap = await database.ref('tasks').once('value');
         const tasks = tasksSnap.val() || {};
@@ -324,19 +348,19 @@ async function loadTasksTable() {
             const task = tasks[id];
             const hasImages = (task.image1 ? 1 : 0) + (task.image2 ? 1 : 0) + (task.image3 ? 1 : 0);
             html += `<tr>
-                <td>${task.taskId || id}</td>
-                <td>${task.productName || 'N/A'}</td>
-                <td>$${task.price || '0'}</td>
-                <td>+${task.commission || '0'} USDT</td>
-                <td>${task.isSpecial ? '<span class="special-badge">🔥 SPECIAL</span>' : '-'}</td>
-                <td>${hasImages}/3 images</td>
+                <td>${task.taskId || id}<\/td>
+                <td>${task.productName || 'N/A'}<\/td>
+                <td>$${task.price || '0'}<\/td>
+                <td>+${task.commission || '0'} USDT<\/td>
+                <td>${task.isSpecial ? '<span class="special-badge">🔥 SPECIAL</span>' : '-'}<\/td>
+                <td>${hasImages}/3 images<\/td>
                 <td>
-                    <button class="edit-btn" onclick="editTask('${id}')">✏️ Edit</button>
-                    <button class="delete-btn" onclick="deleteTask('${id}')">🗑️ Delete</button>
-                </td>
-            </tr>`;
+                    <button class="edit-btn" onclick="editTask('${id}')">✏️ Edit<\/button>
+                    <button class="delete-btn" onclick="deleteTask('${id}')">🗑️ Delete<\/button>
+                <\/td>
+            <\/tr>`;
         }
-        document.getElementById('tasksTableBody').innerHTML = html || '<tr><td colspan="7">No tasks found</td></tr>';
+        tbody.innerHTML = html || '<td><td colspan="7">No tasks found<\/td><\/tr>';
     } catch(e) { console.error(e); }
 }
 
@@ -344,7 +368,6 @@ window.editTask = async function(taskId) {
     const snap = await database.ref('tasks/' + taskId).once('value');
     const task = snap.val();
     
-    // Build image preview HTML
     let imagesHtml = '';
     for (let i = 1; i <= 3; i++) {
         const imgSrc = task[`image${i}`];
@@ -364,7 +387,7 @@ window.editTask = async function(taskId) {
             <input id="price" class="swal2-input" placeholder="Price (USD)" value="${task.price || '0'}">
             <input id="commission" class="swal2-input" placeholder="Commission (USDT)" value="${task.commission || '0'}">
             <input id="availableFrom" class="swal2-input" type="datetime-local" placeholder="Available From" value="${task.availableFrom ? task.availableFrom.slice(0,16) : ''}">
-            <label style="display:flex; align-items:center; gap:10px; margin:10px 0;"><input type="checkbox" id="isSpecial" ${task.isSpecial ? 'checked' : ''}> <span style="color:#ffd700;">🔥 Special Task (shows badge on client side)</span></label>
+            <label style="display:flex; align-items:center; gap:10px; margin:10px 0;"><input type="checkbox" id="isSpecial" ${task.isSpecial ? 'checked' : ''}> <span style="color:#ffd700;">🔥 Special Task</span></label>
             <div style="margin-top:15px;"><label>Task Images (Max 3):</label></div>
             <div style="display:flex; gap:10px; margin-top:10px;">${imagesHtml}</div>
         </div>`,
@@ -392,7 +415,6 @@ window.editTask = async function(taskId) {
             isSpecial: formValues.isSpecial
         };
         
-        // Upload images
         for (let i = 1; i <= 3; i++) {
             const fileInput = document.getElementById(`image${i}`);
             if (fileInput && fileInput.files.length > 0) {
@@ -407,7 +429,7 @@ window.editTask = async function(taskId) {
         }
         
         await database.ref('tasks/' + taskId).update(updates);
-        Swal.fire('Success', 'Task updated! Images will auto-slide on client side.', 'success');
+        Swal.fire('Success', 'Task updated!', 'success');
         loadTasksTable();
     }
 };
@@ -431,11 +453,9 @@ async function addNewTask() {
                <input id="availableFrom" class="swal2-input" type="datetime-local" placeholder="Available From">
                <label style="display:flex; align-items:center; gap:10px; margin:10px 0;"><input type="checkbox" id="isSpecial"> <span style="color:#ffd700;">🔥 Special Task</span></label>
                <div style="margin-top:15px;"><label>Task Images (Max 3):</label></div>
-               <div style="display:flex; gap:10px;">
-                   <div><input type="file" id="image1" accept="image/*"></div>
-                   <div><input type="file" id="image2" accept="image/*"></div>
-                   <div><input type="file" id="image3" accept="image/*"></div>
-               </div>`,
+               <div style="display:flex; gap:10px;"><div><input type="file" id="image1" accept="image/*"></div>
+               <div><input type="file" id="image2" accept="image/*"></div>
+               <div><input type="file" id="image3" accept="image/*"></div></div>`,
         focusConfirm: false, showCancelButton: true, confirmButtonColor: '#ffd700', width: '550px',
         preConfirm: () => {
             return {
@@ -460,7 +480,6 @@ async function addNewTask() {
             createdAt: new Date().toISOString()
         };
         
-        // Upload images
         for (let i = 1; i <= 3; i++) {
             const fileInput = document.getElementById(`image${i}`);
             if (fileInput && fileInput.files.length > 0) {
@@ -480,10 +499,10 @@ async function addNewTask() {
     }
 }
 
-// ============ WITHDRAWAL REQUESTS ============
-
 async function loadWithdrawalRequests() {
     const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     try {
         const snap = await database.ref('withdrawals').once('value');
         const withdrawals = snap.val() || {};
@@ -491,18 +510,30 @@ async function loadWithdrawalRequests() {
         for (let id in withdrawals) {
             const w = withdrawals[id];
             if (w.status === 'pending') {
-                pending += `<tr><td>${w.id}</td><td>${w.username}</td><td>${w.amount} USDT</td><td>${new Date(w.requestDate).toLocaleString()}</td>
-                <td><button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve</button><button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject</button></td></tr>`;
+                pending += `<tr>
+                    <td>${w.id}<\/td>
+                    <td>${w.username}<\/td>
+                    <td>${w.amount} USDT<\/td>
+                    <td>${new Date(w.requestDate).toLocaleString()}<\/td>
+                    <td><button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve<\/button><button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject<\/button><\/td>
+                <\/tr>`;
             } else {
-                history += `<tr><td>${w.id}</td><td>${w.username}</td><td>${w.amount} USDT</td><td>${w.status}</td><td>${new Date(w.requestDate).toLocaleString()}</td></tr>`;
+                history += `<tr>
+                    <td>${w.id}<\/td>
+                    <td>${w.username}<\/td>
+                    <td>${w.amount} USDT<\/td>
+                    <td>${w.status}<\/td>
+                    <td>${new Date(w.requestDate).toLocaleString()}<\/td>
+                <\/tr>`;
             }
         }
+        
         content.innerHTML = `<h3 style="color:#ffd700;">💰 Pending Withdrawals</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody>${pending || '<tr><td colspan="5">None</td></tr>'}</tbody></table></div>
+        <tbody>${pending || '<tr><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>
         <h3 style="color:#ffd700; margin-top:30px;">📜 Withdrawal History</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody>${history || '<tr><td colspan="5">None</td></tr>'}</tbody></table></div>`;
+        <tbody>${history || '<tr><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
     } catch(e) { console.error(e); }
 }
 
@@ -528,26 +559,36 @@ window.rejectWithdrawal = async function(id) {
     loadDashboardStats();
 };
 
-// ============ OTHER FUNCTIONS (Deposits, Content, etc.) ============
-
 async function loadDepositRecords() {
     const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="manualDepositBtn">+ Manual Deposit</button></div>
-        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th></tr></thead>
-        <tbody id="depositsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>`;
-    document.getElementById('manualDepositBtn').addEventListener('click', manualDeposit);
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><tr></thead>
+        <tbody id="depositsTableBody"><tr><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
+    
+    const depositBtn = document.getElementById('manualDepositBtn');
+    if (depositBtn) depositBtn.addEventListener('click', manualDeposit);
     await loadDepositsTable();
 }
 
 async function loadDepositsTable() {
+    const tbody = document.getElementById('depositsTableBody');
+    if (!tbody) return;
+    
     try {
         const depositsSnap = await database.ref('deposits').once('value');
         const deposits = depositsSnap.val() || {};
         let html = '';
         for (let id in deposits) {
-            html += `<tr><td>${deposits[id].id}</td><td>${deposits[id].username}</td><td>${deposits[id].amount} USDT</td><td>${deposits[id].date}</td></tr>`;
+            html += `<tr>
+                <td>${deposits[id].id}<\/td>
+                <td>${deposits[id].username}<\/td>
+                <td>${deposits[id].amount} USDT<\/td>
+                <td>${deposits[id].date}<\/td>
+            <\/tr>`;
         }
-        document.getElementById('depositsTableBody').innerHTML = html || '<tr><td colspan="4">No deposits</td></tr>';
+        tbody.innerHTML = html || '<tr><td colspan="4">No deposits<\/td><\/tr>';
     } catch(e) { console.error(e); }
 }
 
@@ -577,9 +618,12 @@ async function manualDeposit() {
 }
 
 async function loadContentManagement() {
+    const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     const termsSnap = await database.ref('settings/terms').once('value');
     const noticeSnap = await database.ref('settings/taskNotice').once('value');
-    const content = document.getElementById('adminContent');
+    
     content.innerHTML = `
         <div class="form-group"><label>📋 Terms & Conditions</label><textarea id="termsEditor" rows="8" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;">${termsSnap.val() || ''}</textarea><button class="save-btn" id="saveTermsBtn">Save Terms</button></div>
         <div class="form-group" style="margin-top:20px;"><label>📝 Task Notice</label><textarea id="noticeEditor" rows="3" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;">${noticeSnap.val() || ''}</textarea><button class="save-btn" id="saveNoticeBtn">Save Notice</button></div>
@@ -587,9 +631,14 @@ async function loadContentManagement() {
         <div class="form-group" style="margin-top:20px;"><label>📄 About Us PDF URL</label><input type="text" id="aboutPDF" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;"><button class="save-btn" id="saveAboutBtn">Save</button></div>
         <div class="form-group" style="margin-top:20px;"><label>❓ FAQS PDF URL</label><input type="text" id="faqsPDF" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;"><button class="save-btn" id="saveFaqsBtn">Save</button></div>`;
     
-    document.getElementById('saveTermsBtn').addEventListener('click', async () => { await database.ref('settings/terms').set(document.getElementById('termsEditor').value); Swal.fire('Saved', 'Terms saved!', 'success'); });
-    document.getElementById('saveNoticeBtn').addEventListener('click', async () => { await database.ref('settings/taskNotice').set(document.getElementById('noticeEditor').value); Swal.fire('Saved', 'Notice saved!', 'success'); });
-    document.getElementById('saveCertBtn').addEventListener('click', async () => {
+    const termsBtn = document.getElementById('saveTermsBtn');
+    if (termsBtn) termsBtn.addEventListener('click', async () => { await database.ref('settings/terms').set(document.getElementById('termsEditor').value); Swal.fire('Saved', 'Terms saved!', 'success'); });
+    
+    const noticeBtn = document.getElementById('saveNoticeBtn');
+    if (noticeBtn) noticeBtn.addEventListener('click', async () => { await database.ref('settings/taskNotice').set(document.getElementById('noticeEditor').value); Swal.fire('Saved', 'Notice saved!', 'success'); });
+    
+    const certBtn = document.getElementById('saveCertBtn');
+    if (certBtn) certBtn.addEventListener('click', async () => {
         const file = document.getElementById('certImage').files[0];
         if (file) {
             const reader = new FileReader();
@@ -597,39 +646,55 @@ async function loadContentManagement() {
             reader.readAsDataURL(file);
         } else { Swal.fire('Error', 'Select a file', 'error'); }
     });
-    document.getElementById('saveAboutBtn').addEventListener('click', async () => { await database.ref('settings/aboutPDF').set(document.getElementById('aboutPDF').value); Swal.fire('Saved', 'About PDF saved!', 'success'); });
-    document.getElementById('saveFaqsBtn').addEventListener('click', async () => { await database.ref('settings/faqsPDF').set(document.getElementById('faqsPDF').value); Swal.fire('Saved', 'FAQS saved!', 'success'); });
+    
+    const aboutBtn = document.getElementById('saveAboutBtn');
+    if (aboutBtn) aboutBtn.addEventListener('click', async () => { await database.ref('settings/aboutPDF').set(document.getElementById('aboutPDF').value); Swal.fire('Saved', 'About PDF saved!', 'success'); });
+    
+    const faqsBtn = document.getElementById('saveFaqsBtn');
+    if (faqsBtn) faqsBtn.addEventListener('click', async () => { await database.ref('settings/faqsPDF').set(document.getElementById('faqsPDF').value); Swal.fire('Saved', 'FAQS saved!', 'success'); });
 }
 
 function loadVIPSettings() {
     const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     content.innerHTML = `<div class="form-group"><label>VIP 1 (%)</label><input type="number" id="vip1" value="0.5"></div>
         <div class="form-group"><label>VIP 2 (%)</label><input type="number" id="vip2" value="1"></div>
         <div class="form-group"><label>VIP 3 (%)</label><input type="number" id="vip3" value="1.5"></div>
         <div class="form-group"><label>VIP 4 (%)</label><input type="number" id="vip4" value="2"></div>
         <button class="save-btn" id="saveVipBtn">Save</button>`;
-    document.getElementById('saveVipBtn').addEventListener('click', () => Swal.fire('Saved', 'VIP settings saved!', 'success'));
+    
+    const saveBtn = document.getElementById('saveVipBtn');
+    if (saveBtn) saveBtn.addEventListener('click', () => Swal.fire('Saved', 'VIP settings saved!', 'success'));
 }
 
 async function loadServiceSettings() {
+    const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     const snap = await database.ref('settings/serviceContacts').once('value');
     const contacts = snap.val() || { whatsapp: '+1 234 567 8900', telegram: '@ClutchSupport' };
-    const content = document.getElementById('adminContent');
     content.innerHTML = `<div class="form-group"><label>📱 WhatsApp</label><input type="text" id="whatsapp" value="${contacts.whatsapp}"></div>
         <div class="form-group"><label>✈️ Telegram</label><input type="text" id="telegram" value="${contacts.telegram}"></div>
         <button class="save-btn" id="saveServiceBtn">Save</button>`;
-    document.getElementById('saveServiceBtn').addEventListener('click', async () => {
+    
+    const saveBtn = document.getElementById('saveServiceBtn');
+    if (saveBtn) saveBtn.addEventListener('click', async () => {
         await database.ref('settings/serviceContacts').set({ whatsapp: document.getElementById('whatsapp').value, telegram: document.getElementById('telegram').value });
         Swal.fire('Saved', 'Service settings saved!', 'success');
     });
 }
 
 async function loadWalletSettings() {
-    const snap = await database.ref('settings/merchantWallet').once('value');
     const content = document.getElementById('adminContent');
+    if (!content) return;
+    
+    const snap = await database.ref('settings/merchantWallet').once('value');
     content.innerHTML = `<div class="form-group"><label>🏦 Merchant Wallet Address</label><textarea id="merchantAddress" rows="3" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;">${snap.val() || ''}</textarea>
         <button class="save-btn" id="saveWalletBtn">Save</button>`;
-    document.getElementById('saveWalletBtn').addEventListener('click', async () => {
+    
+    const saveBtn = document.getElementById('saveWalletBtn');
+    if (saveBtn) saveBtn.addEventListener('click', async () => {
         await database.ref('settings/merchantWallet').set(document.getElementById('merchantAddress').value);
         Swal.fire('Saved', 'Wallet saved!', 'success');
     });
@@ -637,6 +702,8 @@ async function loadWalletSettings() {
 
 async function loadInvitationCodes() {
     const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     const today = new Date().toISOString().split('T')[0];
     const codesSnap = await database.ref('invitationCodes').once('value');
     const codes = codesSnap.val() || {};
@@ -647,12 +714,12 @@ async function loadInvitationCodes() {
         const code = codes[id];
         if (code.date === today && code.active === true) todaysCode = code;
         historyHtml += `<tr>
-            <td>${code.date}</td>
-            <td style="color:#ffd700;">${code.code}</td>
-            <td>${code.adminName}</td>
-            <td>${code.active ? 'Active' : 'Expired'}</td>
-            <td><button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate</button></td>
-        </tr>`;
+            <td>${code.date}<\/td>
+            <td style="color:#ffd700;">${code.code}<\/td>
+            <td>${code.adminName}<\/td>
+            <td>${code.active ? 'Active' : 'Expired'}<\/td>
+            <td><button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate<\/button><\/td>
+        <\/tr>`;
     }
     
     content.innerHTML = `<div style="background:rgba(255,215,0,0.1); padding:20px; border-radius:16px; margin-bottom:20px; text-align:center;">
@@ -660,10 +727,11 @@ async function loadInvitationCodes() {
             <p style="font-size:36px; font-weight:bold; color:#ffd700;">${todaysCode ? todaysCode.code : 'No code'}</p>
             <button class="save-btn" id="generateCodeBtn">Generate New Code</button>
         </div>
-        <table class="data-table"><thead><tr><th>Date</th><th>Code</th><th>Admin</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>${historyHtml || '<tr><td colspan="5">No codes</td><\/tr>'}</tbody><\/table>`;
+        <div class="table-container"><table class="data-table"><thead><tr><th>Date</th><th>Code</th><th>Admin</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${historyHtml || '<tr><td colspan="5">No codes<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
     
-    document.getElementById('generateCodeBtn').addEventListener('click', generateInvitationCode);
+    const generateBtn = document.getElementById('generateCodeBtn');
+    if (generateBtn) generateBtn.addEventListener('click', generateInvitationCode);
 }
 
 window.deactivateCode = async function(id) {
@@ -685,34 +753,42 @@ async function generateInvitationCode() {
 }
 
 function loadAdminManagement() {
+    const content = document.getElementById('adminContent');
+    if (!content) return;
+    
     if (adminType !== 'master') {
-        document.getElementById('adminContent').innerHTML = '<div style="text-align:center; padding:50px; color:#ff6666;">Access Denied</div>';
+        content.innerHTML = '<div style="text-align:center; padding:50px; color:#ff6666;">Access Denied</div>';
         return;
     }
-    const content = document.getElementById('adminContent');
+    
     content.innerHTML = `<button class="save-btn" id="createAdminBtn">+ Create Sub Admin</button>
         <div class="table-container"><table class="data-table"><thead><tr><th>Username</th><th>Email</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>`;
-    document.getElementById('createAdminBtn').addEventListener('click', createSubAdmin);
+        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
+    
+    const createBtn = document.getElementById('createAdminBtn');
+    if (createBtn) createBtn.addEventListener('click', createSubAdmin);
     loadAdminsTable();
 }
 
 async function loadAdminsTable() {
+    const tbody = document.getElementById('adminsTableBody');
+    if (!tbody) return;
+    
     const snap = await database.ref('admins/sub').once('value');
     const admins = snap.val() || {};
     let html = '';
     for (let id in admins) {
         html += `<tr>
-            <td>${admins[id].username}</td>
-            <td>${admins[id].email}</td>
-            <td>${admins[id].created ? new Date(admins[id].created).toLocaleDateString() : 'Unknown'}</td>
+            <td>${admins[id].username}<\/td>
+            <td>${admins[id].email}<\/td>
+            <td>${admins[id].created ? new Date(admins[id].created).toLocaleDateString() : 'Unknown'}<\/td>
             <td>
-                <button class="edit-btn" onclick="resetAdminPass('${id}')">Reset Password</button>
-                <button class="delete-btn" onclick="deleteAdmin('${id}')">Delete</button>
-            </td>
-        </tr>`;
+                <button class="edit-btn" onclick="resetAdminPass('${id}')">Reset Password<\/button>
+                <button class="delete-btn" onclick="deleteAdmin('${id}')">Delete<\/button>
+            <\/td>
+        <\/tr>`;
     }
-    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins</td><\/tr>';
+    tbody.innerHTML = html || '<tr><td colspan="4">No sub admins<\/td><\/tr>';
 }
 
 window.resetAdminPass = async function(id) {
