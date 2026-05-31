@@ -1,4 +1,4 @@
-// Admin Dashboard - Complete Version
+// Admin Dashboard - Complete Fixed Version
 
 let adminType = '';
 let adminId = '';
@@ -110,11 +110,11 @@ async function loadDashboardStats() {
             if (adminType === 'sub') {
                 if (users[id].assignedAdminId === adminId) {
                     userCount++;
-                    totalBalance += parseFloat(users[id].balance || 0);
+                    totalBalance += parseFloat(users[id].balance || users[id].walletBalance || 0);
                 }
             } else {
                 userCount++;
-                totalBalance += parseFloat(users[id].balance || 0);
+                totalBalance += parseFloat(users[id].balance || users[id].walletBalance || 0);
             }
         }
         
@@ -153,16 +153,24 @@ async function loadUsersTable() {
             const user = users[id];
             if (adminType === 'sub' && user.assignedAdminId !== adminId) continue;
             
-            const available = (parseFloat(user.balance || 0) - parseFloat(user.frozenAmount || 0)).toFixed(2);
+            // Handle both old and new data formats
+            const username = user.username || user.user || 'Unknown';
+            const email = user.email || user.userEmail || 'N/A';
+            const balance = user.balance || user.walletBalance || '0';
+            const frozenAmount = user.frozenAmount || '0';
+            const available = (parseFloat(balance) - parseFloat(frozenAmount)).toFixed(2);
+            const inviteCode = user.inviteCode || user.userInviteCode || 'N/A';
+            const status = user.status || 'active';
+            
             html += `<tr>
                 <td>${id.substring(0, 15)}...</td>
-                <td><strong>${user.username}</strong></td>
-                <td>${user.email || 'N/A'}</td>
-                <td style="color:#ffd700;">${user.balance || '0'} USDT</td>
-                <td style="color:#ff6666;">${user.frozenAmount || '0'} USDT</td>
+                <td><strong>${username}</strong></td>
+                <td>${email}</td>
+                <td style="color:#ffd700;">${balance} USDT</td>
+                <td style="color:#ff6666;">${frozenAmount} USDT</td>
                 <td style="color:#00ff00;">${available} USDT</td>
-                <td style="color:#ffd700;">${user.inviteCode || 'N/A'}</td>
-                <td>${user.status || 'active'}</td>
+                <td style="color:#ffd700;">${inviteCode}</td>
+                <td>${status}</td>
                 <td>
                     <button class="edit-btn" onclick="viewUserDetails('${id}')">👁️ View</button>
                     <button class="edit-btn" onclick="addFunds('${id}')">➕ Add</button>
@@ -180,30 +188,41 @@ async function loadUsersTable() {
 window.viewUserDetails = async function(userId) {
     const snap = await database.ref('users/' + userId).once('value');
     const user = snap.val();
-    const walletSnap = await database.ref('settings/merchantWallet').once('value');
-    const merchantWallet = walletSnap.val() || 'Not set';
+    
+    const username = user.username || user.user || 'Unknown';
+    const email = user.email || user.userEmail || 'Not set';
+    const phone = user.phone || user.userPhone || 'Not set';
+    const walletAddress = user.walletAddress || user.userWallet || 'Not bound';
+    const inviteCode = user.inviteCode || user.userInviteCode || 'N/A';
+    const balance = user.balance || user.walletBalance || '0';
+    const frozenAmount = user.frozenAmount || '0';
+    const available = (parseFloat(balance) - parseFloat(frozenAmount)).toFixed(2);
+    const commission = user.commission || '0';
+    const vip = user.vip || 'VIP 1';
+    const status = user.status || 'active';
+    const joinedDate = user.joinedDate || user.registeredDate || 'N/A';
+    const assignedWhatsapp = user.assignedWhatsapp || 'Default';
+    const assignedTelegram = user.assignedTelegram || 'Default';
     
     Swal.fire({
-        title: `User Details: ${user.username}`,
-        html: `
-            <div style="text-align:left;">
-                <p><strong>User ID:</strong> ${userId}</p>
-                <p><strong>Username:</strong> ${user.username}</p>
-                <p><strong>Email:</strong> ${user.email || 'Not set'}</p>
-                <p><strong>Phone:</strong> ${user.phone || 'Not set'}</p>
-                <p><strong>Wallet Address:</strong> ${user.walletAddress || 'Not bound'}</p>
-                <p><strong>Invitation Code:</strong> ${user.inviteCode || 'N/A'}</p>
-                <p><strong>Balance:</strong> ${user.balance || '0'} USDT</p>
-                <p><strong>Frozen Amount:</strong> ${user.frozenAmount || '0'} USDT</p>
-                <p><strong>Available:</strong> ${(parseFloat(user.balance || 0) - parseFloat(user.frozenAmount || 0)).toFixed(2)} USDT</p>
-                <p><strong>Commission:</strong> ${user.commission || '0'} USDT</p>
-                <p><strong>VIP Level:</strong> ${user.vip || 'VIP 1'}</p>
-                <p><strong>Status:</strong> ${user.status || 'active'}</p>
-                <p><strong>Joined:</strong> ${user.joinedDate || 'N/A'}</p>
-                <p><strong>Assigned WhatsApp:</strong> ${user.assignedWhatsapp || 'Default'}</p>
-                <p><strong>Assigned Telegram:</strong> ${user.assignedTelegram || 'Default'}</p>
-            </div>
-        `,
+        title: `User Details: ${username}`,
+        html: `<div style="text-align:left;">
+            <p><strong>User ID:</strong> ${userId}</p>
+            <p><strong>Username:</strong> ${username}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Phone:</strong> ${phone}</p>
+            <p><strong>Wallet Address:</strong> ${walletAddress}</p>
+            <p><strong>Invitation Code:</strong> ${inviteCode}</p>
+            <p><strong>Balance:</strong> ${balance} USDT</p>
+            <p><strong>Frozen Amount:</strong> ${frozenAmount} USDT</p>
+            <p><strong>Available:</strong> ${available} USDT</p>
+            <p><strong>Commission:</strong> ${commission} USDT</p>
+            <p><strong>VIP Level:</strong> ${vip}</p>
+            <p><strong>Status:</strong> ${status}</p>
+            <p><strong>Joined:</strong> ${joinedDate}</p>
+            <p><strong>Assigned WhatsApp:</strong> ${assignedWhatsapp}</p>
+            <p><strong>Assigned Telegram:</strong> ${assignedTelegram}</p>
+        </div>`,
         icon: 'info',
         confirmButtonColor: '#ffd700'
     });
@@ -219,10 +238,11 @@ window.addFunds = async function(userId) {
         confirmButtonColor: '#ffd700'
     });
     
-    if (amount && !isNaN(amount)) {
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
         const snap = await database.ref('users/' + userId).once('value');
         const user = snap.val();
-        const newBalance = (parseFloat(user.balance || 0) + parseFloat(amount)).toFixed(2);
+        const currentBalance = parseFloat(user.balance || user.walletBalance || 0);
+        const newBalance = (currentBalance + parseFloat(amount)).toFixed(2);
         await database.ref('users/' + userId).update({ balance: newBalance });
         Swal.fire('Success', `Added ${amount} USDT. New balance: ${newBalance}`, 'success');
         loadUsersTable();
@@ -240,10 +260,10 @@ window.subtractFunds = async function(userId) {
         confirmButtonColor: '#ffd700'
     });
     
-    if (amount && !isNaN(amount)) {
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
         const snap = await database.ref('users/' + userId).once('value');
         const user = snap.val();
-        const currentBalance = parseFloat(user.balance || 0);
+        const currentBalance = parseFloat(user.balance || user.walletBalance || 0);
         if (parseFloat(amount) > currentBalance) {
             Swal.fire('Error', 'Cannot subtract more than current balance', 'error');
             return;
@@ -260,7 +280,8 @@ window.freezeAmount = async function(userId) {
     const snap = await database.ref('users/' + userId).once('value');
     const user = snap.val();
     const currentFrozen = parseFloat(user.frozenAmount || 0);
-    const available = parseFloat(user.balance || 0) - currentFrozen;
+    const currentBalance = parseFloat(user.balance || user.walletBalance || 0);
+    const available = currentBalance - currentFrozen;
     
     const { value: amount } = await Swal.fire({
         title: 'Freeze Amount',
@@ -305,6 +326,8 @@ window.unfreezeAmount = async function(userId) {
         } else if (parseFloat(amount) > 0) {
             newFrozen = (currentFrozen - parseFloat(amount)).toFixed(2);
             Swal.fire('Success', `Unfrozen ${amount} USDT. Remaining frozen: ${newFrozen}`, 'success');
+        } else {
+            return;
         }
         await database.ref('users/' + userId).update({ frozenAmount: newFrozen });
         loadUsersTable();
@@ -314,9 +337,10 @@ window.unfreezeAmount = async function(userId) {
 window.assignCustomerService = async function(userId) {
     const snap = await database.ref('users/' + userId).once('value');
     const user = snap.val();
+    const username = user.username || user.user || 'User';
     
     const { value: formValues } = await Swal.fire({
-        title: `Assign Customer Service for ${user.username}`,
+        title: `Assign Customer Service for ${username}`,
         html: `
             <input id="swalWhatsapp" class="swal2-input" placeholder="WhatsApp Number" value="${user.assignedWhatsapp || ''}">
             <input id="swalTelegram" class="swal2-input" placeholder="Telegram Username" value="${user.assignedTelegram || ''}">
@@ -380,8 +404,6 @@ window.editTask = async function(taskId) {
     const snap = await database.ref('tasks/' + taskId).once('value');
     const task = snap.val();
     
-    let images = [task.image1, task.image2, task.image3];
-    
     const { value: formValues } = await Swal.fire({
         title: 'Edit Task',
         html: `
@@ -418,7 +440,6 @@ window.editTask = async function(taskId) {
             isSpecial: formValues.isSpecial
         };
         
-        // Handle image uploads (simplified - store as base64)
         for (let i = 1; i <= 3; i++) {
             const fileInput = document.getElementById(`image${i}`);
             if (fileInput && fileInput.files.length > 0) {
@@ -534,7 +555,8 @@ window.rejectWithdrawal = async function(id) {
     const w = snap.val();
     const userSnap = await database.ref('users/' + w.userId).once('value');
     const user = userSnap.val();
-    const newBalance = (parseFloat(user.balance || 0) + parseFloat(w.amount)).toFixed(2);
+    const currentBalance = parseFloat(user.balance || user.walletBalance || 0);
+    const newBalance = (currentBalance + parseFloat(w.amount)).toFixed(2);
     await database.ref('users/' + w.userId).update({ balance: newBalance });
     await database.ref('withdrawals/' + id).update({ status: 'rejected', processedDate: new Date().toISOString() });
     Swal.fire('Rejected', `Withdrawal of ${w.amount} USDT rejected. Funds returned.`, 'info');
@@ -587,7 +609,7 @@ async function manualDeposit() {
     let userId = null;
     let userData = null;
     for (let id in users) {
-        if (users[id].username === username) {
+        if (users[id].username === username || users[id].user === username) {
             userId = id;
             userData = users[id];
             break;
@@ -598,7 +620,8 @@ async function manualDeposit() {
         return;
     }
     
-    const newBalance = (parseFloat(userData.balance || 0) + parseFloat(amount)).toFixed(2);
+    const currentBalance = parseFloat(userData.balance || userData.walletBalance || 0);
+    const newBalance = (currentBalance + parseFloat(amount)).toFixed(2);
     await database.ref('users/' + userId).update({ balance: newBalance });
     await database.ref('deposits/' + Date.now()).set({
         id: 'DEP' + Date.now(),
@@ -615,13 +638,16 @@ async function manualDeposit() {
 async function loadContentManagement() {
     const termsSnap = await database.ref('settings/terms').once('value');
     const noticeSnap = await database.ref('settings/taskNotice').once('value');
+    const certSnap = await database.ref('settings/certificateImage').once('value');
+    const aboutSnap = await database.ref('settings/aboutPDF').once('value');
+    const faqsSnap = await database.ref('settings/faqsPDF').once('value');
     
     const content = document.getElementById('adminContent');
     content.innerHTML = `
         <div class="form-group"><label>📋 Terms & Conditions</label><textarea id="termsEditor" rows="10" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;">${termsSnap.val() || ''}</textarea><button class="save-btn" id="saveTermsBtn">Save Terms</button></div>
         <div class="form-group" style="margin-top:20px;"><label>📜 Certificate Image</label><input type="file" id="certImage" accept="image/*"><button class="save-btn" id="saveCertBtn" style="margin-top:10px;">Upload Certificate</button></div>
-        <div class="form-group" style="margin-top:20px;"><label>📄 About Us PDF URL</label><input type="text" id="aboutPDF" placeholder="PDF URL" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;"><button class="save-btn" id="saveAboutBtn" style="margin-top:10px;">Save About PDF</button></div>
-        <div class="form-group" style="margin-top:20px;"><label>❓ FAQS PDF URL</label><input type="text" id="faqsPDF" placeholder="PDF URL" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;"><button class="save-btn" id="saveFaqsBtn" style="margin-top:10px;">Save FAQS PDF</button></div>
+        <div class="form-group" style="margin-top:20px;"><label>📄 About Us PDF URL</label><input type="text" id="aboutPDF" placeholder="PDF URL" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;" value="${aboutSnap.val() || ''}"><button class="save-btn" id="saveAboutBtn" style="margin-top:10px;">Save About PDF</button></div>
+        <div class="form-group" style="margin-top:20px;"><label>❓ FAQS PDF URL</label><input type="text" id="faqsPDF" placeholder="PDF URL" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;" value="${faqsSnap.val() || ''}"><button class="save-btn" id="saveFaqsBtn" style="margin-top:10px;">Save FAQS PDF</button></div>
         <div class="form-group" style="margin-top:20px;"><label>📝 Task Notice</label><textarea id="noticeEditor" rows="3" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;">${noticeSnap.val() || ''}</textarea><button class="save-btn" id="saveNoticeBtn">Save Notice</button></div>
     `;
     
@@ -722,7 +748,7 @@ async function loadInvitationCodes() {
                 <td>${code.adminName}</td>
                 <td>${code.active ? '✅ Active' : '❌ Expired'}</td>
                 <td>${code.active ? `<button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate</button>` : '-'}</td>
-            </tr>`;
+            </td>`;
         }
     }
     
@@ -734,7 +760,7 @@ async function loadInvitationCodes() {
         </div>
         <h3 style="color:#ffd700;">📜 Code History</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>Date</th><th>Code</th><th>Admin</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>${historyHtml || '<tr><td colspan="5">No codes found</tr>'}</tbody></table></div>
+        <tbody>${historyHtml || '<tr><td colspan="5">No codes found</td></tr>'}</tbody></table></div>
     `;
     
     document.getElementById('generateCodeBtn').addEventListener('click', generateInvitationCode);
@@ -775,7 +801,7 @@ function loadAdminManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<button class="save-btn" id="createAdminBtn">+ Create Sub Admin</button>
         <div class="table-container"><table class="data-table"><thead><tr><th>Username</th><th>Email</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...</tr></tbody></table></div>`;
+        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>`;
     
     document.getElementById('createAdminBtn').addEventListener('click', createSubAdmin);
     loadAdminsTable();
@@ -796,7 +822,7 @@ async function loadAdminsTable() {
             </td>
         </tr>`;
     }
-    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins</tr>';
+    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins</td>';
 }
 
 window.resetAdminPass = async function(id) {
