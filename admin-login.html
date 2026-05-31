@@ -88,6 +88,7 @@
         }
         button:hover {
             transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
         }
         .error-message {
             background: rgba(255,0,0,0.1);
@@ -98,11 +99,6 @@
             margin-top: 15px;
             text-align: center;
             font-size: 13px;
-        }
-        .otp-hint {
-            font-size: 11px;
-            color: #ffd700;
-            margin-top: 5px;
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -125,14 +121,6 @@
                 <input type="password" id="adminPassword" placeholder="Enter password" required>
             </div>
             
-            <div id="otpSection" style="display: none;">
-                <div class="input-group">
-                    <label>2FA Code</label>
-                    <input type="text" id="otpCode" placeholder="Enter 6-digit code" maxlength="6">
-                    <div class="otp-hint" id="otpHint"></div>
-                </div>
-            </div>
-            
             <button type="submit">Login</button>
         </form>
         
@@ -140,6 +128,7 @@
     </div>
 
     <script>
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBwf-rkEWsNJRkh_TJeMSoNDc1iwO1c6tI",
             authDomain: "clutch-incorporated.firebaseapp.com",
@@ -158,7 +147,7 @@
         async function loadMasterAdmin() {
             const snapshot = await database.ref('admins/master').once('value');
             masterAdmin = snapshot.val();
-            console.log('Master admin:', masterAdmin);
+            console.log('Master admin loaded:', masterAdmin);
         }
         
         loadMasterAdmin();
@@ -166,92 +155,33 @@
         const loginForm = document.getElementById('adminLoginForm');
         const identifierInput = document.getElementById('adminIdentifier');
         const passwordInput = document.getElementById('adminPassword');
-        const otpSection = document.getElementById('otpSection');
-        const otpInput = document.getElementById('otpCode');
-        const otpHint = document.getElementById('otpHint');
         const messageDiv = document.getElementById('loginMessage');
-        
-        async function checkIfMaster() {
-            const identifier = identifierInput.value.trim();
-            if (masterAdmin && (identifier === masterAdmin.username || identifier === masterAdmin.email)) {
-                otpSection.style.display = 'block';
-                otpHint.textContent = 'Enter 6-digit code from Google Authenticator';
-            } else {
-                otpSection.style.display = 'none';
-                if (otpInput) otpInput.value = '';
-            }
-        }
-        
-        identifierInput.addEventListener('input', checkIfMaster);
-        passwordInput.addEventListener('input', checkIfMaster);
-        
-        // Simple TOTP verification that works with Google Authenticator
-        function verifyTOTP(secret, token) {
-            if (token === '123456') return false;
-            if (!secret || secret === 'TEST123456') return false;
-            
-            // Convert base32 secret to bytes (simplified)
-            const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-            let bits = '';
-            for (let i = 0; i < secret.length; i++) {
-                const val = base32chars.indexOf(secret[i]);
-                if (val === -1) continue;
-                bits += val.toString(2).padStart(5, '0');
-            }
-            
-            // Get current time window (30 seconds)
-            const epoch = Math.floor(Date.now() / 1000);
-            const timeWindow = Math.floor(epoch / 30);
-            
-            // Simple hash function
-            let hash = 0;
-            for (let i = 0; i < bits.length; i++) {
-                hash = ((hash << 5) - hash) + bits.charCodeAt(i);
-                hash |= 0;
-            }
-            
-            // Generate code
-            const code = (Math.abs(hash + timeWindow) % 1000000).toString().padStart(6, '0');
-            
-            // Check current and adjacent windows
-            return code === token;
-        }
         
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const identifier = identifierInput.value.trim();
             const password = passwordInput.value;
-            const otpCode = otpInput ? otpInput.value : '';
             
             messageDiv.innerHTML = '';
             
             try {
+                // Check Master Admin (No 2FA)
                 if (masterAdmin && (identifier === masterAdmin.username || identifier === masterAdmin.email)) {
                     if (password !== masterAdmin.password) {
                         messageDiv.innerHTML = '<div class="error-message">Invalid password</div>';
                         return;
                     }
                     
-                    if (!otpCode || otpCode.length !== 6) {
-                        messageDiv.innerHTML = '<div class="error-message">Enter 6-digit 2FA code</div>';
-                        return;
-                    }
-                    
-                    const isValid = verifyTOTP(masterAdmin.twoFASecret, otpCode);
-                    
-                    if (isValid) {
-                        localStorage.setItem('isAdminLoggedIn', 'true');
-                        localStorage.setItem('adminType', 'master');
-                        localStorage.setItem('adminUsername', masterAdmin.username);
-                        localStorage.setItem('adminId', 'master');
-                        window.location.href = 'admin-dashboard.html';
-                    } else {
-                        messageDiv.innerHTML = '<div class="error-message">Invalid 2FA code. Use Google Authenticator.</div>';
-                    }
+                    localStorage.setItem('isAdminLoggedIn', 'true');
+                    localStorage.setItem('adminType', 'master');
+                    localStorage.setItem('adminUsername', masterAdmin.username);
+                    localStorage.setItem('adminId', 'master');
+                    window.location.href = 'admin-dashboard.html';
                     return;
                 }
                 
+                // Check Sub Admins
                 const subSnapshot = await database.ref('admins/sub').once('value');
                 const subAdmins = subSnapshot.val() || {};
                 
@@ -271,7 +201,7 @@
                 
             } catch (error) {
                 console.error('Login error:', error);
-                messageDiv.innerHTML = '<div class="error-message">Database error</div>';
+                messageDiv.innerHTML = '<div class="error-message">Database error: ' + error.message + '</div>';
             }
         });
     </script>
