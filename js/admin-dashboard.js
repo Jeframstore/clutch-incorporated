@@ -110,6 +110,7 @@ async function loadUserManagement() {
     content.innerHTML = `
         <div style="margin-bottom:20px;">
             <button class="save-btn" id="addUserBtn">+ Add New User</button>
+            <button class="edit-btn" id="refreshUsersBtn" style="margin-left:10px;">🔄 Refresh</button>
         </div>
         <div class="table-container">
             <table class="data-table">
@@ -119,13 +120,14 @@ async function loadUserManagement() {
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                    <tr><td colspan="7" style="text-align:center">Loading users...</td</tr>
+                    <td><td colspan="7" style="text-align:center">Loading users...</td</tr>
                 </tbody>
             </table>
         </div>
     `;
     
     document.getElementById('addUserBtn').addEventListener('click', addNewUser);
+    document.getElementById('refreshUsersBtn').addEventListener('click', loadUsersTable);
     await loadUsersTable();
 }
 
@@ -137,20 +139,22 @@ async function loadUsersTable() {
         const tbody = document.getElementById('usersTableBody');
         tbody.innerHTML = '';
         
+        console.log("Loading users from Firebase:", users);
+        
         for (let id in users) {
             const user = users[id];
             const row = `
                 <tr>
-                    <td>${id.substring(0, 15)}...</td>
-                    <td>${user.username || 'N/A'}</td>
-                    <td>${user.email || 'N/A'}</td>
-                    <td>${user.balance || '0'} USDT</td>
-                    <td style="color:#ffd700;">${user.inviteCode || 'N/A'}</td>
-                    <td>${user.status || 'active'}</td>
+                    <td>${id.substring(0, 20)}...</td
+                    <td>${user.username || 'N/A'}</td
+                    <td>${user.email || 'N/A'}</td
+                    <td>${user.balance || '0'} USDT</td
+                    <td style="color:#ffd700;">${user.inviteCode || 'N/A'}</td
+                    <td>${user.status || 'active'}</td
                     <td>
                         <button class="edit-btn" onclick="editUserBalance('${id}')">Edit Balance</button>
                         <button class="edit-btn" onclick="viewUserDetails('${id}')">View</button>
-                     </td>
+                      </td
                 </tr>
             `;
             tbody.innerHTML += row;
@@ -484,7 +488,6 @@ async function generateInvitationCode() {
     }
 }
 
-// Admin Management (Master Admin Only)
 function loadAdminManagement() {
     if (adminType !== 'master') {
         document.getElementById('adminContent').innerHTML = `
