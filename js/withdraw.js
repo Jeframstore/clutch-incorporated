@@ -1,127 +1,102 @@
-// Withdraw Page - Original Working Version
+// Withdraw Page - Firebase Version
 
-document.addEventListener('DOMContentLoaded', function() {
+let userId = null;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    userId = localStorage.getItem('userId');
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
         return;
     }
     
-    loadBalance();
+    await loadBalance();
     
     const backBtn = document.getElementById('backBtn');
-    if (backBtn) {
-        backBtn.addEventListener('click', function() {
-            window.location.href = 'dashboard.html';
-        });
-    }
+    if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'dashboard.html');
     
     const submitBtn = document.getElementById('submitWithdrawBtn');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', submitWithdrawRequest);
-    }
+    if (submitBtn) submitBtn.addEventListener('click', submitWithdraw);
 });
 
-function loadBalance() {
-    let balance = localStorage.getItem('walletBalance');
-    if (!balance) {
-        balance = '0.00';
-        localStorage.setItem('walletBalance', balance);
-    }
-    
-    const balanceElement = document.getElementById('withdrawBalance');
-    if (balanceElement) {
-        balanceElement.textContent = parseFloat(balance).toFixed(2) + ' USDT';
+async function loadBalance() {
+    try {
+        const snapshot = await database.ref('users/' + userId).once('value');
+        const user = snapshot.val();
+        const balance = parseFloat(user?.balance || 0).toFixed(2);
+        document.getElementById('withdrawBalance').textContent = balance + ' USDT';
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('withdrawBalance').textContent = '0.00 USDT';
     }
 }
 
-function submitWithdrawRequest() {
+async function submitWithdraw() {
     const amount = document.getElementById('withdrawAmount').value;
-    let balance = parseFloat(localStorage.getItem('walletBalance') || 0);
-    
     removeMessages();
     
-    if (!amount || amount <= 0) {
-        showError('Please enter a valid amount');
-        return;
+    if (!amount || amount <= 0) { showError('Enter valid amount'); return; }
+    if (amount < 10) { showError('Minimum 10 USDT'); return; }
+    
+    try {
+        const snapshot = await database.ref('users/' + userId).once('value');
+        const user = snapshot.val();
+        const balance = parseFloat(user?.balance || 0);
+        
+        if (parseFloat(amount) > balance) {
+            showError('Insufficient balance. Balance: ' + balance.toFixed(2) + ' USDT');
+            return;
+        }
+        
+        const withdrawId = 'WD' + Date.now();
+        const withdrawData = {
+            id: withdrawId,
+            userId: userId,
+            username: user.username,
+            amount: parseFloat(amount),
+            status: 'pending',
+            requestDate: new Date().toISOString()
+        };
+        
+        await database.ref('withdrawals/' + withdrawId).set(withdrawData);
+        showSuccess('Withdrawal request submitted! Amount: ' + amount + ' USDT');
+        document.getElementById('withdrawAmount').value = '';
+        await loadBalance();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Database error. Try again.');
     }
-    
-    if (amount < 10) {
-        showError('Minimum withdrawal is 10 USDT');
-        return;
-    }
-    
-    if (amount > balance) {
-        showError('Insufficient balance. Your balance is ' + balance.toFixed(2) + ' USDT');
-        return;
-    }
-    
-    const withdrawalRequest = {
-        id: 'WD' + Date.now(),
-        amount: parseFloat(amount),
-        status: 'pending',
-        requestDate: new Date().toISOString(),
-        username: localStorage.getItem('username') || 'User'
-    };
-    
-    let pendingRequests = localStorage.getItem('pendingWithdrawals');
-    if (pendingRequests) {
-        pendingRequests = JSON.parse(pendingRequests);
-    } else {
-        pendingRequests = [];
-    }
-    
-    pendingRequests.push(withdrawalRequest);
-    localStorage.setItem('pendingWithdrawals', JSON.stringify(pendingRequests));
-    
-    showSuccess('Withdrawal request submitted! Amount: ' + amount + ' USDT');
-    
-    document.getElementById('withdrawAmount').value = '';
 }
 
-function showError(message) {
+function showError(msg) {
     const form = document.querySelector('.withdraw-form');
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    form.insertAdjacentElement('beforebegin', errorDiv);
-    
-    setTimeout(function() {
-        const msg = document.querySelector('.error-message');
-        if (msg) msg.remove();
-    }, 5000);
+    const div = document.createElement('div');
+    div.className = 'error-message';
+    div.textContent = msg;
+    form.insertAdjacentElement('beforebegin', div);
+    setTimeout(() => div.remove(), 5000);
 }
 
-function showSuccess(message) {
+function showSuccess(msg) {
     const form = document.querySelector('.withdraw-form');
-    const successDiv = document.createElement('div');
-    successDiv.className = 'success-message';
-    successDiv.textContent = message;
-    form.insertAdjacentElement('beforebegin', successDiv);
-    
-    setTimeout(function() {
-        const msg = document.querySelector('.success-message');
-        if (msg) msg.remove();
-    }, 5000);
+    const div = document.createElement('div');
+    div.className = 'success-message';
+    div.textContent = msg;
+    form.insertAdjacentElement('beforebegin', div);
+    setTimeout(() => div.remove(), 5000);
 }
 
 function removeMessages() {
-    const errorMsg = document.querySelector('.error-message');
-    const successMsg = document.querySelector('.success-message');
-    if (errorMsg) errorMsg.remove();
-    if (successMsg) successMsg.remove();
+    document.querySelectorAll('.error-message, .success-message').forEach(el => el.remove());
 }
 
-document.querySelectorAll('.nav-btn').forEach(function(button) {
-    button.addEventListener('click', function() {
-        const page = button.getAttribute('data-page');
-        
-        if (page === 'home') {
-            window.location.href = 'dashboard.html';
-        } else if (page === 'starting') {
-            window.location.href = 'starting.html';
-        } else if (page === 'records') {
-            window.location.href = 'records.html';
-        }
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const page = this.getAttribute('data-page');
+        if (page === 'home') window.location.href = 'dashboard.html';
+        if (page === 'starting') window.location.href = 'starting.html';
+        if (page === 'records') window.location.href = 'records.html';
     });
 });

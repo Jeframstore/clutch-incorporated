@@ -1,81 +1,58 @@
-// Profile Page - Original Working Version
+// Profile Page - Firebase Version
 
-document.addEventListener('DOMContentLoaded', function() {
+let userId = null;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    userId = localStorage.getItem('userId');
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
         return;
     }
     
-    const username = localStorage.getItem('username') || 'Jefram';
-    const inviteCode = localStorage.getItem('userInviteCode') || 'A4832E73';
-    
-    document.getElementById('profileUserName').textContent = username;
-    document.getElementById('inviteCode').textContent = inviteCode;
-    
-    let balance = localStorage.getItem('walletBalance');
-    if (!balance) {
-        balance = '0.00';
-        localStorage.setItem('walletBalance', balance);
-    }
-    document.getElementById('profileBalance').textContent = parseFloat(balance).toFixed(2) + ' USDT';
-    
-    let profits = localStorage.getItem('commission');
-    if (!profits) {
-        profits = '0.00';
-        localStorage.setItem('commission', profits);
-    }
-    document.getElementById('profileProfits').textContent = parseFloat(profits).toFixed(2) + ' USDT';
+    await loadProfile();
     
     const backBtn = document.getElementById('backBtn');
-    if (backBtn) {
-        backBtn.addEventListener('click', function() {
-            window.location.href = 'dashboard.html';
-        });
-    }
+    if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'dashboard.html');
     
-    document.getElementById('depositBtn').addEventListener('click', function() {
-        window.location.href = 'deposit.html';
-    });
-    
-    document.getElementById('withdrawBtn').addEventListener('click', function() {
-        window.location.href = 'withdraw.html';
-    });
-    
-    document.getElementById('changePasswordBtn').addEventListener('click', function() {
-        window.location.href = 'change-password.html';
-    });
-    
-    document.getElementById('bindWalletBtn').addEventListener('click', function() {
-        window.location.href = 'bind-wallet.html';
-    });
-    
-    document.getElementById('contactUsBtn').addEventListener('click', function() {
-        window.location.href = 'service.html';
-    });
-    
-    document.getElementById('logoutBtn').addEventListener('click', function() {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('username');
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userInviteCode');
-        localStorage.removeItem('walletBalance');
-        localStorage.removeItem('commission');
+    document.getElementById('depositBtn').addEventListener('click', () => window.location.href = 'deposit.html');
+    document.getElementById('withdrawBtn').addEventListener('click', () => window.location.href = 'withdraw.html');
+    document.getElementById('changePasswordBtn').addEventListener('click', () => window.location.href = 'change-password.html');
+    document.getElementById('bindWalletBtn').addEventListener('click', () => window.location.href = 'bind-wallet.html');
+    document.getElementById('contactUsBtn').addEventListener('click', () => window.location.href = 'service.html');
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.clear();
         window.location.href = 'index.html';
     });
 });
 
-document.querySelectorAll('.nav-btn').forEach(function(button) {
-    button.addEventListener('click', function() {
-        const page = button.getAttribute('data-page');
+async function loadProfile() {
+    try {
+        const snapshot = await database.ref('users/' + userId).once('value');
+        const user = snapshot.val();
         
-        if (page === 'home') {
-            window.location.href = 'dashboard.html';
-        } else if (page === 'starting') {
-            window.location.href = 'starting.html';
-        } else if (page === 'records') {
-            window.location.href = 'records.html';
+        if (user) {
+            document.getElementById('profileUserName').textContent = user.username;
+            document.getElementById('inviteCode').textContent = user.inviteCode || 'N/A';
+            document.getElementById('profileBalance').textContent = parseFloat(user.balance || 0).toFixed(2) + ' USDT';
+            document.getElementById('profileProfits').textContent = parseFloat(user.commission || 0).toFixed(2) + ' USDT';
+            document.getElementById('creditScore').textContent = '97%';
+            
+            localStorage.setItem('userInviteCode', user.inviteCode);
+            localStorage.setItem('walletBalance', user.balance);
+            localStorage.setItem('commission', user.commission);
         }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const page = this.getAttribute('data-page');
+        if (page === 'home') window.location.href = 'dashboard.html';
+        if (page === 'starting') window.location.href = 'starting.html';
+        if (page === 'records') window.location.href = 'records.html';
     });
 });

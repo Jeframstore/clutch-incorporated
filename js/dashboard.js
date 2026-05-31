@@ -1,7 +1,8 @@
-// Dashboard - Original Working Version
+// Dashboard - Firebase Version
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const userId = localStorage.getItem('userId');
     const username = localStorage.getItem('username');
     
     if (!isLoggedIn || isLoggedIn !== 'true') {
@@ -9,138 +10,69 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    const usernameDisplay = document.getElementById('usernameDisplay');
-    if (usernameDisplay) {
-        usernameDisplay.textContent = username || 'Collins';
+    document.getElementById('usernameDisplay').textContent = username || 'User';
+    
+    if (userId) {
+        await loadUserData(userId);
     }
     
-    const savedMessage = localStorage.getItem('welcomeMessage');
-    const marqueeElement = document.getElementById('welcomeMarquee');
-    if (savedMessage && marqueeElement) {
-        marqueeElement.textContent = savedMessage;
-    }
-    
-    let signInCount = localStorage.getItem('signInCount');
-    if (signInCount === null) {
-        signInCount = 0;
-        localStorage.setItem('signInCount', signInCount);
-    }
-    
-    const lastSignIn = localStorage.getItem('lastSignIn');
-    const today = new Date().toDateString();
-    
-    if (lastSignIn !== today) {
-        signInCount = parseInt(signInCount) + 1;
-        localStorage.setItem('signInCount', signInCount);
-        localStorage.setItem('lastSignIn', today);
-        updateSignInDisplay(signInCount);
-        
-        const reward = getRewardForDay(signInCount);
-        if (reward > 0) {
-            setTimeout(function() {
-                alert('Daily sign-in reward: +' + reward + ' USDT!');
-            }, 500);
-        }
-    } else {
-        updateSignInDisplay(signInCount);
-    }
-    
+    // Profile Menu
     const profileIcon = document.getElementById('profileIconBtn');
     const profileMenu = document.getElementById('profileMenu');
     
     if (profileIcon && profileMenu) {
-        profileIcon.addEventListener('click', function(e) {
+        profileIcon.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (profileMenu.style.display === 'none') {
-                profileMenu.style.display = 'block';
-            } else {
-                profileMenu.style.display = 'none';
-            }
+            profileMenu.style.display = profileMenu.style.display === 'none' ? 'block' : 'none';
         });
         
-        document.addEventListener('click', function() {
-            profileMenu.style.display = 'none';
+        document.addEventListener('click', () => { profileMenu.style.display = 'none'; });
+        
+        document.getElementById('profileMenuItem').addEventListener('click', () => {
+            window.location.href = 'profile.html';
         });
         
-        const profileMenuItem = document.getElementById('profileMenuItem');
-        const logoutMenuItem = document.getElementById('logoutMenuItem');
-        
-        if (profileMenuItem) {
-            profileMenuItem.addEventListener('click', function() {
-                window.location.href = 'profile.html';
-            });
-        }
-        
-        if (logoutMenuItem) {
-            logoutMenuItem.addEventListener('click', function() {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('username');
-                window.location.href = 'index.html';
-            });
-        }
-    }
-});
-
-function getRewardForDay(day) {
-    const rewards = {
-        1: 300, 2: 150, 3: 500, 4: 1000, 5: 50,
-        6: 300, 7: 300, 8: 0, 9: 0, 10: 0,
-        11: 0, 12: 0, 13: 0, 14: 0, 15: 0
-    };
-    
-    if (day <= 15) {
-        return rewards[day] || 0;
-    } else {
-        localStorage.setItem('signInCount', 0);
-        return 0;
-    }
-}
-
-function updateSignInDisplay(count) {
-    const counterElement = document.querySelector('.signin-counter');
-    if (counterElement) {
-        counterElement.textContent = `SIGN IN NOW (${count}/15)`;
+        document.getElementById('logoutMenuItem').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        });
     }
     
-    if (count >= 15) {
-        setTimeout(function() {
-            alert('Congratulations! You completed 15 days of continuous sign in!');
-        }, 500);
-    }
-}
-
-document.querySelectorAll('.menu-btn').forEach(function(button) {
-    button.addEventListener('click', function() {
-        const page = this.getAttribute('data-page');
-        
-        switch(page) {
-            case 'service': window.location.href = 'service.html'; break;
-            case 'withdraw': window.location.href = 'withdraw.html'; break;
-            case 'deposit': window.location.href = 'deposit.html'; break;
-            case 'terms': window.location.href = 'terms.html'; break;
-            case 'certificate': window.location.href = 'certificate.html'; break;
-            case 'faqs': window.location.href = 'faqs.html'; break;
-            case 'about': window.location.href = 'about.html'; break;
-            default: break;
-        }
+    // Menu buttons
+    document.querySelectorAll('.menu-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const page = this.getAttribute('data-page');
+            if (page === 'service') window.location.href = 'service.html';
+            if (page === 'withdraw') window.location.href = 'withdraw.html';
+            if (page === 'deposit') window.location.href = 'deposit.html';
+            if (page === 'terms') window.location.href = 'terms.html';
+            if (page === 'certificate') window.location.href = 'certificate.html';
+            if (page === 'faqs') window.location.href = 'faqs.html';
+            if (page === 'about') window.location.href = 'about.html';
+        });
+    });
+    
+    // Bottom nav
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const page = this.getAttribute('data-page');
+            if (page === 'starting') window.location.href = 'starting.html';
+            if (page === 'records') window.location.href = 'records.html';
+        });
     });
 });
 
-document.querySelectorAll('.nav-btn').forEach(function(button) {
-    button.addEventListener('click', function() {
-        document.querySelectorAll('.nav-btn').forEach(function(btn) {
-            btn.classList.remove('active');
-        });
-        this.classList.add('active');
-        
-        const page = this.getAttribute('data-page');
-        
-        if (page === 'home') {
-            // Already on home
-        } else if (page === 'starting') {
-            window.location.href = 'starting.html';
-        } else if (page === 'records') {
-            window.location.href = 'records.html';
+async function loadUserData(userId) {
+    try {
+        const snapshot = await database.ref('users/' + userId).once('value');
+        const user = snapshot.val();
+        if (user) {
+            localStorage.setItem('walletBalance', user.balance || '0');
+            localStorage.setItem('commission', user.commission || '0');
         }
-    });
-});
+    } catch (error) {
+        console.error('Error loading user data:', error);
+    }
+}

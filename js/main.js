@@ -1,74 +1,88 @@
-// Login Page - Original Working Version
+// Login Page - Firebase Version
 
-document.addEventListener('DOMContentLoaded', function() {
+if (document.getElementById('loginForm')) {
     const loginForm = document.getElementById('loginForm');
     
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const identifier = document.getElementById('loginIdentifier').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        
+        removeMessages();
+        
+        try {
+            // Check Master Admin
+            const masterSnapshot = await database.ref('admins/master').once('value');
+            const master = masterSnapshot.val();
             
-            const identifier = document.getElementById('loginIdentifier').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            removeMessages();
-            
-            // Get registered users
-            let users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-            
-            // Check admin
-            const masterAdmin = { username: 'master', email: 'admin@clutch.com', password: 'Master@2024' };
-            const subAdmins = JSON.parse(localStorage.getItem('adminUsers') || '[]');
-            
-            // Check master admin
-            if ((identifier === masterAdmin.username || identifier === masterAdmin.email) && password === masterAdmin.password) {
+            if (master && (identifier === master.username || identifier === master.email) && password === master.password) {
                 localStorage.setItem('isAdminLoggedIn', 'true');
                 localStorage.setItem('adminType', 'master');
-                localStorage.setItem('adminUsername', masterAdmin.username);
+                localStorage.setItem('adminUsername', master.username);
+                localStorage.setItem('adminId', 'master');
                 window.location.href = 'admin-dashboard.html';
                 return;
             }
             
-            // Check sub admins
-            const subAdmin = subAdmins.find(function(a) {
-                return (a.username === identifier || a.email === identifier) && a.password === password;
-            });
-            
-            if (subAdmin) {
-                localStorage.setItem('isAdminLoggedIn', 'true');
-                localStorage.setItem('adminType', 'sub');
-                localStorage.setItem('adminUsername', subAdmin.username);
-                window.location.href = 'admin-dashboard.html';
-                return;
+            // Check Sub Admins
+            const subSnapshot = await database.ref('admins/sub').once('value');
+            const subs = subSnapshot.val() || {};
+            for (let id in subs) {
+                const admin = subs[id];
+                if ((admin.username === identifier || admin.email === identifier) && admin.password === password) {
+                    localStorage.setItem('isAdminLoggedIn', 'true');
+                    localStorage.setItem('adminType', 'sub');
+                    localStorage.setItem('adminUsername', admin.username);
+                    localStorage.setItem('adminId', id);
+                    window.location.href = 'admin-dashboard.html';
+                    return;
+                }
             }
             
-            // Check regular users
-            const user = users.find(function(u) {
-                return (u.username === identifier || u.email === identifier) && u.password === password;
-            });
+            // Check Regular Users
+            const usersSnapshot = await database.ref('users').once('value');
+            const users = usersSnapshot.val() || {};
+            let foundUser = null;
+            let foundUserId = null;
             
-            if (user) {
+            for (let id in users) {
+                const user = users[id];
+                if ((user.username === identifier || user.email === identifier) && user.password === password) {
+                    foundUser = user;
+                    foundUserId = id;
+                    break;
+                }
+            }
+            
+            if (foundUser) {
                 localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('username', user.username);
-                localStorage.setItem('userEmail', user.email);
-                localStorage.setItem('userId', user.id);
-                localStorage.setItem('userInviteCode', user.inviteCode);
-                localStorage.setItem('walletBalance', user.balance);
-                localStorage.setItem('commission', user.commission);
+                localStorage.setItem('username', foundUser.username);
+                localStorage.setItem('userEmail', foundUser.email);
+                localStorage.setItem('userId', foundUserId);
+                localStorage.setItem('userInviteCode', foundUser.inviteCode || '');
+                localStorage.setItem('walletBalance', foundUser.balance || '0');
+                localStorage.setItem('commission', foundUser.commission || '0');
                 window.location.href = 'dashboard.html';
             } else {
                 showError('Invalid username/email or password');
                 document.getElementById('loginPassword').value = '';
             }
-        });
-    }
-});
+        } catch (error) {
+            console.error('Login error:', error);
+            showError('Database error. Please try again.');
+        }
+    });
+}
 
 function showError(message) {
     const loginCard = document.querySelector('.login-card');
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    loginCard.appendChild(errorDiv);
+    if (loginCard) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        loginCard.appendChild(errorDiv);
+    }
 }
 
 function removeMessages() {

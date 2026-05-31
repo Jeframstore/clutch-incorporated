@@ -1,9 +1,9 @@
-// Registration Page - Original Working Version
+// Registration Page - Firebase Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const registerForm = document.getElementById('registerForm');
     
-    registerForm.addEventListener('submit', function(e) {
+    registerForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const inviteCode = document.getElementById('regInviteCode').value.trim().toUpperCase();
@@ -14,109 +14,94 @@ document.addEventListener('DOMContentLoaded', function() {
         
         removeMessages();
         
-        if (!inviteCode) {
-            showError('Invitation code is required');
-            return;
+        if (!inviteCode) { showError('Invitation code required'); return; }
+        if (!username || username.length < 3) { showError('Username must be 3+ characters'); return; }
+        if (!email || !email.includes('@')) { showError('Valid email required'); return; }
+        if (!password || password.length < 4) { showError('Password must be 4+ characters'); return; }
+        if (password !== confirmPassword) { showError('Passwords do not match'); return; }
+        
+        try {
+            // Check invitation code
+            const today = new Date().toISOString().split('T')[0];
+            const codesSnapshot = await database.ref('invitationCodes').once('value');
+            const codes = codesSnapshot.val() || {};
+            
+            let validCode = null;
+            for (let id in codes) {
+                const code = codes[id];
+                if (code.code === inviteCode && code.date === today && code.active === true) {
+                    validCode = code;
+                    break;
+                }
+            }
+            
+            if (!validCode) {
+                showError('Invalid or expired invitation code');
+                return;
+            }
+            
+            // Check if user exists
+            const usersSnapshot = await database.ref('users').once('value');
+            const users = usersSnapshot.val() || {};
+            for (let id in users) {
+                if (users[id].username === username || users[id].email === email) {
+                    showError('Username or email already exists');
+                    return;
+                }
+            }
+            
+            // Create new user
+            const userId = 'UID' + Date.now();
+            const newUser = {
+                username: username,
+                email: email,
+                password: password,
+                inviteCode: inviteCode,
+                assignedAdminId: validCode.adminId || 'master',
+                assignedAdminName: validCode.adminName || 'master',
+                balance: '0.00',
+                commission: '0.00',
+                frozenAmount: '0',
+                vip: 'VIP 1',
+                status: 'active',
+                joinedDate: today,
+                invitedBy: validCode.adminName || 'master',
+                phone: '',
+                walletAddress: '',
+                withdrawPassword: '',
+                signInCount: 0,
+                lastSignIn: ''
+            };
+            
+            await database.ref('users/' + userId).set(newUser);
+            
+            showSuccess('Registration successful! Please login.');
+            setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+            
+        } catch (error) {
+            console.error('Registration error:', error);
+            showError('Database error: ' + error.message);
         }
-        
-        if (!username || username.length < 3) {
-            showError('Username must be at least 3 characters');
-            return;
-        }
-        
-        if (!email || !email.includes('@')) {
-            showError('Please enter a valid email address');
-            return;
-        }
-        
-        if (!password || password.length < 4) {
-            showError('Password must be at least 4 characters');
-            return;
-        }
-        
-        if (password !== confirmPassword) {
-            showError('Passwords do not match');
-            return;
-        }
-        
-        // Check invitation code
-        const today = new Date().toISOString().split('T')[0];
-        const validCodes = JSON.parse(localStorage.getItem('dailyInvitationCodes') || '[]');
-        const isValidCode = validCodes.find(function(c) {
-            return c.code === inviteCode && c.date === today && c.active === true;
-        });
-        
-        if (!isValidCode) {
-            showError('Invalid or expired invitation code. Please contact your admin.');
-            return;
-        }
-        
-        // Get existing users
-        let users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        
-        // Check if username or email already exists
-        const userExists = users.find(function(u) {
-            return u.username === username || u.email === email;
-        });
-        
-        if (userExists) {
-            showError('Username or email already exists');
-            return;
-        }
-        
-        // Create new user
-        const newUser = {
-            id: 'UID' + Date.now(),
-            username: username,
-            email: email,
-            password: password,
-            inviteCode: inviteCode,
-            assignedAdminId: isValidCode.adminId,
-            assignedAdminName: isValidCode.adminName,
-            balance: '0.00',
-            commission: '0.00',
-            frozenAmount: '0',
-            vip: 'VIP 1',
-            status: 'active',
-            joinedDate: today,
-            invitedBy: isValidCode.adminName,
-            phone: '',
-            walletAddress: '',
-            withdrawPassword: '',
-            signInCount: 0,
-            lastSignIn: ''
-        };
-        
-        users.push(newUser);
-        localStorage.setItem('registeredUsers', JSON.stringify(users));
-        
-        showSuccess('Registration successful! Please login.');
-        
-        setTimeout(function() {
-            window.location.href = 'index.html';
-        }, 2000);
     });
 });
 
-function showError(message) {
+function showError(msg) {
     const form = document.getElementById('registerForm');
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    form.appendChild(errorDiv);
+    const div = document.createElement('div');
+    div.className = 'error-message';
+    div.textContent = msg;
+    form.appendChild(div);
 }
 
-function showSuccess(message) {
+function showSuccess(msg) {
     const form = document.getElementById('registerForm');
-    const successDiv = document.createElement('div');
-    successDiv.className = 'success-message';
-    successDiv.textContent = message;
-    form.appendChild(successDiv);
+    const div = document.createElement('div');
+    div.className = 'success-message';
+    div.textContent = msg;
+    form.appendChild(div);
 }
 
 function removeMessages() {
-    const errors = document.querySelectorAll('.error-message, .success-message');
-    errors.forEach(function(el) {
-        el.remove();
-    });
+    const msgs = document.querySelectorAll('.error-message, .success-message');
+    msgs.forEach(el => el.remove());
 }

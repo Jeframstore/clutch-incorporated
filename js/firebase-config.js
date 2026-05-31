@@ -1,4 +1,4 @@
-// Firebase Configuration
+// Firebase Configuration - Working Version
 const firebaseConfig = {
   apiKey: "AIzaSyBwf-rkEWsNJRkh_TJeMSoNDc1iwO1c6tI",
   authDomain: "clutch-incorporated.firebaseapp.com",
