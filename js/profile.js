@@ -1,4 +1,4 @@
-// Profile Page - Firebase Version
+// Profile Page - Firebase Only (No localStorage cache)
 
 let userId = null;
 
@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
     
+    // Show loading state immediately
+    document.getElementById('profileUserName').textContent = 'Loading...';
+    document.getElementById('inviteCode').textContent = 'Loading...';
+    document.getElementById('profileBalance').textContent = 'Loading...';
+    document.getElementById('profileProfits').textContent = 'Loading...';
+    
+    // Load from Firebase only
     await loadProfile();
     
     const backBtn = document.getElementById('backBtn');
@@ -33,18 +40,29 @@ async function loadProfile() {
         const user = snapshot.val();
         
         if (user) {
-            document.getElementById('profileUserName').textContent = user.username;
+            // Update display with Firebase data
+            document.getElementById('profileUserName').textContent = user.username + ' - VIP 1';
             document.getElementById('inviteCode').textContent = user.inviteCode || 'N/A';
             document.getElementById('profileBalance').textContent = parseFloat(user.balance || 0).toFixed(2) + ' USDT';
             document.getElementById('profileProfits').textContent = parseFloat(user.commission || 0).toFixed(2) + ' USDT';
             document.getElementById('creditScore').textContent = '97%';
             
+            // Update localStorage to match Firebase (for other pages)
+            localStorage.setItem('username', user.username);
             localStorage.setItem('userInviteCode', user.inviteCode);
             localStorage.setItem('walletBalance', user.balance);
             localStorage.setItem('commission', user.commission);
+        } else {
+            console.error('User not found');
+            document.getElementById('profileUserName').textContent = 'Error';
+            document.getElementById('inviteCode').textContent = 'Error';
         }
     } catch (error) {
         console.error('Error loading profile:', error);
+        document.getElementById('profileUserName').textContent = 'Error loading data';
+        document.getElementById('inviteCode').textContent = 'Error';
+        document.getElementById('profileBalance').textContent = '0.00 USDT';
+        document.getElementById('profileProfits').textContent = '0.00 USDT';
     }
 }
 
