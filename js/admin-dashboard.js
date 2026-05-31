@@ -1,4 +1,4 @@
-// Admin Dashboard - Simplified Working Version
+// Admin Dashboard - COMPLETE VERSION with ALL Features
 
 let adminType = '';
 let adminId = '';
@@ -99,14 +99,28 @@ async function loadDashboardStats() {
         }
         document.getElementById('totalUsers').textContent = userCount;
         document.getElementById('totalBalance').textContent = totalBalance.toFixed(2) + ' USDT';
+        
+        const withdrawalsSnap = await database.ref('withdrawals').once('value');
+        const withdrawals = withdrawalsSnap.val() || {};
+        let pending = 0;
+        for (let id in withdrawals) if (withdrawals[id].status === 'pending') pending++;
+        document.getElementById('pendingWithdrawals').textContent = pending;
+        
+        const tasksSnap = await database.ref('tasks').once('value');
+        const tasks = tasksSnap.val() || {};
+        document.getElementById('totalTasks').textContent = Object.keys(tasks).length;
     } catch(e) { console.error(e); }
 }
+
+// ============ USER MANAGEMENT ============
 
 async function loadUserManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="refreshUsersBtn">🔄 Refresh Users</button></div>
-        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="usersTableBody"></td><td colspan="6">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
+        <div class="table-container"><table class="data-table"><thead>
+            <tr><th>ID</th><th>Username</th><th>Email</th><th>Balance</th><th>Frozen</th><th>Available</th><th>Invite Code</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="usersTableBody"><tr><td colspan="9">Loading...</td></tr></tbody></table></div>`;
     
     document.getElementById('refreshUsersBtn').addEventListener('click', () => loadUsersTable());
     await loadUsersTable();
@@ -120,71 +134,182 @@ async function loadUsersTable() {
         
         for (let id in users) {
             const user = users[id];
+            const balance = parseFloat(user.balance || 0).toFixed(2);
+            const frozen = parseFloat(user.frozenAmount || 0).toFixed(2);
+            const available = (parseFloat(balance) - parseFloat(frozen)).toFixed(2);
+            
             html += `<tr>
-                <td>${id.substring(0, 15)}...<\/td>
-                <td>${user.username || 'Unknown'}<\/td>
-                <td>${user.email || 'N/A'}<\/td>
-                <td style="color:#ffd700;">${user.balance || '0'} USDT<\/td>
-                <td>${user.status || 'active'}<\/td>
+                <td>${id.substring(0, 15)}...</td>
+                <td><strong>${user.username || 'Unknown'}</strong></td>
+                <td>${user.email || 'N/A'}</td>
+                <td style="color:#ffd700;">${balance} USDT</td>
+                <td style="color:#ff6666;">${frozen} USDT</td>
+                <td style="color:#00ff00;">${available} USDT</td>
+                <td style="color:#ffd700;">${user.inviteCode || 'N/A'}</td>
+                <td>${user.status || 'active'}</td>
                 <td>
-                    <button class="edit-btn" onclick="viewUser('${id}')">👁️ View<\/button>
-                    <button class="edit-btn" onclick="editBalance('${id}')">💰 Edit Balance<\/button>
-                <\/td>
-            <\/tr>`;
+                    <button class="edit-btn" onclick="viewUserDetails('${id}')">👁️ View</button>
+                    <button class="edit-btn" onclick="addFunds('${id}')">➕ Add</button>
+                    <button class="delete-btn" onclick="subtractFunds('${id}')">➖ Sub</button>
+                    <button class="edit-btn" onclick="freezeAmount('${id}')">❄️ Freeze</button>
+                    <button class="save-btn" onclick="unfreezeAmount('${id}')">🔥 Unfreeze</button>
+                    <button class="edit-btn" onclick="assignCustomerService('${id}')">📞 Assign CS</button>
+                </td>
+            </tr>`;
         }
         
-        if (Object.keys(users).length === 0) {
-            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center">No users found<\/td><\/tr>';
-        } else {
-            document.getElementById('usersTableBody').innerHTML = html;
-        }
+        document.getElementById('usersTableBody').innerHTML = html || '<tr><td colspan="9">No users found</td></tr>';
     } catch(e) { 
-        console.error('Error:', e);
-        document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center">Error loading users<\/td><\/tr>';
+        console.error(e);
+        document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="9">Error loading users</td></tr>';
     }
 }
 
-window.viewUser = async function(userId) {
+window.viewUserDetails = async function(userId) {
     const snap = await database.ref('users/' + userId).once('value');
     const user = snap.val();
+    const available = (parseFloat(user.balance || 0) - parseFloat(user.frozenAmount || 0)).toFixed(2);
+    
     Swal.fire({
-        title: `User: ${user.username}`,
+        title: `User Details: ${user.username}`,
         html: `<div style="text-align:left;">
-            <p><strong>ID:</strong> ${userId}</p>
+            <p><strong>User ID:</strong> ${userId}</p>
             <p><strong>Username:</strong> ${user.username}</p>
             <p><strong>Email:</strong> ${user.email || 'Not set'}</p>
+            <p><strong>Phone:</strong> ${user.phone || 'Not set'}</p>
+            <p><strong>Wallet Address:</strong> ${user.walletAddress || 'Not bound'}</p>
+            <p><strong>Invitation Code:</strong> ${user.inviteCode || 'N/A'}</p>
             <p><strong>Balance:</strong> ${user.balance || '0'} USDT</p>
+            <p><strong>Frozen:</strong> ${user.frozenAmount || '0'} USDT</p>
+            <p><strong>Available:</strong> ${available} USDT</p>
+            <p><strong>Commission:</strong> ${user.commission || '0'} USDT</p>
+            <p><strong>VIP:</strong> ${user.vip || 'VIP 1'}</p>
             <p><strong>Status:</strong> ${user.status || 'active'}</p>
+            <p><strong>Joined:</strong> ${user.joinedDate || 'N/A'}</p>
+            <p><strong>Assigned WhatsApp:</strong> ${user.assignedWhatsapp || 'Default'}</p>
+            <p><strong>Assigned Telegram:</strong> ${user.assignedTelegram || 'Default'}</p>
         </div>`,
         icon: 'info',
         confirmButtonColor: '#ffd700'
     });
 };
 
-window.editBalance = async function(userId) {
-    const snap = await database.ref('users/' + userId).once('value');
-    const user = snap.val();
+window.addFunds = async function(userId) {
     const { value: amount } = await Swal.fire({
-        title: 'Edit Balance',
-        input: 'number',
-        inputLabel: `Current balance: ${user.balance || '0'} USDT`,
-        inputPlaceholder: 'Enter new balance',
-        showCancelButton: true,
-        confirmButtonColor: '#ffd700'
+        title: 'Add Funds', input: 'number', inputLabel: 'Amount in USDT', inputPlaceholder: '0.00',
+        showCancelButton: true, confirmButtonColor: '#ffd700'
     });
-    if (amount !== null && !isNaN(amount)) {
-        await database.ref('users/' + userId).update({ balance: parseFloat(amount).toFixed(2) });
-        Swal.fire('Success', 'Balance updated!', 'success');
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        const snap = await database.ref('users/' + userId).once('value');
+        const user = snap.val();
+        const newBalance = (parseFloat(user.balance || 0) + parseFloat(amount)).toFixed(2);
+        await database.ref('users/' + userId).update({ balance: newBalance });
+        Swal.fire('Success', `Added ${amount} USDT. New balance: ${newBalance}`, 'success');
         loadUsersTable();
         loadDashboardStats();
     }
 };
 
+window.subtractFunds = async function(userId) {
+    const { value: amount } = await Swal.fire({
+        title: 'Subtract Funds', input: 'number', inputLabel: 'Amount to subtract', inputPlaceholder: '0.00',
+        showCancelButton: true, confirmButtonColor: '#ffd700'
+    });
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        const snap = await database.ref('users/' + userId).once('value');
+        const user = snap.val();
+        const currentBalance = parseFloat(user.balance || 0);
+        if (parseFloat(amount) > currentBalance) {
+            Swal.fire('Error', 'Cannot subtract more than current balance', 'error');
+            return;
+        }
+        const newBalance = (currentBalance - parseFloat(amount)).toFixed(2);
+        await database.ref('users/' + userId).update({ balance: newBalance });
+        Swal.fire('Success', `Subtracted ${amount} USDT. New balance: ${newBalance}`, 'success');
+        loadUsersTable();
+        loadDashboardStats();
+    }
+};
+
+window.freezeAmount = async function(userId) {
+    const snap = await database.ref('users/' + userId).once('value');
+    const user = snap.val();
+    const currentFrozen = parseFloat(user.frozenAmount || 0);
+    const currentBalance = parseFloat(user.balance || 0);
+    const available = currentBalance - currentFrozen;
+    
+    const { value: amount } = await Swal.fire({
+        title: 'Freeze Amount', input: 'number', 
+        inputLabel: `Available to freeze: ${available.toFixed(2)} USDT`, inputPlaceholder: '0.00',
+        showCancelButton: true, confirmButtonColor: '#ffd700'
+    });
+    
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        if (parseFloat(amount) > available) {
+            Swal.fire('Error', `Cannot freeze more than available. Available: ${available.toFixed(2)}`, 'error');
+            return;
+        }
+        const newFrozen = (currentFrozen + parseFloat(amount)).toFixed(2);
+        await database.ref('users/' + userId).update({ frozenAmount: newFrozen });
+        Swal.fire('Success', `Frozen ${amount} USDT. Total frozen: ${newFrozen}`, 'success');
+        loadUsersTable();
+    }
+};
+
+window.unfreezeAmount = async function(userId) {
+    const snap = await database.ref('users/' + userId).once('value');
+    const user = snap.val();
+    const currentFrozen = parseFloat(user.frozenAmount || 0);
+    
+    const { value: amount } = await Swal.fire({
+        title: 'Unfreeze Amount', input: 'number',
+        inputLabel: `Currently frozen: ${currentFrozen.toFixed(2)} USDT (0 = all)`, inputPlaceholder: '0',
+        showCancelButton: true, confirmButtonColor: '#ffd700'
+    });
+    
+    if (amount !== null) {
+        let newFrozen = 0;
+        if (parseFloat(amount) === 0 || parseFloat(amount) >= currentFrozen) {
+            newFrozen = 0;
+            Swal.fire('Success', `All frozen funds (${currentFrozen.toFixed(2)} USDT) unfrozen`, 'success');
+        } else if (parseFloat(amount) > 0) {
+            newFrozen = (currentFrozen - parseFloat(amount)).toFixed(2);
+            Swal.fire('Success', `Unfrozen ${amount} USDT. Remaining frozen: ${newFrozen}`, 'success');
+        } else { return; }
+        await database.ref('users/' + userId).update({ frozenAmount: newFrozen });
+        loadUsersTable();
+    }
+};
+
+window.assignCustomerService = async function(userId) {
+    const snap = await database.ref('users/' + userId).once('value');
+    const user = snap.val();
+    
+    const { value: formValues } = await Swal.fire({
+        title: `Assign Customer Service for ${user.username}`,
+        html: `<input id="whatsapp" class="swal2-input" placeholder="WhatsApp Number" value="${user.assignedWhatsapp || ''}">
+               <input id="telegram" class="swal2-input" placeholder="Telegram Username" value="${user.assignedTelegram || ''}">`,
+        focusConfirm: false, showCancelButton: true, confirmButtonColor: '#ffd700',
+        preConfirm: () => ({ whatsapp: document.getElementById('whatsapp').value, telegram: document.getElementById('telegram').value })
+    });
+    
+    if (formValues) {
+        await database.ref('users/' + userId).update({
+            assignedWhatsapp: formValues.whatsapp,
+            assignedTelegram: formValues.telegram
+        });
+        Swal.fire('Success', 'Customer service assigned!', 'success');
+        loadUsersTable();
+    }
+};
+
+// ============ TASK MANAGEMENT ============
+
 async function loadTaskManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="addTaskBtn">+ Add New Task</button></div>
-        <div class="table-container"><table class="data-table"><thead><tr><th>Task ID</th><th>Product Name</th><th>Price</th><th>Commission</th><th>Actions</th></tr></thead>
-        <tbody id="tasksTableBody"><tr><td colspan="5">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
+        <div class="table-container"><table class="data-table"><thead><tr><th>Task ID</th><th>Product Name</th><th>Price</th><th>Commission</th><th>Special</th><th>Images</th><th>Actions</th></tr></thead>
+        <tbody id="tasksTableBody"><tr><td colspan="7">Loading...</td></tr></tbody></table></div>`;
     
     document.getElementById('addTaskBtn').addEventListener('click', addNewTask);
     await loadTasksTable();
@@ -197,18 +322,21 @@ async function loadTasksTable() {
         let html = '';
         for (let id in tasks) {
             const task = tasks[id];
+            const hasImages = (task.image1 ? 1 : 0) + (task.image2 ? 1 : 0) + (task.image3 ? 1 : 0);
             html += `<tr>
-                <td>${task.taskId || id}<\/td>
-                <td>${task.productName || 'N/A'}<\/td>
-                <td>$${task.price || '0'}<\/td>
-                <td>+${task.commission || '0'} USDT<\/td>
+                <td>${task.taskId || id}</td>
+                <td>${task.productName || 'N/A'}</td>
+                <td>$${task.price || '0'}</td>
+                <td>+${task.commission || '0'} USDT</td>
+                <td>${task.isSpecial ? '<span class="special-badge">🔥 SPECIAL</span>' : '-'}</td>
+                <td>${hasImages}/3 images</td>
                 <td>
-                    <button class="edit-btn" onclick="editTask('${id}')">✏️ Edit<\/button>
-                    <button class="delete-btn" onclick="deleteTask('${id}')">🗑️ Delete<\/button>
-                <\/td>
-            <\/tr>`;
+                    <button class="edit-btn" onclick="editTask('${id}')">✏️ Edit</button>
+                    <button class="delete-btn" onclick="deleteTask('${id}')">🗑️ Delete</button>
+                </td>
+            </tr>`;
         }
-        document.getElementById('tasksTableBody').innerHTML = html || '<tr><td colspan="5">No tasks found<\/td><\/tr>';
+        document.getElementById('tasksTableBody').innerHTML = html || '<tr><td colspan="7">No tasks found</td></tr>';
     } catch(e) { console.error(e); }
 }
 
@@ -216,44 +344,76 @@ window.editTask = async function(taskId) {
     const snap = await database.ref('tasks/' + taskId).once('value');
     const task = snap.val();
     
+    // Build image preview HTML
+    let imagesHtml = '';
+    for (let i = 1; i <= 3; i++) {
+        const imgSrc = task[`image${i}`];
+        imagesHtml += `<div style="flex:1; text-align:center;">
+            <div id="preview${i}" style="width:100%; height:100px; background:#333; border-radius:8px; margin-bottom:5px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                ${imgSrc ? `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover;">` : '<span style="color:#888;">No Image</span>'}
+            </div>
+            <input type="file" id="image${i}" accept="image/*" style="font-size:11px;">
+        </div>`;
+    }
+    
     const { value: formValues } = await Swal.fire({
-        title: 'Edit Task',
-        html: `
-            <input id="taskName" class="swal2-input" placeholder="Product Name" value="${task.productName || ''}">
-            <input id="taskPrice" class="swal2-input" placeholder="Price (USD)" value="${task.price || ''}">
-            <input id="taskCommission" class="swal2-input" placeholder="Commission (USDT)" value="${task.commission || ''}">
-        `,
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonColor: '#ffd700',
+        title: `Edit Task: ${task.taskId}`,
+        html: `<div style="max-height:70vh; overflow-y:auto;">
+            <input id="taskId" class="swal2-input" placeholder="Task ID" value="${task.taskId || ''}">
+            <input id="productName" class="swal2-input" placeholder="Product Name" value="${task.productName || ''}">
+            <input id="price" class="swal2-input" placeholder="Price (USD)" value="${task.price || '0'}">
+            <input id="commission" class="swal2-input" placeholder="Commission (USDT)" value="${task.commission || '0'}">
+            <input id="availableFrom" class="swal2-input" type="datetime-local" placeholder="Available From" value="${task.availableFrom ? task.availableFrom.slice(0,16) : ''}">
+            <label style="display:flex; align-items:center; gap:10px; margin:10px 0;"><input type="checkbox" id="isSpecial" ${task.isSpecial ? 'checked' : ''}> <span style="color:#ffd700;">🔥 Special Task (shows badge on client side)</span></label>
+            <div style="margin-top:15px;"><label>Task Images (Max 3):</label></div>
+            <div style="display:flex; gap:10px; margin-top:10px;">${imagesHtml}</div>
+        </div>`,
+        focusConfirm: false, showCancelButton: true, confirmButtonText: 'Save', cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ffd700', width: '650px',
         preConfirm: () => {
             return {
-                name: document.getElementById('taskName').value,
-                price: document.getElementById('taskPrice').value,
-                commission: document.getElementById('taskCommission').value
+                taskId: document.getElementById('taskId').value,
+                productName: document.getElementById('productName').value,
+                price: document.getElementById('price').value,
+                commission: document.getElementById('commission').value,
+                availableFrom: document.getElementById('availableFrom').value,
+                isSpecial: document.getElementById('isSpecial').checked
             };
         }
     });
     
     if (formValues) {
-        await database.ref('tasks/' + taskId).update({
-            productName: formValues.name,
+        const updates = {
+            taskId: formValues.taskId,
+            productName: formValues.productName,
             price: formValues.price,
-            commission: formValues.commission
-        });
-        Swal.fire('Success', 'Task updated!', 'success');
+            commission: formValues.commission,
+            availableFrom: formValues.availableFrom,
+            isSpecial: formValues.isSpecial
+        };
+        
+        // Upload images
+        for (let i = 1; i <= 3; i++) {
+            const fileInput = document.getElementById(`image${i}`);
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const imageData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+                updates[`image${i}`] = imageData;
+            }
+        }
+        
+        await database.ref('tasks/' + taskId).update(updates);
+        Swal.fire('Success', 'Task updated! Images will auto-slide on client side.', 'success');
         loadTasksTable();
     }
 };
 
 window.deleteTask = async function(taskId) {
-    const result = await Swal.fire({
-        title: 'Delete Task?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ff6666',
-        confirmButtonText: 'Delete'
-    });
+    const result = await Swal.fire({ title: 'Delete Task?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ff6666', confirmButtonText: 'Delete' });
     if (result.isConfirmed) {
         await database.ref('tasks/' + taskId).remove();
         Swal.fire('Deleted!', 'Task deleted.', 'success');
@@ -264,87 +424,117 @@ window.deleteTask = async function(taskId) {
 async function addNewTask() {
     const { value: formValues } = await Swal.fire({
         title: 'Create New Task',
-        html: `
-            <input id="taskId" class="swal2-input" placeholder="Task ID">
-            <input id="taskName" class="swal2-input" placeholder="Product Name">
-            <input id="taskPrice" class="swal2-input" placeholder="Price (USD)">
-            <input id="taskCommission" class="swal2-input" placeholder="Commission (USDT)">
-        `,
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonColor: '#ffd700',
+        html: `<input id="taskId" class="swal2-input" placeholder="Task ID">
+               <input id="productName" class="swal2-input" placeholder="Product Name">
+               <input id="price" class="swal2-input" placeholder="Price (USD)">
+               <input id="commission" class="swal2-input" placeholder="Commission (USDT)">
+               <input id="availableFrom" class="swal2-input" type="datetime-local" placeholder="Available From">
+               <label style="display:flex; align-items:center; gap:10px; margin:10px 0;"><input type="checkbox" id="isSpecial"> <span style="color:#ffd700;">🔥 Special Task</span></label>
+               <div style="margin-top:15px;"><label>Task Images (Max 3):</label></div>
+               <div style="display:flex; gap:10px;">
+                   <div><input type="file" id="image1" accept="image/*"></div>
+                   <div><input type="file" id="image2" accept="image/*"></div>
+                   <div><input type="file" id="image3" accept="image/*"></div>
+               </div>`,
+        focusConfirm: false, showCancelButton: true, confirmButtonColor: '#ffd700', width: '550px',
         preConfirm: () => {
             return {
                 taskId: document.getElementById('taskId').value,
-                name: document.getElementById('taskName').value,
-                price: document.getElementById('taskPrice').value,
-                commission: document.getElementById('taskCommission').value
+                productName: document.getElementById('productName').value,
+                price: document.getElementById('price').value,
+                commission: document.getElementById('commission').value,
+                availableFrom: document.getElementById('availableFrom').value,
+                isSpecial: document.getElementById('isSpecial').checked
             };
         }
     });
     
-    if (formValues && formValues.name) {
+    if (formValues && formValues.productName) {
         const newTask = {
             taskId: formValues.taskId || 'TSK' + Date.now(),
-            productName: formValues.name,
+            productName: formValues.productName,
             price: formValues.price || '0',
             commission: formValues.commission || '0',
+            availableFrom: formValues.availableFrom || null,
+            isSpecial: formValues.isSpecial || false,
             createdAt: new Date().toISOString()
         };
+        
+        // Upload images
+        for (let i = 1; i <= 3; i++) {
+            const fileInput = document.getElementById(`image${i}`);
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const imageData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+                newTask[`image${i}`] = imageData;
+            }
+        }
+        
         await database.ref('tasks/' + newTask.taskId).set(newTask);
         Swal.fire('Success', 'Task created!', 'success');
         loadTasksTable();
     }
 }
 
+// ============ WITHDRAWAL REQUESTS ============
+
 async function loadWithdrawalRequests() {
     const content = document.getElementById('adminContent');
-    content.innerHTML = `<h3 style="color:#ffd700;">💰 Withdrawal Requests</h3>
-        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody id="withdrawalsTableBody"><tr><td colspan="6">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
-    
     try {
         const snap = await database.ref('withdrawals').once('value');
         const withdrawals = snap.val() || {};
-        let html = '';
+        let pending = '', history = '';
         for (let id in withdrawals) {
             const w = withdrawals[id];
-            html += `<tr>
-                <td>${w.id}<\/td>
-                <td>${w.username}<\/td>
-                <td>${w.amount} USDT<\/td>
-                <td>${w.status}<\/td>
-                <td>${new Date(w.requestDate).toLocaleString()}<\/td>
-                <td>
-                    ${w.status === 'pending' ? `<button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve<\/button><button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject<\/button>` : '-'}
-                <\/td>
-            <\/tr>`;
+            if (w.status === 'pending') {
+                pending += `<tr><td>${w.id}</td><td>${w.username}</td><td>${w.amount} USDT</td><td>${new Date(w.requestDate).toLocaleString()}</td>
+                <td><button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve</button><button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject</button></td></tr>`;
+            } else {
+                history += `<tr><td>${w.id}</td><td>${w.username}</td><td>${w.amount} USDT</td><td>${w.status}</td><td>${new Date(w.requestDate).toLocaleString()}</td></tr>`;
+            }
         }
-        document.getElementById('withdrawalsTableBody').innerHTML = html || '<tr><td colspan="6">No withdrawals<\/td><\/tr>';
+        content.innerHTML = `<h3 style="color:#ffd700;">💰 Pending Withdrawals</h3>
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody>${pending || '<tr><td colspan="5">None</td></tr>'}</tbody></table></div>
+        <h3 style="color:#ffd700; margin-top:30px;">📜 Withdrawal History</h3>
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>${history || '<tr><td colspan="5">None</td></tr>'}</tbody></table></div>`;
     } catch(e) { console.error(e); }
 }
 
 window.approveWithdrawal = async function(id) {
     const snap = await database.ref('withdrawals/' + id).once('value');
     const w = snap.val();
-    await database.ref('withdrawals/' + id).update({ status: 'confirmed' });
+    await database.ref('withdrawals/' + id).update({ status: 'confirmed', processedDate: new Date().toISOString() });
     Swal.fire('Approved', `Withdrawal of ${w.amount} USDT approved`, 'success');
     loadWithdrawalRequests();
+    loadDashboardStats();
 };
 
 window.rejectWithdrawal = async function(id) {
     const snap = await database.ref('withdrawals/' + id).once('value');
     const w = snap.val();
-    await database.ref('withdrawals/' + id).update({ status: 'rejected' });
-    Swal.fire('Rejected', `Withdrawal of ${w.amount} USDT rejected`, 'info');
+    const userSnap = await database.ref('users/' + w.userId).once('value');
+    const user = userSnap.val();
+    const newBalance = (parseFloat(user.balance || 0) + parseFloat(w.amount)).toFixed(2);
+    await database.ref('users/' + w.userId).update({ balance: newBalance });
+    await database.ref('withdrawals/' + id).update({ status: 'rejected', processedDate: new Date().toISOString() });
+    Swal.fire('Rejected', `Withdrawal rejected. Funds returned.`, 'info');
     loadWithdrawalRequests();
+    loadDashboardStats();
 };
+
+// ============ OTHER FUNCTIONS (Deposits, Content, etc.) ============
 
 async function loadDepositRecords() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="manualDepositBtn">+ Manual Deposit</button></div>
-        <div class="table-container"><table class="data-table"><thead><td><th>ID</th><th>User</th><th>Amount</th><th>Date</th></tr></thead>
-        <tbody id="depositsTableBody"><table><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th></tr></thead>
+        <tbody id="depositsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>`;
     document.getElementById('manualDepositBtn').addEventListener('click', manualDeposit);
     await loadDepositsTable();
 }
@@ -355,14 +545,9 @@ async function loadDepositsTable() {
         const deposits = depositsSnap.val() || {};
         let html = '';
         for (let id in deposits) {
-            html += `<tr>
-                <td>${deposits[id].id}<\/td>
-                <td>${deposits[id].username}<\/td>
-                <td>${deposits[id].amount} USDT<\/td>
-                <td>${deposits[id].date}<\/td>
-            <\/tr>`;
+            html += `<tr><td>${deposits[id].id}</td><td>${deposits[id].username}</td><td>${deposits[id].amount} USDT</td><td>${deposits[id].date}</td></tr>`;
         }
-        document.getElementById('depositsTableBody').innerHTML = html || '<tr><td colspan="4">No deposits<\/td><\/tr>';
+        document.getElementById('depositsTableBody').innerHTML = html || '<tr><td colspan="4">No deposits</td></tr>';
     } catch(e) { console.error(e); }
 }
 
@@ -376,10 +561,7 @@ async function manualDeposit() {
     const users = usersSnap.val() || {};
     let userId = null;
     for (let id in users) {
-        if (users[id].username === username) {
-            userId = id;
-            break;
-        }
+        if (users[id].username === username) { userId = id; break; }
     }
     if (!userId) { Swal.fire('Error', 'User not found', 'error'); return; }
     
@@ -387,11 +569,7 @@ async function manualDeposit() {
     const newBalance = (parseFloat(user.balance || 0) + parseFloat(amount)).toFixed(2);
     await database.ref('users/' + userId).update({ balance: newBalance });
     await database.ref('deposits/' + Date.now()).set({
-        id: 'DEP' + Date.now(),
-        userId: userId,
-        username: username,
-        amount: parseFloat(amount),
-        date: new Date().toLocaleString()
+        id: 'DEP' + Date.now(), userId: userId, username: username, amount: parseFloat(amount), date: new Date().toLocaleString()
     });
     Swal.fire('Success', `Deposited ${amount} USDT to ${username}`, 'success');
     loadDepositsTable();
@@ -401,41 +579,34 @@ async function manualDeposit() {
 async function loadContentManagement() {
     const termsSnap = await database.ref('settings/terms').once('value');
     const noticeSnap = await database.ref('settings/taskNotice').once('value');
-    
     const content = document.getElementById('adminContent');
     content.innerHTML = `
         <div class="form-group"><label>📋 Terms & Conditions</label><textarea id="termsEditor" rows="8" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;">${termsSnap.val() || ''}</textarea><button class="save-btn" id="saveTermsBtn">Save Terms</button></div>
         <div class="form-group" style="margin-top:20px;"><label>📝 Task Notice</label><textarea id="noticeEditor" rows="3" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;">${noticeSnap.val() || ''}</textarea><button class="save-btn" id="saveNoticeBtn">Save Notice</button></div>
-        <div class="form-group" style="margin-top:20px;"><label>📜 Certificate Image</label><input type="file" id="certImage" accept="image/*"><button class="save-btn" id="saveCertBtn" style="margin-top:10px;">Upload Certificate</button></div>
-    `;
+        <div class="form-group" style="margin-top:20px;"><label>📜 Certificate Image</label><input type="file" id="certImage" accept="image/*"><button class="save-btn" id="saveCertBtn" style="margin-top:10px;">Upload</button></div>
+        <div class="form-group" style="margin-top:20px;"><label>📄 About Us PDF URL</label><input type="text" id="aboutPDF" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;"><button class="save-btn" id="saveAboutBtn">Save</button></div>
+        <div class="form-group" style="margin-top:20px;"><label>❓ FAQS PDF URL</label><input type="text" id="faqsPDF" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;"><button class="save-btn" id="saveFaqsBtn">Save</button></div>`;
     
-    document.getElementById('saveTermsBtn').addEventListener('click', async () => {
-        await database.ref('settings/terms').set(document.getElementById('termsEditor').value);
-        Swal.fire('Saved', 'Terms saved!', 'success');
-    });
-    document.getElementById('saveNoticeBtn').addEventListener('click', async () => {
-        await database.ref('settings/taskNotice').set(document.getElementById('noticeEditor').value);
-        Swal.fire('Saved', 'Notice saved!', 'success');
-    });
+    document.getElementById('saveTermsBtn').addEventListener('click', async () => { await database.ref('settings/terms').set(document.getElementById('termsEditor').value); Swal.fire('Saved', 'Terms saved!', 'success'); });
+    document.getElementById('saveNoticeBtn').addEventListener('click', async () => { await database.ref('settings/taskNotice').set(document.getElementById('noticeEditor').value); Swal.fire('Saved', 'Notice saved!', 'success'); });
     document.getElementById('saveCertBtn').addEventListener('click', async () => {
         const file = document.getElementById('certImage').files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = async (e) => {
-                await database.ref('settings/certificateImage').set(e.target.result);
-                Swal.fire('Saved', 'Certificate uploaded!', 'success');
-            };
+            reader.onload = async (e) => { await database.ref('settings/certificateImage').set(e.target.result); Swal.fire('Saved', 'Certificate uploaded!', 'success'); };
             reader.readAsDataURL(file);
         } else { Swal.fire('Error', 'Select a file', 'error'); }
     });
+    document.getElementById('saveAboutBtn').addEventListener('click', async () => { await database.ref('settings/aboutPDF').set(document.getElementById('aboutPDF').value); Swal.fire('Saved', 'About PDF saved!', 'success'); });
+    document.getElementById('saveFaqsBtn').addEventListener('click', async () => { await database.ref('settings/faqsPDF').set(document.getElementById('faqsPDF').value); Swal.fire('Saved', 'FAQS saved!', 'success'); });
 }
 
 function loadVIPSettings() {
     const content = document.getElementById('adminContent');
-    content.innerHTML = `<div class="form-group"><label>VIP 1 Commission (%)</label><input type="number" id="vip1" value="0.5" step="0.1"></div>
-        <div class="form-group"><label>VIP 2 Commission (%)</label><input type="number" id="vip2" value="1" step="0.1"></div>
-        <div class="form-group"><label>VIP 3 Commission (%)</label><input type="number" id="vip3" value="1.5" step="0.1"></div>
-        <div class="form-group"><label>VIP 4 Commission (%)</label><input type="number" id="vip4" value="2" step="0.1"></div>
+    content.innerHTML = `<div class="form-group"><label>VIP 1 (%)</label><input type="number" id="vip1" value="0.5"></div>
+        <div class="form-group"><label>VIP 2 (%)</label><input type="number" id="vip2" value="1"></div>
+        <div class="form-group"><label>VIP 3 (%)</label><input type="number" id="vip3" value="1.5"></div>
+        <div class="form-group"><label>VIP 4 (%)</label><input type="number" id="vip4" value="2"></div>
         <button class="save-btn" id="saveVipBtn">Save</button>`;
     document.getElementById('saveVipBtn').addEventListener('click', () => Swal.fire('Saved', 'VIP settings saved!', 'success'));
 }
@@ -448,10 +619,7 @@ async function loadServiceSettings() {
         <div class="form-group"><label>✈️ Telegram</label><input type="text" id="telegram" value="${contacts.telegram}"></div>
         <button class="save-btn" id="saveServiceBtn">Save</button>`;
     document.getElementById('saveServiceBtn').addEventListener('click', async () => {
-        await database.ref('settings/serviceContacts').set({
-            whatsapp: document.getElementById('whatsapp').value,
-            telegram: document.getElementById('telegram').value
-        });
+        await database.ref('settings/serviceContacts').set({ whatsapp: document.getElementById('whatsapp').value, telegram: document.getElementById('telegram').value });
         Swal.fire('Saved', 'Service settings saved!', 'success');
     });
 }
@@ -479,12 +647,12 @@ async function loadInvitationCodes() {
         const code = codes[id];
         if (code.date === today && code.active === true) todaysCode = code;
         historyHtml += `<tr>
-            <td>${code.date}<\/td>
-            <td style="color:#ffd700;">${code.code}<\/td>
-            <td>${code.adminName}<\/td>
-            <td>${code.active ? 'Active' : 'Expired'}<\/td>
-            <td><button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate<\/button><\/td>
-        <\/tr>`;
+            <td>${code.date}</td>
+            <td style="color:#ffd700;">${code.code}</td>
+            <td>${code.adminName}</td>
+            <td>${code.active ? 'Active' : 'Expired'}</td>
+            <td><button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate</button></td>
+        </tr>`;
     }
     
     content.innerHTML = `<div style="background:rgba(255,215,0,0.1); padding:20px; border-radius:16px; margin-bottom:20px; text-align:center;">
@@ -493,7 +661,7 @@ async function loadInvitationCodes() {
             <button class="save-btn" id="generateCodeBtn">Generate New Code</button>
         </div>
         <table class="data-table"><thead><tr><th>Date</th><th>Code</th><th>Admin</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>${historyHtml || '<td><td colspan="5">No codes</td><\/tr>'}</tbody><\/table>`;
+        <tbody>${historyHtml || '<tr><td colspan="5">No codes</td><\/tr>'}</tbody><\/table>`;
     
     document.getElementById('generateCodeBtn').addEventListener('click', generateInvitationCode);
 }
@@ -512,7 +680,7 @@ async function generateInvitationCode() {
     await database.ref('invitationCodes/CODE_' + Date.now()).set({
         code: code, date: today, adminId: adminId || 'master', adminName: adminName || 'master', active: true
     });
-    Swal.fire('Generated', `Code: ${code}`, 'success');
+    Swal.fire('Generated', `Code: ${code}\nValid until midnight`, 'success');
     loadInvitationCodes();
 }
 
@@ -524,7 +692,7 @@ function loadAdminManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<button class="save-btn" id="createAdminBtn">+ Create Sub Admin</button>
         <div class="table-container"><table class="data-table"><thead><tr><th>Username</th><th>Email</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
+        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>`;
     document.getElementById('createAdminBtn').addEventListener('click', createSubAdmin);
     loadAdminsTable();
 }
@@ -535,16 +703,16 @@ async function loadAdminsTable() {
     let html = '';
     for (let id in admins) {
         html += `<tr>
-            <td>${admins[id].username}<\/td>
-            <td>${admins[id].email}<\/td>
-            <td>${admins[id].created ? new Date(admins[id].created).toLocaleDateString() : 'Unknown'}<\/td>
+            <td>${admins[id].username}</td>
+            <td>${admins[id].email}</td>
+            <td>${admins[id].created ? new Date(admins[id].created).toLocaleDateString() : 'Unknown'}</td>
             <td>
-                <button class="edit-btn" onclick="resetAdminPass('${id}')">Reset Password<\/button>
-                <button class="delete-btn" onclick="deleteAdmin('${id}')">Delete<\/button>
-            <\/td>
-        <\/tr>`;
+                <button class="edit-btn" onclick="resetAdminPass('${id}')">Reset Password</button>
+                <button class="delete-btn" onclick="deleteAdmin('${id}')">Delete</button>
+            </td>
+        </tr>`;
     }
-    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins<\/td><\/tr>';
+    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins</td><\/tr>';
 }
 
 window.resetAdminPass = async function(id) {
