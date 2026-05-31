@@ -1,4 +1,4 @@
-// Admin Dashboard - Complete Fixed Version
+// Admin Dashboard - Complete Version
 
 let adminType = '';
 let adminId = '';
@@ -137,7 +137,7 @@ async function loadUserManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="refreshUsersBtn">🔄 Refresh Users</button></div>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Balance</th><th>Frozen</th><th>Available</th><th>Invite Code</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="usersTableBody"><tr><td colspan="9">Loading...</td></tr></tbody></table></div>`;
+        <tbody id="usersTableBody"><tr><td colspan="9">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     
     document.getElementById('refreshUsersBtn').addEventListener('click', () => loadUsersTable());
     await loadUsersTable();
@@ -148,41 +148,55 @@ async function loadUsersTable() {
         const usersSnap = await database.ref('users').once('value');
         const users = usersSnap.val() || {};
         let html = '';
+        let userCount = 0;
         
         for (let id in users) {
             const user = users[id];
+            
             if (adminType === 'sub' && user.assignedAdminId !== adminId) continue;
             
-            // Handle both old and new data formats
+            userCount++;
+            
             const username = user.username || user.user || 'Unknown';
-            const email = user.email || user.userEmail || 'N/A';
-            const balance = user.balance || user.walletBalance || '0';
+            const email = user.email || user.userEmail || (user.username ? `${user.username}@temp.com` : 'N/A');
+            const balance = user.balance !== undefined ? user.balance : (user.walletBalance || '0');
             const frozenAmount = user.frozenAmount || '0';
             const available = (parseFloat(balance) - parseFloat(frozenAmount)).toFixed(2);
-            const inviteCode = user.inviteCode || user.userInviteCode || 'N/A';
+            const inviteCode = user.inviteCode || user.userInviteCode || (user.assignedAdminId ? 'MANUAL' : 'N/A');
             const status = user.status || 'active';
             
             html += `<tr>
-                <td>${id.substring(0, 15)}...</td>
-                <td><strong>${username}</strong></td>
-                <td>${email}</td>
-                <td style="color:#ffd700;">${balance} USDT</td>
-                <td style="color:#ff6666;">${frozenAmount} USDT</td>
-                <td style="color:#00ff00;">${available} USDT</td>
-                <td style="color:#ffd700;">${inviteCode}</td>
-                <td>${status}</td>
+                <td>${id.substring(0, 15)}...<\/td>
+                <td><strong>${username}<\/strong><\/td>
+                <td>${email}<\/td>
+                <td style="color:#ffd700;">${parseFloat(balance).toFixed(2)} USDT<\/td>
+                <td style="color:#ff6666;">${parseFloat(frozenAmount).toFixed(2)} USDT<\/td>
+                <td style="color:#00ff00;">${available} USDT<\/td>
+                <td style="color:#ffd700;">${inviteCode}<\/td>
+                <td>${status}<\/td>
                 <td>
-                    <button class="edit-btn" onclick="viewUserDetails('${id}')">👁️ View</button>
-                    <button class="edit-btn" onclick="addFunds('${id}')">➕ Add</button>
-                    <button class="delete-btn" onclick="subtractFunds('${id}')">➖ Sub</button>
-                    <button class="edit-btn" onclick="freezeAmount('${id}')">❄️ Freeze</button>
-                    <button class="save-btn" onclick="unfreezeAmount('${id}')">🔥 Unfreeze</button>
-                    <button class="edit-btn" onclick="assignCustomerService('${id}')">📞 Assign CS</button>
-                </td>
-            </tr>`;
+                    <button class="edit-btn" onclick="viewUserDetails('${id}')">👁️ View<\/button>
+                    <button class="edit-btn" onclick="addFunds('${id}')">➕ Add<\/button>
+                    <button class="delete-btn" onclick="subtractFunds('${id}')">➖ Sub<\/button>
+                    <button class="edit-btn" onclick="freezeAmount('${id}')">❄️ Freeze<\/button>
+                    <button class="save-btn" onclick="unfreezeAmount('${id}')">🔥 Unfreeze<\/button>
+                    <button class="edit-btn" onclick="assignCustomerService('${id}')">📞 Assign CS<\/button>
+                <\/td>
+            <\/tr>`;
         }
-        document.getElementById('usersTableBody').innerHTML = html || '<tr><td colspan="9">No users found</td></tr>';
-    } catch(e) { console.error(e); }
+        
+        if (userCount === 0) {
+            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="9" style="text-align:center">No users found<\/td><\/tr>';
+        } else {
+            document.getElementById('usersTableBody').innerHTML = html;
+        }
+        
+        document.getElementById('totalUsers').textContent = userCount;
+        
+    } catch(e) { 
+        console.error('Error loading users:', e);
+        document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="9" style="text-align:center">Error loading users<\/td><\/tr>';
+    }
 }
 
 window.viewUserDetails = async function(userId) {
@@ -370,7 +384,7 @@ async function loadTaskManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="addTaskBtn">+ Add New Task</button></div>
         <div class="table-container"><table class="data-table"><thead><tr><th>Task ID</th><th>Product Name</th><th>Price</th><th>Commission</th><th>Special</th><th>Available From</th><th>Actions</th></tr></thead>
-        <tbody id="tasksTableBody"><tr><td colspan="7">Loading...</td></tr></tbody></table></div>`;
+        <tbody id="tasksTableBody"><tr><td colspan="7">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     
     document.getElementById('addTaskBtn').addEventListener('click', addNewTask);
     await loadTasksTable();
@@ -384,19 +398,19 @@ async function loadTasksTable() {
         for (let id in tasks) {
             const task = tasks[id];
             html += `<tr>
-                <td>${task.taskId || id}</td>
-                <td>${task.productName || 'N/A'}</td>
-                <td>$${task.price || '0'}</td>
-                <td>+${task.commission || '0'} USDT</td>
-                <td>${task.isSpecial ? '<span class="special-badge">SPECIAL</span>' : '-'}</td>
-                <td>${task.availableFrom ? new Date(task.availableFrom).toLocaleString() : 'Anytime'}</td>
+                <td>${task.taskId || id}<\/td>
+                <td>${task.productName || 'N/A'}<\/td>
+                <td>$${task.price || '0'}<\/td>
+                <td>+${task.commission || '0'} USDT<\/td>
+                <td>${task.isSpecial ? '<span class="special-badge">SPECIAL</span>' : '-'}<\/td>
+                <td>${task.availableFrom ? new Date(task.availableFrom).toLocaleString() : 'Anytime'}<\/td>
                 <td>
-                    <button class="edit-btn" onclick="editTask('${id}')">✏️ Edit</button>
-                    <button class="delete-btn" onclick="deleteTask('${id}')">🗑️ Delete</button>
-                </td>
-            </tr>`;
+                    <button class="edit-btn" onclick="editTask('${id}')">✏️ Edit<\/button>
+                    <button class="delete-btn" onclick="deleteTask('${id}')">🗑️ Delete<\/button>
+                <\/td>
+            <\/tr>`;
         }
-        document.getElementById('tasksTableBody').innerHTML = html || '<tr><td colspan="7">No tasks found</td></tr>';
+        document.getElementById('tasksTableBody').innerHTML = html || '<tr><td colspan="7">No tasks found<\/td><\/tr>';
     } catch(e) { console.error(e); }
 }
 
@@ -404,24 +418,72 @@ window.editTask = async function(taskId) {
     const snap = await database.ref('tasks/' + taskId).once('value');
     const task = snap.val();
     
-    const { value: formValues } = await Swal.fire({
+    const modalHtml = `
+        <div style="max-height: 80vh; overflow-y: auto; padding: 10px;">
+            <div class="form-group">
+                <label>Task ID</label>
+                <input id="taskId" class="swal2-input" value="${task.taskId || ''}" style="width:100%">
+            </div>
+            <div class="form-group">
+                <label>Product Name</label>
+                <input id="taskName" class="swal2-input" value="${task.productName || ''}" style="width:100%">
+            </div>
+            <div class="form-group">
+                <label>Price (USD)</label>
+                <input id="taskPrice" class="swal2-input" value="${task.price || '0'}" style="width:100%">
+            </div>
+            <div class="form-group">
+                <label>Commission (USDT)</label>
+                <input id="taskCommission" class="swal2-input" value="${task.commission || '0'}" style="width:100%">
+            </div>
+            <div class="form-group">
+                <label>Available From</label>
+                <input id="taskAvailableFrom" class="swal2-input" type="datetime-local" value="${task.availableFrom ? task.availableFrom.slice(0, 16) : ''}" style="width:100%">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="taskSpecial" ${task.isSpecial ? 'checked' : ''}> Special Task
+                </label>
+            </div>
+            <div class="form-group">
+                <label>Task Images (Max 3 - Will auto-slide)</label>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                    <div style="flex:1; text-align:center;">
+                        <div id="image1Preview" style="width:100px; height:100px; background:#333; border-radius:8px; margin:0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                            ${task.image1 ? `<img src="${task.image1}" style="width:100%; height:100%; object-fit:cover;">` : '<span style="color:#888;">No Image</span>'}
+                        </div>
+                        <input type="file" id="image1" accept="image/*" style="margin-top:5px; font-size:11px;">
+                    </div>
+                    <div style="flex:1; text-align:center;">
+                        <div id="image2Preview" style="width:100px; height:100px; background:#333; border-radius:8px; margin:0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                            ${task.image2 ? `<img src="${task.image2}" style="width:100%; height:100%; object-fit:cover;">` : '<span style="color:#888;">No Image</span>'}
+                        </div>
+                        <input type="file" id="image2" accept="image/*" style="margin-top:5px; font-size:11px;">
+                    </div>
+                    <div style="flex:1; text-align:center;">
+                        <div id="image3Preview" style="width:100px; height:100px; background:#333; border-radius:8px; margin:0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                            ${task.image3 ? `<img src="${task.image3}" style="width:100%; height:100%; object-fit:cover;">` : '<span style="color:#888;">No Image</span>'}
+                        </div>
+                        <input type="file" id="image3" accept="image/*" style="margin-top:5px; font-size:11px;">
+                    </div>
+                </div>
+                <p style="color:#888; font-size:11px; margin-top:10px;">Images will appear as a slider on client side (right to left)</p>
+            </div>
+        </div>
+    `;
+    
+    const result = await Swal.fire({
         title: 'Edit Task',
-        html: `
-            <input id="taskName" class="swal2-input" placeholder="Product Name" value="${task.productName || ''}">
-            <input id="taskPrice" class="swal2-input" placeholder="Price (USD)" value="${task.price || ''}">
-            <input id="taskCommission" class="swal2-input" placeholder="Commission (USDT)" value="${task.commission || ''}">
-            <input id="taskAvailableFrom" class="swal2-input" type="datetime-local" placeholder="Available From" value="${task.availableFrom ? task.availableFrom.slice(0, 16) : ''}">
-            <label style="color:#aaa;"><input type="checkbox" id="taskSpecial" ${task.isSpecial ? 'checked' : ''}> Special Task</label>
-            <div style="margin-top:10px;"><label>Images (Max 3):</label></div>
-            <input type="file" id="image1" accept="image/*">
-            <input type="file" id="image2" accept="image/*">
-            <input type="file" id="image3" accept="image/*">
-        `,
+        html: modalHtml,
         focusConfirm: false,
         showCancelButton: true,
+        confirmButtonText: 'Save Changes',
+        cancelButtonText: 'Cancel',
         confirmButtonColor: '#ffd700',
+        width: '600px',
         preConfirm: () => {
             return {
+                taskId: document.getElementById('taskId').value,
                 name: document.getElementById('taskName').value,
                 price: document.getElementById('taskPrice').value,
                 commission: document.getElementById('taskCommission').value,
@@ -431,21 +493,22 @@ window.editTask = async function(taskId) {
         }
     });
     
-    if (formValues) {
+    if (result.isConfirmed) {
         const updates = {
-            productName: formValues.name,
-            price: formValues.price,
-            commission: formValues.commission,
-            availableFrom: formValues.availableFrom,
-            isSpecial: formValues.isSpecial
+            taskId: result.value.taskId,
+            productName: result.value.name,
+            price: result.value.price,
+            commission: result.value.commission,
+            availableFrom: result.value.availableFrom,
+            isSpecial: result.value.isSpecial
         };
         
         for (let i = 1; i <= 3; i++) {
             const fileInput = document.getElementById(`image${i}`);
             if (fileInput && fileInput.files.length > 0) {
                 const file = fileInput.files[0];
-                const reader = new FileReader();
                 const imageData = await new Promise((resolve) => {
+                    const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target.result);
                     reader.readAsDataURL(file);
                 });
@@ -454,7 +517,7 @@ window.editTask = async function(taskId) {
         }
         
         await database.ref('tasks/' + taskId).update(updates);
-        Swal.fire('Success', 'Task updated!', 'success');
+        Swal.fire('Success', 'Task updated! Images will auto-slide on client side.', 'success');
         loadTasksTable();
     }
 };
@@ -526,18 +589,18 @@ async function loadWithdrawalRequests() {
         for (let id in withdrawals) {
             const w = withdrawals[id];
             if (w.status === 'pending') {
-                pending += `<tr><td>${w.id}</td><td>${w.username}</td><td>${w.amount} USDT</td><td>${new Date(w.requestDate).toLocaleString()}</td>
-                <td><button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve</button><button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject</button></td></tr>`;
+                pending += `<tr><td>${w.id}<\/td><td>${w.username}<\/td><td>${w.amount} USDT<\/td><td>${new Date(w.requestDate).toLocaleString()}<\/td>
+                <td><button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve<\/button><button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject<\/button><\/td><\/tr>`;
             } else {
-                history += `<tr><td>${w.id}</td><td>${w.username}</td><td>${w.amount} USDT</td><td>${w.status}</td><td>${new Date(w.requestDate).toLocaleString()}</td></tr>`;
+                history += `<tr><td>${w.id}<\/td><td>${w.username}<\/td><td>${w.amount} USDT<\/td><td>${w.status}<\/td><td>${new Date(w.requestDate).toLocaleString()}<\/td><\/tr>`;
             }
         }
         content.innerHTML = `<h3 style="color:#ffd700;">💰 Pending Withdrawals</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody>${pending || '<tr><td colspan="5">None</td></tr>'}</tbody></table></div>
+        <tbody>${pending || '<tr><td colspan="5">None<\/td><\/tr>'}</tbody><\/table><\/div>
         <h3 style="color:#ffd700; margin-top:30px;">📜 Withdrawal History</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody>${history || '<tr><td colspan="5">None</td></tr>'}</tbody></table></div>`;
+        <tbody>${history || '<tr><td colspan="5">None<\/td><\/tr>'}</tbody><\/table><\/div>`;
     } catch(e) { console.error(e); }
 }
 
@@ -568,7 +631,7 @@ async function loadDepositRecords() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="manualDepositBtn">+ Manual Deposit</button></div>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th></tr></thead>
-        <tbody id="depositsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>`;
+        <tbody id="depositsTableBody"><tr><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     document.getElementById('manualDepositBtn').addEventListener('click', manualDeposit);
     await loadDepositsTable();
 }
@@ -579,9 +642,9 @@ async function loadDepositsTable() {
         const deposits = depositsSnap.val() || {};
         let html = '';
         for (let id in deposits) {
-            html += `<tr><td>${deposits[id].id}</td><td>${deposits[id].username}</td><td>${deposits[id].amount} USDT</td><td>${deposits[id].date}</td></tr>`;
+            html += `<tr><td>${deposits[id].id}<\/td><td>${deposits[id].username}<\/td><td>${deposits[id].amount} USDT<\/td><td>${deposits[id].date}<\/td><\/tr>`;
         }
-        document.getElementById('depositsTableBody').innerHTML = html || '<tr><td colspan="4">No deposits</td></tr>';
+        document.getElementById('depositsTableBody').innerHTML = html || '<tr><td colspan="4">No deposits<\/td><\/tr>';
     } catch(e) { console.error(e); }
 }
 
@@ -743,12 +806,12 @@ async function loadInvitationCodes() {
         if (code.date === today && code.active === true) todaysCode = code;
         if (adminType === 'master' || code.adminId === adminId) {
             historyHtml += `<tr>
-                <td>${code.date}</td>
-                <td style="color:#ffd700;">${code.code}</td>
-                <td>${code.adminName}</td>
-                <td>${code.active ? '✅ Active' : '❌ Expired'}</td>
-                <td>${code.active ? `<button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate</button>` : '-'}</td>
-            </td>`;
+                <td>${code.date}<\/td>
+                <td style="color:#ffd700;">${code.code}<\/td>
+                <td>${code.adminName}<\/td>
+                <td>${code.active ? '✅ Active' : '❌ Expired'}<\/td>
+                <td>${code.active ? `<button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate<\/button>` : '-'}<\/td>
+            <\/tr>`;
         }
     }
     
@@ -760,7 +823,7 @@ async function loadInvitationCodes() {
         </div>
         <h3 style="color:#ffd700;">📜 Code History</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>Date</th><th>Code</th><th>Admin</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>${historyHtml || '<tr><td colspan="5">No codes found</td></tr>'}</tbody></table></div>
+        <tbody>${historyHtml || '<tr><td colspan="5">No codes found<\/td><\/tr>'}</tbody><\/table><\/div>
     `;
     
     document.getElementById('generateCodeBtn').addEventListener('click', generateInvitationCode);
@@ -801,7 +864,7 @@ function loadAdminManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<button class="save-btn" id="createAdminBtn">+ Create Sub Admin</button>
         <div class="table-container"><table class="data-table"><thead><tr><th>Username</th><th>Email</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>`;
+        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     
     document.getElementById('createAdminBtn').addEventListener('click', createSubAdmin);
     loadAdminsTable();
@@ -813,16 +876,16 @@ async function loadAdminsTable() {
     let html = '';
     for (let id in admins) {
         html += `<tr>
-            <td>${admins[id].username}</td>
-            <td>${admins[id].email}</td>
-            <td>${admins[id].created ? new Date(admins[id].created).toLocaleDateString() : 'Unknown'}</td>
+            <td>${admins[id].username}<\/td>
+            <td>${admins[id].email}<\/td>
+            <td>${admins[id].created ? new Date(admins[id].created).toLocaleDateString() : 'Unknown'}<\/td>
             <td>
-                <button class="edit-btn" onclick="resetAdminPass('${id}')">Reset Password</button>
-                <button class="delete-btn" onclick="deleteAdmin('${id}')">Delete</button>
-            </td>
-        </tr>`;
+                <button class="edit-btn" onclick="resetAdminPass('${id}')">Reset Password<\/button>
+                <button class="delete-btn" onclick="deleteAdmin('${id}')">Delete<\/button>
+            <\/td>
+        <\/tr>`;
     }
-    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins</td>';
+    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins<\/td><\/tr>';
 }
 
 window.resetAdminPass = async function(id) {
