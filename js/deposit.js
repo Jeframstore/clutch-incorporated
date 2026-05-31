@@ -1,14 +1,13 @@
-// Deposit Page - Firebase Version
+// Deposit Page - Original Working Version
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
-    
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
         return;
     }
     
-    await loadServiceContacts();
+    loadContactNumbers();
     
     const backBtn = document.getElementById('backBtn');
     if (backBtn) {
@@ -37,33 +36,26 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
-async function loadServiceContacts() {
-    try {
-        const snapshot = await database.ref('settings/serviceContacts').once('value');
-        const contacts = snapshot.val();
-        
-        if (contacts) {
-            localStorage.setItem('depositWhatsapp', contacts.whatsapp || '+1 234 567 8900');
-            localStorage.setItem('depositTelegram', contacts.telegram || '@ClutchSupport');
-        }
-        
-        const whatsappNumber = localStorage.getItem('depositWhatsapp') || '+1 234 567 8900';
-        const telegramUsername = localStorage.getItem('depositTelegram') || '@ClutchSupport';
-        
-        const whatsappElement = document.getElementById('whatsappNumber');
-        const telegramElement = document.getElementById('telegramUsername');
-        
-        if (whatsappElement) whatsappElement.textContent = whatsappNumber;
-        if (telegramElement) telegramElement.textContent = telegramUsername;
-        
-    } catch (error) {
-        console.error('Error loading service contacts:', error);
+function loadContactNumbers() {
+    const whatsappNumber = localStorage.getItem('depositWhatsapp') || '+1 234 567 8900';
+    const telegramUsername = localStorage.getItem('depositTelegram') || '@ClutchSupport';
+    
+    const whatsappElement = document.getElementById('whatsappNumber');
+    const telegramElement = document.getElementById('telegramUsername');
+    
+    if (whatsappElement) {
+        whatsappElement.textContent = whatsappNumber;
+    }
+    
+    if (telegramElement) {
+        telegramElement.textContent = telegramUsername;
     }
 }
 
 document.querySelectorAll('.nav-btn').forEach(function(button) {
     button.addEventListener('click', function() {
         const page = button.getAttribute('data-page');
+        
         if (page === 'home') {
             window.location.href = 'dashboard.html';
         } else if (page === 'starting') {

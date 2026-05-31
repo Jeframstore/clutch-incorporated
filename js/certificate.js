@@ -1,4 +1,4 @@
-// Certificate Page - Complete with Image Support
+// Certificate Page - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadCertificateData() {
-    // Load certificate image
     let certificateImage = localStorage.getItem('certificateImage');
     const certificateImg = document.getElementById('certificateImage');
     const noImagePlaceholder = document.getElementById('noImagePlaceholder');
@@ -36,7 +35,6 @@ function loadCertificateData() {
         }
     }
     
-    // Load certificate text
     let certificateText = localStorage.getItem('certificateText');
     const textContainer = document.getElementById('certificateText');
     

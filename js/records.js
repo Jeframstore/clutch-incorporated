@@ -1,85 +1,112 @@
-// Records Page - Complete
+// Records Page - Original Working Version
 
-let userId = null;
 let allRecords = [];
 
-document.addEventListener('DOMContentLoaded', async function() {
-    userId = localStorage.getItem('userId');
+document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
-    
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
         return;
     }
     
-    await loadRecords();
+    loadRecords();
     
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
             this.classList.add('active');
+            
             const tab = this.getAttribute('data-tab');
             filterRecords(tab);
         });
     });
     
     const backBtn = document.getElementById('backBtn');
-    if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'dashboard.html');
+    if (backBtn) {
+        backBtn.addEventListener('click', function() {
+            window.location.href = 'dashboard.html';
+        });
+    }
 });
 
-async function loadRecords() {
-    try {
-        const withdrawalsSnap = await database.ref('withdrawals').once('value');
-        const withdrawals = withdrawalsSnap.val() || {};
-        
-        allRecords = [];
-        
-        for (let id in withdrawals) {
-            const w = withdrawals[id];
-            if (w.userId === userId) {
-                allRecords.push({
-                    id: w.id,
-                    type: 'withdraw',
-                    amount: w.amount,
-                    date: new Date(w.requestDate).toLocaleString(),
-                    status: w.status || 'pending',
-                    remark: w.status === 'pending' ? 'Processing' : (w.status === 'confirmed' ? 'Completed' : 'Rejected')
-                });
-            }
-        }
-        
-        allRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
-        displayRecords(allRecords);
-        
-    } catch (error) {
-        console.error('Error:', error);
-    }
+function loadRecords() {
+    let deposits = JSON.parse(localStorage.getItem('depositRecords') || '[]');
+    let withdrawals = JSON.parse(localStorage.getItem('withdrawalRecords') || '[]');
+    let pendingRequests = JSON.parse(localStorage.getItem('pendingWithdrawals') || '[]');
+    
+    allRecords = [];
+    
+    deposits.forEach(function(d) {
+        allRecords.push({
+            id: d.id,
+            type: 'deposit',
+            amount: d.amount,
+            date: d.date,
+            status: d.status || 'confirmed',
+            remark: d.remark || 'Deposit'
+        });
+    });
+    
+    withdrawals.forEach(function(w) {
+        allRecords.push({
+            id: w.id,
+            type: 'withdraw',
+            amount: w.amount,
+            date: new Date(w.requestDate).toLocaleString(),
+            status: w.status,
+            remark: w.status === 'pending' ? 'Processing' : (w.status === 'confirmed' ? 'Completed' : 'Rejected')
+        });
+    });
+    
+    allRecords.sort(function(a, b) {
+        return new Date(b.date) - new Date(a.date);
+    });
+    
+    displayRecords(allRecords);
 }
 
 function displayRecords(records) {
-    const container = document.getElementById('recordsList');
+    const recordsList = document.getElementById('recordsList');
     
     if (!records || records.length === 0) {
-        container.innerHTML = '<div class="empty-state">No transaction records found</div>';
+        recordsList.innerHTML = '<div class="empty-state">No transaction records found</div>';
         return;
     }
     
-    container.innerHTML = '';
+    recordsList.innerHTML = '';
     
-    records.forEach(record => {
-        const div = document.createElement('div');
-        div.className = 'record-item';
+    records.forEach(function(record) {
+        const recordDiv = document.createElement('div');
+        recordDiv.className = 'record-item';
         
         const typeClass = record.type === 'deposit' ? 'deposit' : 'withdraw';
         const amountClass = record.type === 'deposit' ? 'positive' : 'negative';
         const amountSymbol = record.type === 'deposit' ? '+' : '-';
         
-        let statusClass = '', statusText = '';
-        if (record.status === 'pending') { statusClass = 'status-pending'; statusText = 'Pending'; }
-        else if (record.status === 'confirmed') { statusClass = 'status-confirmed'; statusText = 'Confirmed'; }
-        else { statusClass = 'status-rejected'; statusText = 'Rejected'; }
+        let statusClass = '';
+        let statusText = '';
         
-        div.innerHTML = `
+        switch(record.status) {
+            case 'pending':
+                statusClass = 'status-pending';
+                statusText = 'Pending';
+                break;
+            case 'confirmed':
+                statusClass = 'status-confirmed';
+                statusText = 'Confirmed';
+                break;
+            case 'rejected':
+                statusClass = 'status-rejected';
+                statusText = 'Rejected';
+                break;
+            default:
+                statusClass = 'status-pending';
+                statusText = 'Pending';
+        }
+        
+        recordDiv.innerHTML = `
             <div class="record-header">
                 <span class="record-type ${typeClass}">${record.type.toUpperCase()}</span>
                 <span class="record-amount ${amountClass}">${amountSymbol}$${parseFloat(record.amount).toFixed(2)}</span>
@@ -93,20 +120,33 @@ function displayRecords(records) {
                 <span class="record-remark">${record.remark || '-'}</span>
             </div>
         `;
-        container.appendChild(div);
+        
+        recordsList.appendChild(recordDiv);
     });
 }
 
 function filterRecords(tab) {
-    if (tab === 'all') displayRecords(allRecords);
-    else if (tab === 'deposit') displayRecords(allRecords.filter(r => r.type === 'deposit'));
-    else if (tab === 'withdraw') displayRecords(allRecords.filter(r => r.type === 'withdraw'));
+    let filtered = [];
+    
+    if (tab === 'all') {
+        filtered = allRecords;
+    } else if (tab === 'deposit') {
+        filtered = allRecords.filter(function(r) { return r.type === 'deposit'; });
+    } else if (tab === 'withdraw') {
+        filtered = allRecords.filter(function(r) { return r.type === 'withdraw'; });
+    }
+    
+    displayRecords(filtered);
 }
 
-document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const page = this.getAttribute('data-page');
-        if (page === 'home') window.location.href = 'dashboard.html';
-        if (page === 'starting') window.location.href = 'starting.html';
+document.querySelectorAll('.nav-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+        const page = button.getAttribute('data-page');
+        
+        if (page === 'home') {
+            window.location.href = 'dashboard.html';
+        } else if (page === 'starting') {
+            window.location.href = 'starting.html';
+        }
     });
 });

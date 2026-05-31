@@ -1,4 +1,4 @@
-// Profile Page - Original Working Version (No Firebase)
+// Profile Page - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');

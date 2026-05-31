@@ -114,29 +114,14 @@ document.querySelectorAll('.menu-btn').forEach(function(button) {
         const page = this.getAttribute('data-page');
         
         switch(page) {
-            case 'service':
-                window.location.href = 'service.html';
-                break;
-            case 'withdraw':
-                window.location.href = 'withdraw.html';
-                break;
-            case 'deposit':
-                window.location.href = 'deposit.html';
-                break;
-            case 'terms':
-                window.location.href = 'terms.html';
-                break;
-            case 'certificate':
-                window.location.href = 'certificate.html';
-                break;
-            case 'faqs':
-                window.location.href = 'faqs.html';
-                break;
-            case 'about':
-                window.location.href = 'about.html';
-                break;
-            default:
-                break;
+            case 'service': window.location.href = 'service.html'; break;
+            case 'withdraw': window.location.href = 'withdraw.html'; break;
+            case 'deposit': window.location.href = 'deposit.html'; break;
+            case 'terms': window.location.href = 'terms.html'; break;
+            case 'certificate': window.location.href = 'certificate.html'; break;
+            case 'faqs': window.location.href = 'faqs.html'; break;
+            case 'about': window.location.href = 'about.html'; break;
+            default: break;
         }
     });
 });
@@ -159,9 +144,3 @@ document.querySelectorAll('.nav-btn').forEach(function(button) {
         }
     });
 });
-
-function logout() {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('username');
-    window.location.href = 'index.html';
-}

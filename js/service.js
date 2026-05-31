@@ -1,4 +1,4 @@
-// Customer Service Page - Loads User-Specific Contacts
+// Service Page - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    loadUserSpecificContacts();
+    loadContactNumbers();
     
     const backBtn = document.getElementById('backBtn');
     if (backBtn) {
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (whatsappLink) {
         whatsappLink.addEventListener('click', function(e) {
             e.preventDefault();
-            const whatsappNumber = localStorage.getItem('userAssignedWhatsapp') || localStorage.getItem('whatsappNumber') || '+12345678900';
+            const whatsappNumber = localStorage.getItem('whatsappNumber') || '+12345678900';
             window.open('https://wa.me/' + whatsappNumber.replace(/[^0-9]/g, ''), '_blank');
         });
     }
@@ -30,22 +30,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (telegramLink) {
         telegramLink.addEventListener('click', function(e) {
             e.preventDefault();
-            const telegramUser = localStorage.getItem('userAssignedTelegram') || localStorage.getItem('telegramUsername') || '@ClutchSupport';
+            const telegramUser = localStorage.getItem('telegramUsername') || '@ClutchSupport';
             window.open('https://t.me/' + telegramUser.replace('@', ''), '_blank');
         });
     }
 });
 
-function loadUserSpecificContacts() {
-    let whatsappNumber = localStorage.getItem('userAssignedWhatsapp');
-    let telegramUsername = localStorage.getItem('userAssignedTelegram');
-    
-    if (!whatsappNumber) {
-        whatsappNumber = localStorage.getItem('whatsappNumber') || '+1 234 567 8900';
-    }
-    if (!telegramUsername) {
-        telegramUsername = localStorage.getItem('telegramUsername') || '@ClutchSupport';
-    }
+function loadContactNumbers() {
+    const whatsappNumber = localStorage.getItem('whatsappNumber') || '+1 234 567 8900';
+    const telegramUsername = localStorage.getItem('telegramUsername') || '@ClutchSupport';
     
     const whatsappElement = document.getElementById('whatsappNumber');
     const telegramElement = document.getElementById('telegramUsername');

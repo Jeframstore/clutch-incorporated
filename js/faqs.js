@@ -1,4 +1,4 @@
-// FAQS Page - PDF Support
+// FAQS Page - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');

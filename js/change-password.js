@@ -1,79 +1,111 @@
-// Change Password Page - Complete
-
-let userId = null;
+// Change Password Page - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
-    userId = localStorage.getItem('userId');
     const isLoggedIn = localStorage.getItem('isLoggedIn');
-    
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
         return;
     }
     
     const backBtn = document.getElementById('backBtn');
-    if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'profile.html');
+    if (backBtn) {
+        backBtn.addEventListener('click', function() {
+            window.location.href = 'profile.html';
+        });
+    }
     
-    document.getElementById('changePasswordBtn').addEventListener('click', changePassword);
+    const changeBtn = document.getElementById('changePasswordBtn');
+    if (changeBtn) {
+        changeBtn.addEventListener('click', changePassword);
+    }
 });
 
-async function changePassword() {
-    const current = document.getElementById('currentPassword').value;
-    const newPass = document.getElementById('newPassword').value;
-    const confirm = document.getElementById('confirmPassword').value;
+function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
     
     removeMessages();
     
-    if (!current) { showError('Current password required'); return; }
-    if (!newPass || newPass.length < 4) { showError('New password (min 4 characters)'); return; }
-    if (newPass !== confirm) { showError('Passwords do not match'); return; }
+    const storedPassword = localStorage.getItem('userPassword') || '9630';
     
-    try {
-        const snapshot = await database.ref('users/' + userId).once('value');
-        const user = snapshot.val();
-        
-        if (current !== user.password) {
-            showError('Current password incorrect');
-            return;
-        }
-        
-        await database.ref('users/' + userId).update({ password: newPass });
-        showSuccess('Password changed successfully!');
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-    } catch (error) {
-        showError('Database error');
+    if (!currentPassword) {
+        showError('Please enter current password');
+        return;
     }
+    
+    if (currentPassword !== storedPassword) {
+        showError('Current password is incorrect');
+        return;
+    }
+    
+    if (!newPassword) {
+        showError('Please enter new password');
+        return;
+    }
+    
+    if (newPassword.length < 4) {
+        showError('New password must be at least 4 characters');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showError('New passwords do not match');
+        return;
+    }
+    
+    localStorage.setItem('userPassword', newPassword);
+    
+    showSuccess('Password changed successfully!');
+    
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
 }
 
-function showError(msg) {
+function showError(message) {
     const form = document.querySelector('.password-form');
-    const div = document.createElement('div');
-    div.className = 'error-message';
-    div.textContent = msg;
-    form.insertAdjacentElement('beforebegin', div);
-    setTimeout(() => div.remove(), 5000);
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    form.insertAdjacentElement('beforebegin', errorDiv);
+    
+    setTimeout(function() {
+        const msg = document.querySelector('.error-message');
+        if (msg) msg.remove();
+    }, 5000);
 }
 
-function showSuccess(msg) {
+function showSuccess(message) {
     const form = document.querySelector('.password-form');
-    const div = document.createElement('div');
-    div.className = 'success-message';
-    div.textContent = msg;
-    form.insertAdjacentElement('beforebegin', div);
-    setTimeout(() => div.remove(), 5000);
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.textContent = message;
+    form.insertAdjacentElement('beforebegin', successDiv);
+    
+    setTimeout(function() {
+        const msg = document.querySelector('.success-message');
+        if (msg) msg.remove();
+    }, 5000);
 }
 
 function removeMessages() {
-    document.querySelectorAll('.error-message, .success-message').forEach(el => el.remove());
+    const errorMsg = document.querySelector('.error-message');
+    const successMsg = document.querySelector('.success-message');
+    if (errorMsg) errorMsg.remove();
+    if (successMsg) successMsg.remove();
 }
 
-document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const page = this.getAttribute('data-page');
-        if (page === 'home') window.location.href = 'dashboard.html';
-        if (page === 'starting') window.location.href = 'starting.html';
-        if (page === 'records') window.location.href = 'records.html';
+document.querySelectorAll('.nav-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+        const page = button.getAttribute('data-page');
+        
+        if (page === 'home') {
+            window.location.href = 'dashboard.html';
+        } else if (page === 'starting') {
+            window.location.href = 'starting.html';
+        } else if (page === 'records') {
+            window.location.href = 'records.html';
+        }
     });
 });

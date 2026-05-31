@@ -1,4 +1,4 @@
-// About Page - PDF Support
+// About Page - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
