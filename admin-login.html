@@ -4,206 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Admin Login - Clutch Incorporated</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .login-card {
-            background: rgba(18, 18, 26, 0.95);
-            padding: 40px;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid rgba(255, 215, 0, 0.3);
-        }
-        .big-c {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #ffd700, #ffaa00);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            font-weight: bold;
-            margin: 0 auto 15px;
-        }
-        h2 {
-            color: #ffd700;
-            text-align: center;
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-        .subtitle {
-            color: #888;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .input-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            color: #aaa;
-            margin-bottom: 8px;
-        }
-        input {
-            width: 100%;
-            padding: 14px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
-        }
-        input:focus {
-            outline: none;
-            border-color: #ffd700;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #ffd700, #ffaa00);
-            border: none;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            transform: scale(1.02);
-        }
-        .error-message {
-            background: rgba(255,0,0,0.1);
-            border: 1px solid rgba(255,0,0,0.3);
-            padding: 10px;
-            border-radius: 10px;
-            color: #ff6666;
-            margin-top: 15px;
-            text-align: center;
-        }
-        .otp-hint {
-            font-size: 11px;
-            color: #ffd700;
-            margin-top: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/admin.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
 </head>
 <body>
-    <div class="login-card">
-        <div class="big-c">C</div>
-        <h2>Clutch Incorporated</h2>
-        <p class="subtitle">Admin Panel</p>
-        
-        <form id="adminLoginForm">
-            <div class="input-group">
-                <label>Username or Email</label>
-                <input type="text" id="adminIdentifier" placeholder="Enter username or email" required>
+    <div class="admin-login-container">
+        <div class="admin-login-card">
+            <div class="admin-logo">
+                <div class="big-c">C</div>
+                <h2>Clutch Incorporated</h2>
+                <p>Admin Panel</p>
             </div>
             
-            <div class="input-group">
-                <label>Password</label>
-                <input type="password" id="adminPassword" placeholder="Enter password" required>
-            </div>
-            
-            <div id="otpSection" style="display: none;">
+            <form id="adminLoginForm">
                 <div class="input-group">
-                    <label>2FA Code</label>
-                    <input type="text" id="otpCode" placeholder="Enter 6-digit code" maxlength="6">
-                    <div class="otp-hint" id="otpHint"></div>
+                    <label>Username or Email</label>
+                    <input type="text" id="adminIdentifier" placeholder="Enter username or email" required>
                 </div>
-            </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="adminPassword" placeholder="Enter password" required>
+                </div>
+                
+                <div id="otpSection" style="display: none;">
+                    <div class="input-group">
+                        <label>2FA Code</label>
+                        <input type="text" id="otpCode" placeholder="Enter 6-digit code" maxlength="6">
+                        <div class="otp-hint" id="otpHint"></div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="login-btn">Login</button>
+            </form>
             
-            <button type="submit">Login</button>
-        </form>
-        
-        <div id="loginMessage"></div>
+            <div id="loginMessage"></div>
+        </div>
     </div>
 
-    <script>
-        const loginForm = document.getElementById('adminLoginForm');
-        const adminIdentifier = document.getElementById('adminIdentifier');
-        const adminPassword = document.getElementById('adminPassword');
-        const otpSection = document.getElementById('otpSection');
-        const otpCodeInput = document.getElementById('otpCode');
-        const otpHint = document.getElementById('otpHint');
-        const messageDiv = document.getElementById('loginMessage');
-        
-        function checkIfMaster() {
-            const identifier = adminIdentifier.value.trim();
-            
-            // Check if entering master admin credentials
-            if (identifier === 'master' || identifier === 'admin@clutch.com') {
-                otpSection.style.display = 'block';
-                otpHint.textContent = 'Test 2FA Code: 123456';
-            } else {
-                otpSection.style.display = 'none';
-                if (otpCodeInput) otpCodeInput.value = '';
-            }
-        }
-        
-        adminIdentifier.addEventListener('input', checkIfMaster);
-        adminPassword.addEventListener('input', checkIfMaster);
-        
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const identifier = adminIdentifier.value.trim();
-            const password = adminPassword.value;
-            const otpCode = otpCodeInput ? otpCodeInput.value : '';
-            
-            messageDiv.innerHTML = '';
-            
-            // Check Master Admin
-            if (identifier === 'master' || identifier === 'admin@clutch.com') {
-                if (password !== 'Master@2024') {
-                    messageDiv.innerHTML = '<div class="error-message">Invalid password</div>';
-                    return;
-                }
-                
-                if (otpCode !== '123456') {
-                    messageDiv.innerHTML = '<div class="error-message">Invalid 2FA code. Use: 123456</div>';
-                    return;
-                }
-                
-                // Login successful
-                localStorage.setItem('isAdminLoggedIn', 'true');
-                localStorage.setItem('adminType', 'master');
-                localStorage.setItem('adminUsername', 'master');
-                localStorage.setItem('adminId', 'master');
-                window.location.href = 'admin-dashboard.html';
-                return;
-            }
-            
-            // Check Sub Admins
-            let subAdmins = JSON.parse(localStorage.getItem('adminUsers') || '[]');
-            const subAdmin = subAdmins.find(function(a) {
-                return (a.username === identifier || a.email === identifier) && a.password === password;
-            });
-            
-            if (subAdmin) {
-                localStorage.setItem('isAdminLoggedIn', 'true');
-                localStorage.setItem('adminType', 'sub');
-                localStorage.setItem('adminUsername', subAdmin.username);
-                localStorage.setItem('adminId', subAdmin.id);
-                window.location.href = 'admin-dashboard.html';
-                return;
-            }
-            
-            messageDiv.innerHTML = '<div class="error-message">Invalid admin credentials</div>';
-        });
-    </script>
+    <script src="js/admin-login.js"></script>
 </body>
 </html>
