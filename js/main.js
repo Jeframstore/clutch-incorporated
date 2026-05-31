@@ -1,4 +1,4 @@
-// Login Page - Firebase Version
+// Login Page - Firebase ONLY (No localStorage)
 
 if (document.getElementById('loginForm')) {
     const loginForm = document.getElementById('loginForm');
@@ -13,8 +13,8 @@ if (document.getElementById('loginForm')) {
         
         try {
             // Check Master Admin
-            const masterSnapshot = await database.ref('admins/master').once('value');
-            const master = masterSnapshot.val();
+            const masterSnap = await database.ref('admins/master').once('value');
+            const master = masterSnap.val();
             
             if (master && (identifier === master.username || identifier === master.email) && password === master.password) {
                 localStorage.setItem('isAdminLoggedIn', 'true');
@@ -26,8 +26,8 @@ if (document.getElementById('loginForm')) {
             }
             
             // Check Sub Admins
-            const subSnapshot = await database.ref('admins/sub').once('value');
-            const subs = subSnapshot.val() || {};
+            const subSnap = await database.ref('admins/sub').once('value');
+            const subs = subSnap.val() || {};
             for (let id in subs) {
                 const admin = subs[id];
                 if ((admin.username === identifier || admin.email === identifier) && admin.password === password) {
@@ -40,23 +40,27 @@ if (document.getElementById('loginForm')) {
                 }
             }
             
-            // Check Regular Users
-            const usersSnapshot = await database.ref('users').once('value');
-            const users = usersSnapshot.val() || {};
+            // Check Regular Users - Firebase ONLY
+            const usersSnap = await database.ref('users').once('value');
+            const users = usersSnap.val() || {};
             
             let foundUser = null;
             let foundUserId = null;
             
             for (let id in users) {
-                const user = users[id];
-                if ((user.username === identifier || user.email === identifier) && user.password === password) {
-                    foundUser = user;
+                const u = users[id];
+                if ((u.username === identifier || u.email === identifier) && u.password === password) {
+                    foundUser = u;
                     foundUserId = id;
                     break;
                 }
             }
             
             if (foundUser) {
+                // Clear old localStorage
+                localStorage.clear();
+                
+                // Set new session
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('username', foundUser.username);
                 localStorage.setItem('userEmail', foundUser.email);
@@ -64,6 +68,7 @@ if (document.getElementById('loginForm')) {
                 localStorage.setItem('userInviteCode', foundUser.inviteCode || '');
                 localStorage.setItem('walletBalance', foundUser.balance || '0');
                 localStorage.setItem('commission', foundUser.commission || '0');
+                
                 window.location.href = 'dashboard.html';
             } else {
                 showError('Invalid username/email or password');
