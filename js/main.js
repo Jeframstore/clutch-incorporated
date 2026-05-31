@@ -43,6 +43,7 @@ if (document.getElementById('loginForm')) {
             // Check Regular Users
             const usersSnapshot = await database.ref('users').once('value');
             const users = usersSnapshot.val() || {};
+            
             let foundUser = null;
             let foundUserId = null;
             
