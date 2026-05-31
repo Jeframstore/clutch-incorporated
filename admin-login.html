@@ -50,6 +50,7 @@
             color: #888;
             text-align: center;
             margin-bottom: 30px;
+            font-size: 13px;
         }
         .input-group {
             margin-bottom: 20px;
@@ -58,6 +59,7 @@
             display: block;
             color: #aaa;
             margin-bottom: 8px;
+            font-size: 13px;
         }
         input {
             width: 100%;
@@ -86,6 +88,7 @@
         }
         button:hover {
             transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
         }
         .error-message {
             background: rgba(255,0,0,0.1);
@@ -95,6 +98,7 @@
             color: #ff6666;
             margin-top: 15px;
             text-align: center;
+            font-size: 13px;
         }
         .otp-hint {
             font-size: 11px;
@@ -102,9 +106,11 @@
             margin-top: 5px;
         }
     </style>
-    <!-- Firebase SDK - Load first -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Speakeasy for proper TOTP -->
+    <script src="https://cdn.jsdelivr.net/npm/speakeasy@2.0.0/speakeasy.js"></script>
 </head>
 <body>
     <div class="login-card">
@@ -185,7 +191,7 @@
         identifierInput.addEventListener('input', checkIfMaster);
         passwordInput.addEventListener('input', checkIfMaster);
         
-        // Real TOTP verification - NO TEST CODE
+        // Real TOTP verification using speakeasy
         function verifyTOTP(secret, token) {
             // Reject test code
             if (token === '123456') {
@@ -196,24 +202,18 @@
                 return false;
             }
             
-            // Simple TOTP calculation
-            const period = Math.floor(Date.now() / 1000 / 30);
-            let valid = false;
-            
-            for (let offset = -1; offset <= 1; offset++) {
-                const time = period + offset;
-                let hash = 0;
-                for (let i = 0; i < secret.length; i++) {
-                    hash += secret.charCodeAt(i);
-                }
-                const code = ((hash + time) % 1000000).toString().padStart(6, '0');
-                if (code === token) {
-                    valid = true;
-                    break;
-                }
+            try {
+                const verified = speakeasy.totp.verify({
+                    secret: secret,
+                    encoding: 'base32',
+                    token: token,
+                    window: 1
+                });
+                return verified;
+            } catch(e) {
+                console.error('2FA verification error:', e);
+                return false;
             }
-            
-            return valid;
         }
         
         loginForm.addEventListener('submit', async function(e) {
@@ -226,6 +226,7 @@
             messageDiv.innerHTML = '';
             
             try {
+                // Check Master Admin
                 if (masterAdmin && (identifier === masterAdmin.username || identifier === masterAdmin.email)) {
                     if (password !== masterAdmin.password) {
                         messageDiv.innerHTML = '<div class="error-message">Invalid password</div>';
@@ -246,7 +247,7 @@
                         localStorage.setItem('adminId', 'master');
                         window.location.href = 'admin-dashboard.html';
                     } else {
-                        messageDiv.innerHTML = '<div class="error-message">Invalid 2FA code. Use Google Authenticator.</div>';
+                        messageDiv.innerHTML = '<div class="error-message">Invalid 2FA code. Use code from Google Authenticator.</div>';
                     }
                     return;
                 }
@@ -271,7 +272,7 @@
                 
             } catch (error) {
                 console.error('Login error:', error);
-                messageDiv.innerHTML = '<div class="error-message">Database error</div>';
+                messageDiv.innerHTML = '<div class="error-message">Database error: ' + error.message + '</div>';
             }
         });
     </script>
