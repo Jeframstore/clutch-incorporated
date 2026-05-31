@@ -1,4 +1,4 @@
-// Withdraw Page - Complete
+// Withdraw Page - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadBalance() {
     let balance = localStorage.getItem('walletBalance');
     if (!balance) {
-        balance = '198.25';
+        balance = '0.00';
         localStorage.setItem('walletBalance', balance);
     }
     
@@ -37,7 +37,7 @@ function loadBalance() {
 
 function submitWithdrawRequest() {
     const amount = document.getElementById('withdrawAmount').value;
-    let balance = parseFloat(localStorage.getItem('walletBalance') || 198.25);
+    let balance = parseFloat(localStorage.getItem('walletBalance') || 0);
     
     removeMessages();
     
@@ -61,7 +61,7 @@ function submitWithdrawRequest() {
         amount: parseFloat(amount),
         status: 'pending',
         requestDate: new Date().toISOString(),
-        username: localStorage.getItem('username') || 'Jefram'
+        username: localStorage.getItem('username') || 'User'
     };
     
     let pendingRequests = localStorage.getItem('pendingWithdrawals');

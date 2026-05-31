@@ -1,136 +1,92 @@
 // Bind Wallet Page - Complete
 
-document.addEventListener('DOMContentLoaded', function() {
+let userId = null;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    userId = localStorage.getItem('userId');
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
         return;
     }
     
-    loadUserData();
-    loadSavedData();
+    await loadUserData();
     
-    const submitBtn = document.getElementById('submitBindBtn');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', submitBindWallet);
-    }
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'profile.html');
+    
+    document.getElementById('submitBindBtn').addEventListener('click', saveWallet);
 });
 
-function loadUserData() {
-    const username = localStorage.getItem('username') || 'Collins';
-    document.getElementById('userName').textContent = username + ' - VIP 1';
-    
-    let balance = localStorage.getItem('walletBalance');
-    if (!balance) {
-        balance = '198.25';
-        localStorage.setItem('walletBalance', balance);
-    }
-    document.getElementById('accountBalance').textContent = parseFloat(balance).toFixed(2) + ' USDT';
-    
-    let profits = localStorage.getItem('commission');
-    if (!profits) {
-        profits = '4.70';
-        localStorage.setItem('commission', profits);
-    }
-    document.getElementById('totalProfits').textContent = parseFloat(profits).toFixed(2) + ' USDT';
-}
-
-function loadSavedData() {
-    const savedPhone = localStorage.getItem('userPhoneNumber');
-    const savedWallet = localStorage.getItem('userWalletAddress');
-    
-    if (savedPhone) {
-        document.getElementById('phoneNumber').value = savedPhone;
-    }
-    if (savedWallet) {
-        document.getElementById('walletAddress').value = savedWallet;
+async function loadUserData() {
+    try {
+        const snapshot = await database.ref('users/' + userId).once('value');
+        const user = snapshot.val();
+        
+        document.getElementById('userName').textContent = (user?.username || 'User') + ' - VIP 1';
+        document.getElementById('accountBalance').textContent = parseFloat(user?.balance || 0).toFixed(2) + ' USDT';
+        document.getElementById('totalProfits').textContent = parseFloat(user?.commission || 0).toFixed(2) + ' USDT';
+        document.getElementById('inviteCode').textContent = user?.inviteCode || 'N/A';
+        
+        if (user?.phone) document.getElementById('phoneNumber').value = user.phone;
+        if (user?.walletAddress) document.getElementById('walletAddress').value = user.walletAddress;
+    } catch (error) {
+        console.error('Error:', error);
     }
 }
 
-function submitBindWallet() {
-    const phoneNumber = document.getElementById('phoneNumber').value.trim();
-    const walletAddress = document.getElementById('walletAddress').value.trim();
-    const withdrawPassword = document.getElementById('withdrawPassword').value;
+async function saveWallet() {
+    const phone = document.getElementById('phoneNumber').value.trim();
+    const wallet = document.getElementById('walletAddress').value.trim();
+    const password = document.getElementById('withdrawPassword').value;
     
     removeMessages();
     
-    if (!phoneNumber) {
-        showError('Please enter your phone number with country code');
-        return;
+    if (!phone) { showError('Phone number required'); return; }
+    if (!wallet || wallet.length < 20) { showError('Valid wallet address required'); return; }
+    if (!password || password.length < 4) { showError('Withdraw password (min 4 characters)'); return; }
+    
+    try {
+        await database.ref('users/' + userId).update({
+            phone: phone,
+            walletAddress: wallet,
+            withdrawPassword: password
+        });
+        showSuccess('Wallet address and password saved!');
+        document.getElementById('withdrawPassword').value = '';
+    } catch (error) {
+        showError('Database error');
     }
-    
-    if (!walletAddress) {
-        showError('Please enter or paste your USDT wallet address');
-        return;
-    }
-    
-    if (walletAddress.length < 20) {
-        showError('Please enter a valid USDT wallet address');
-        return;
-    }
-    
-    if (!withdrawPassword) {
-        showError('Please set your withdraw password');
-        return;
-    }
-    
-    if (withdrawPassword.length < 4) {
-        showError('Withdraw password must be at least 4 characters');
-        return;
-    }
-    
-    localStorage.setItem('userPhoneNumber', phoneNumber);
-    localStorage.setItem('userWalletAddress', walletAddress);
-    localStorage.setItem('withdrawPassword', withdrawPassword);
-    
-    showSuccess('Wallet address and withdraw password saved successfully!');
-    
-    document.getElementById('withdrawPassword').value = '';
 }
 
-function showError(message) {
+function showError(msg) {
     const form = document.querySelector('.bind-form');
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    form.insertAdjacentElement('beforebegin', errorDiv);
-    
-    setTimeout(function() {
-        const msg = document.querySelector('.error-message');
-        if (msg) msg.remove();
-    }, 5000);
+    const div = document.createElement('div');
+    div.className = 'error-message';
+    div.textContent = msg;
+    form.insertAdjacentElement('beforebegin', div);
+    setTimeout(() => div.remove(), 5000);
 }
 
-function showSuccess(message) {
+function showSuccess(msg) {
     const form = document.querySelector('.bind-form');
-    const successDiv = document.createElement('div');
-    successDiv.className = 'success-message';
-    successDiv.textContent = message;
-    form.insertAdjacentElement('beforebegin', successDiv);
-    
-    setTimeout(function() {
-        const msg = document.querySelector('.success-message');
-        if (msg) msg.remove();
-    }, 5000);
+    const div = document.createElement('div');
+    div.className = 'success-message';
+    div.textContent = msg;
+    form.insertAdjacentElement('beforebegin', div);
+    setTimeout(() => div.remove(), 5000);
 }
 
 function removeMessages() {
-    const errorMsg = document.querySelector('.error-message');
-    const successMsg = document.querySelector('.success-message');
-    if (errorMsg) errorMsg.remove();
-    if (successMsg) successMsg.remove();
+    document.querySelectorAll('.error-message, .success-message').forEach(el => el.remove());
 }
 
-document.querySelectorAll('.nav-btn').forEach(function(button) {
-    button.addEventListener('click', function() {
-        const page = button.getAttribute('data-page');
-        
-        if (page === 'home') {
-            window.location.href = 'dashboard.html';
-        } else if (page === 'starting') {
-            window.location.href = 'starting.html';
-        } else if (page === 'records') {
-            alert('Records page - Coming soon');
-        }
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const page = this.getAttribute('data-page');
+        if (page === 'home') window.location.href = 'dashboard.html';
+        if (page === 'starting') window.location.href = 'starting.html';
+        if (page === 'records') window.location.href = 'records.html';
     });
 });

@@ -1,13 +1,14 @@
-// Deposit Page - Loads User-Specific Customer Service
+// Deposit Page - Firebase Version
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
         return;
     }
     
-    loadUserSpecificContacts();
+    await loadServiceContacts();
     
     const backBtn = document.getElementById('backBtn');
     if (backBtn) {
@@ -22,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (whatsappBtn) {
         whatsappBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            const whatsappNumber = localStorage.getItem('userAssignedWhatsapp') || localStorage.getItem('depositWhatsapp') || '+12345678900';
+            const whatsappNumber = localStorage.getItem('depositWhatsapp') || '+12345678900';
             window.open('https://wa.me/' + whatsappNumber.replace(/[^0-9]/g, ''), '_blank');
         });
     }
@@ -30,43 +31,39 @@ document.addEventListener('DOMContentLoaded', function() {
     if (telegramBtn) {
         telegramBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            const telegramUser = localStorage.getItem('userAssignedTelegram') || localStorage.getItem('depositTelegram') || '@ClutchSupport';
+            const telegramUser = localStorage.getItem('depositTelegram') || '@ClutchSupport';
             window.open('https://t.me/' + telegramUser.replace('@', ''), '_blank');
         });
     }
 });
 
-function loadUserSpecificContacts() {
-    const username = localStorage.getItem('username') || 'Jefram';
-    
-    // Try to get user-specific assigned contacts
-    let whatsappNumber = localStorage.getItem('userAssignedWhatsapp');
-    let telegramUsername = localStorage.getItem('userAssignedTelegram');
-    
-    // Fallback to default
-    if (!whatsappNumber) {
-        whatsappNumber = localStorage.getItem('depositWhatsapp') || '+1 234 567 8900';
-    }
-    if (!telegramUsername) {
-        telegramUsername = localStorage.getItem('depositTelegram') || '@ClutchSupport';
-    }
-    
-    const whatsappElement = document.getElementById('whatsappNumber');
-    const telegramElement = document.getElementById('telegramUsername');
-    
-    if (whatsappElement) {
-        whatsappElement.textContent = whatsappNumber;
-    }
-    
-    if (telegramElement) {
-        telegramElement.textContent = telegramUsername;
+async function loadServiceContacts() {
+    try {
+        const snapshot = await database.ref('settings/serviceContacts').once('value');
+        const contacts = snapshot.val();
+        
+        if (contacts) {
+            localStorage.setItem('depositWhatsapp', contacts.whatsapp || '+1 234 567 8900');
+            localStorage.setItem('depositTelegram', contacts.telegram || '@ClutchSupport');
+        }
+        
+        const whatsappNumber = localStorage.getItem('depositWhatsapp') || '+1 234 567 8900';
+        const telegramUsername = localStorage.getItem('depositTelegram') || '@ClutchSupport';
+        
+        const whatsappElement = document.getElementById('whatsappNumber');
+        const telegramElement = document.getElementById('telegramUsername');
+        
+        if (whatsappElement) whatsappElement.textContent = whatsappNumber;
+        if (telegramElement) telegramElement.textContent = telegramUsername;
+        
+    } catch (error) {
+        console.error('Error loading service contacts:', error);
     }
 }
 
 document.querySelectorAll('.nav-btn').forEach(function(button) {
     button.addEventListener('click', function() {
         const page = button.getAttribute('data-page');
-        
         if (page === 'home') {
             window.location.href = 'dashboard.html';
         } else if (page === 'starting') {

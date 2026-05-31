@@ -1,4 +1,4 @@
-// Dashboard JavaScript - Complete
+// Dashboard - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');

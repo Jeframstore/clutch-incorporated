@@ -1,4 +1,4 @@
-// Profile Page - Complete with Invitation Code
+// Profile Page - Original Working Version (No Firebase)
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');

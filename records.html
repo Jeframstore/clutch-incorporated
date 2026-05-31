@@ -6,7 +6,8 @@
     <title>Clutch Incorporated - Records</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/records.css">
-</head>
+    <!-- Firebase SDK -->
+    </head>
 <body>
     <div class="records-container">
         <div class="records-header">
@@ -23,19 +24,14 @@
             <h1 class="page-title">Transaction Records</h1>
         </div>
 
-        <!-- Tabs -->
         <div class="tabs">
             <button class="tab-btn active" data-tab="all">All</button>
             <button class="tab-btn" data-tab="deposit">Deposit</button>
             <button class="tab-btn" data-tab="withdraw">Withdraw</button>
         </div>
 
-        <!-- Records List -->
-        <div class="records-list" id="recordsList">
-            <!-- Records will be inserted here -->
-        </div>
+        <div class="records-list" id="recordsList"></div>
 
-        <!-- Bottom Navigation -->
         <div class="bottom-nav">
             <button class="nav-btn" data-page="home">
                 <span>🏠</span>
