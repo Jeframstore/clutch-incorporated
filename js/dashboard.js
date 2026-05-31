@@ -1,9 +1,11 @@
-// Dashboard - Firebase Version
+// Dashboard - Complete with Fixed Sign-In
+
+let userId = null;
 
 document.addEventListener('DOMContentLoaded', async function() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    const userId = localStorage.getItem('userId');
+    userId = localStorage.getItem('userId');
     const username = localStorage.getItem('username');
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
     
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
@@ -11,35 +13,41 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     document.getElementById('usernameDisplay').textContent = username || 'User';
-    
-    if (userId) {
-        await loadUserData(userId);
-    }
+    await loadUserData();
     
     // Profile Menu
     const profileIcon = document.getElementById('profileIconBtn');
     const profileMenu = document.getElementById('profileMenu');
     
     if (profileIcon && profileMenu) {
-        profileIcon.addEventListener('click', (e) => {
+        profileIcon.addEventListener('click', function(e) {
             e.stopPropagation();
             profileMenu.style.display = profileMenu.style.display === 'none' ? 'block' : 'none';
         });
         
-        document.addEventListener('click', () => { profileMenu.style.display = 'none'; });
-        
-        document.getElementById('profileMenuItem').addEventListener('click', () => {
-            window.location.href = 'profile.html';
+        document.addEventListener('click', function() {
+            profileMenu.style.display = 'none';
         });
         
-        document.getElementById('logoutMenuItem').addEventListener('click', () => {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        });
+        const profileMenuItem = document.getElementById('profileMenuItem');
+        const logoutMenuItem = document.getElementById('logoutMenuItem');
+        
+        if (profileMenuItem) {
+            profileMenuItem.addEventListener('click', function() {
+                window.location.href = 'profile.html';
+            });
+        }
+        
+        if (logoutMenuItem) {
+            logoutMenuItem.addEventListener('click', function() {
+                localStorage.clear();
+                window.location.href = 'index.html';
+            });
+        }
     }
     
     // Menu buttons
-    document.querySelectorAll('.menu-btn').forEach(btn => {
+    document.querySelectorAll('.menu-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const page = this.getAttribute('data-page');
             if (page === 'service') window.location.href = 'service.html';
@@ -52,10 +60,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     });
     
-    // Bottom nav
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+    // Bottom navigation
+    document.querySelectorAll('.nav-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
             this.classList.add('active');
             const page = this.getAttribute('data-page');
             if (page === 'starting') window.location.href = 'starting.html';
@@ -64,15 +74,90 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 });
 
-async function loadUserData(userId) {
+async function loadUserData() {
     try {
+        if (!userId) return;
+        
         const snapshot = await database.ref('users/' + userId).once('value');
         const user = snapshot.val();
+        
         if (user) {
+            // Update display
+            document.getElementById('usernameDisplay').textContent = user.username;
+            
+            // Process sign-in streak
+            const today = new Date().toISOString().split('T')[0];
+            let streak = user.signInStreak || 0;
+            let lastSignIn = user.lastSignIn || '';
+            let baseSalary = user.baseSalary || 0;
+            
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            
+            // Check if user missed a day
+            if (lastSignIn !== yesterdayStr && lastSignIn !== today && streak > 0) {
+                streak = 0;
+                baseSalary = 0;
+                await database.ref('users/' + userId).update({
+                    signInStreak: 0,
+                    baseSalary: 0
+                });
+                console.log('Streak reset - missed a day');
+            }
+            
+            // Check if signed in today
+            if (lastSignIn !== today) {
+                streak++;
+                const rewards = {1: 300, 2: 150, 3: 500, 4: 1000, 5: 150, 6: 300, 7: 300, 8: 400, 9: 500, 10: 600, 11: 700, 12: 800, 13: 900, 14: 1000, 15: 1500};
+                const todayReward = rewards[streak] || 0;
+                baseSalary += todayReward;
+                
+                await database.ref('users/' + userId).update({
+                    signInStreak: streak,
+                    baseSalary: baseSalary,
+                    lastSignIn: today
+                });
+                
+                // Update display
+                const baseSalaryElement = document.getElementById('baseSalary');
+                if (baseSalaryElement) {
+                    baseSalaryElement.textContent = baseSalary.toFixed(2);
+                }
+                
+                const counterElement = document.querySelector('.signin-counter');
+                if (counterElement) {
+                    counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
+                }
+                
+                if (todayReward > 0) {
+                    setTimeout(() => {
+                        alert(`🎉 Daily sign-in reward: +${todayReward} USDT!\nStreak: ${streak} days\nTotal Base Salary: ${baseSalary.toFixed(2)} USDT`);
+                    }, 500);
+                }
+            } else {
+                // Update display with existing values
+                const baseSalaryElement = document.getElementById('baseSalary');
+                if (baseSalaryElement) {
+                    baseSalaryElement.textContent = baseSalary.toFixed(2);
+                }
+                
+                const counterElement = document.querySelector('.signin-counter');
+                if (counterElement) {
+                    counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
+                }
+            }
+            
             localStorage.setItem('walletBalance', user.balance || '0');
             localStorage.setItem('commission', user.commission || '0');
+            localStorage.setItem('userInviteCode', user.inviteCode || '');
         }
     } catch (error) {
         console.error('Error loading user data:', error);
     }
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = 'index.html';
 }
