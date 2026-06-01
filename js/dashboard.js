@@ -82,7 +82,10 @@ async function loadUserData() {
         
         if (user) {
             // Update display from Firebase
-            document.getElementById('usernameDisplay').textContent = user.username;
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            if (usernameDisplay) {
+                usernameDisplay.textContent = user.username || 'User';
+            }
             
             // Process sign-in streak
             const today = new Date().toISOString().split('T')[0];
