@@ -61,11 +61,15 @@ async function loadUserStats() {
 }
 
 async function loadCurrentTask() {
-    currentTask = JSON.parse(localStorage.getItem('currentTask') || 'null');
-    const completedTaskIds = JSON.parse(localStorage.getItem('completedTaskIds') || '[]');
-
-    if (!currentTask || currentTask.completed === true) {
-        try {
+    try {
+        const userSnap = await database.ref('users/' + userId).once('value');
+        const user = userSnap.val() || {};
+        const completedTaskIds = user.completedTaskIds || [];
+        const currentTaskData = user.currentTask || null;
+        
+        if (currentTaskData && !currentTaskData.completed) {
+            currentTask = currentTaskData;
+        } else {
             const tasksSnap = await database.ref('tasks').once('value');
             const tasks = tasksSnap.val() || {};
             const now = new Date();
@@ -91,12 +95,12 @@ async function loadCurrentTask() {
                     image3: task.image3 || '',
                     completed: false
                 };
-                localStorage.setItem('currentTask', JSON.stringify(currentTask));
+                await database.ref('users/' + userId).update({ currentTask: currentTask });
                 break;
             }
-        } catch (e) {
-            console.error('Error loading task from Firebase:', e);
         }
+    } catch (e) {
+        console.error('Error loading task from Firebase:', e);
     }
 
     displayTask(currentTask);
@@ -212,9 +216,8 @@ function updateStartButtonState(task) {
     startBtn.disabled = false;
 }
 
-function saveTransactionRecord(task, profit) {
-    const records = JSON.parse(localStorage.getItem('transactionRecords') || '[]');
-    records.push({
+async function saveTransactionRecord(task, profit) {
+    const record = {
         id: 'TR' + Date.now(),
         type: 'optimization',
         taskId: task.taskId || 'Unknown',
@@ -222,57 +225,51 @@ function saveTransactionRecord(task, profit) {
         status: 'completed',
         date: new Date().toISOString(),
         remark: 'Task profit added to commission'
-    });
-    localStorage.setItem('transactionRecords', JSON.stringify(records));
+    };
+    await database.ref('users/' + userId + '/transactions/' + record.id).set(record);
 }
 
-function loadTaskProgress() {
-    let completedTasks = localStorage.getItem('completedTasks');
-    let totalTasks = localStorage.getItem('totalTasksPerRound');
-    
-    if (!completedTasks) {
-        completedTasks = 0;
-        localStorage.setItem('completedTasks', completedTasks);
+async function loadTaskProgress() {
+    try {
+        const userSnap = await database.ref('users/' + userId).once('value');
+        const user = userSnap.val() || {};
+        let completedTasks = user.completedTasks || 0;
+        let totalTasks = user.totalTasksPerRound || 40;
+        
+        const percentage = (completedTasks / totalTasks) * 100;
+        
+        document.getElementById('taskCount').textContent = completedTasks + '/' + totalTasks;
+        document.getElementById('progressFill').style.width = percentage + '%';
+    } catch (e) {
+        console.error('Error loading task progress:', e);
     }
-    
-    if (!totalTasks) {
-        totalTasks = 40;
-        localStorage.setItem('totalTasksPerRound', totalTasks);
-    }
-    
-    completedTasks = parseInt(completedTasks);
-    totalTasks = parseInt(totalTasks);
-    
-    const percentage = (completedTasks / totalTasks) * 100;
-    
-    document.getElementById('taskCount').textContent = completedTasks + '/' + totalTasks;
-    document.getElementById('progressFill').style.width = percentage + '%';
 }
 
 async function completeTask() {
     if (isProcessingTask) return;
 
-    currentTask = JSON.parse(localStorage.getItem('currentTask') || 'null');
-    if (!currentTask) {
-        alert('No task is currently available.');
-        return;
-    }
-
-    if (currentTask.completed === true) {
-        alert('This task has already been completed.');
-        return;
-    }
-
-    isProcessingTask = true;
-    updateStartButtonState(currentTask);
-
     try {
-        let completedTasks = parseInt(localStorage.getItem('completedTasks') || 0);
-        let totalTasks = parseInt(localStorage.getItem('totalTasksPerRound') || 40);
-        
-        // Get current user data from Firebase
         const userSnap = await database.ref('users/' + userId).once('value');
-        const user = userSnap.val() || { balance: 0, commission: 0 };
+        const user = userSnap.val() || {};
+        const currentTaskData = user.currentTask || null;
+        
+        if (!currentTaskData) {
+            alert('No task is currently available.');
+            return;
+        }
+
+        if (currentTaskData.completed === true) {
+            alert('This task has already been completed.');
+            return;
+        }
+
+        isProcessingTask = true;
+        currentTask = currentTaskData;
+        updateStartButtonState(currentTask);
+
+        let completedTasks = user.completedTasks || 0;
+        let totalTasks = user.totalTasksPerRound || 40;
+        const completedTaskIds = user.completedTaskIds || [];
         
         let balance = parseFloat(user.balance || 0);
         let commission = parseFloat(user.commission || 0);
@@ -281,27 +278,25 @@ async function completeTask() {
         const newBalance = balance + profit;
         const newCommission = commission + profit;
         
-        // Write updated balance/commission to Firebase
-        await database.ref('users/' + userId).update({
-            balance: newBalance.toFixed(2),
-            commission: newCommission.toFixed(2)
-        });
-        
         currentTask.completed = true;
-        localStorage.setItem('currentTask', JSON.stringify(currentTask));
-
-        const completedTaskIds = JSON.parse(localStorage.getItem('completedTaskIds') || '[]');
+        
         if (currentTask.firebaseKey && !completedTaskIds.includes(currentTask.firebaseKey)) {
             completedTaskIds.push(currentTask.firebaseKey);
-            localStorage.setItem('completedTaskIds', JSON.stringify(completedTaskIds));
         }
         
         completedTasks++;
-        localStorage.setItem('completedTasks', completedTasks);
         
-        saveTransactionRecord(currentTask, profit);
+        await database.ref('users/' + userId).update({
+            balance: newBalance.toFixed(2),
+            commission: newCommission.toFixed(2),
+            currentTask: currentTask,
+            completedTaskIds: completedTaskIds,
+            completedTasks: completedTasks
+        });
+        
+        await saveTransactionRecord(currentTask, profit);
         await loadUserStats();
-        loadTaskProgress();
+        await loadTaskProgress();
         updateStartButtonState(currentTask);
         
         alert('Task completed! +' + profit.toFixed(2) + ' USDT added to your balance.');
@@ -311,6 +306,8 @@ async function completeTask() {
         }
         
         await loadCurrentTask();
+    } catch (e) {
+        console.error('Error completing task:', e);
     } finally {
         isProcessingTask = false;
         updateStartButtonState(currentTask);

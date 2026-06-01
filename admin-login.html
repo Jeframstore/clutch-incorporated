@@ -173,10 +173,10 @@
                         return;
                     }
                     
-                    localStorage.setItem('isAdminLoggedIn', 'true');
-                    localStorage.setItem('adminType', 'master');
-                    localStorage.setItem('adminUsername', masterAdmin.username);
-                    localStorage.setItem('adminId', 'master');
+                    sessionStorage.setItem('isAdminLoggedIn', 'true');
+                    sessionStorage.setItem('adminType', 'master');
+                    sessionStorage.setItem('adminUsername', masterAdmin.username);
+                    sessionStorage.setItem('adminId', 'master');
                     window.location.href = 'admin-dashboard.html';
                     return;
                 }
@@ -188,10 +188,10 @@
                 for (let id in subAdmins) {
                     const admin = subAdmins[id];
                     if ((admin.username === identifier || admin.email === identifier) && admin.password === password) {
-                        localStorage.setItem('isAdminLoggedIn', 'true');
-                        localStorage.setItem('adminType', 'sub');
-                        localStorage.setItem('adminUsername', admin.username);
-                        localStorage.setItem('adminId', id);
+                        sessionStorage.setItem('isAdminLoggedIn', 'true');
+                        sessionStorage.setItem('adminType', 'sub');
+                        sessionStorage.setItem('adminUsername', admin.username);
+                        sessionStorage.setItem('adminId', id);
                         window.location.href = 'admin-dashboard.html';
                         return;
                     }

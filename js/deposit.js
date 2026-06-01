@@ -20,35 +20,53 @@ document.addEventListener('DOMContentLoaded', function() {
     const telegramBtn = document.getElementById('telegramBtn');
     
     if (whatsappBtn) {
-        whatsappBtn.addEventListener('click', function(e) {
+        whatsappBtn.addEventListener('click', async function(e) {
             e.preventDefault();
-            const whatsappNumber = localStorage.getItem('depositWhatsapp') || '+12345678900';
-            window.open('https://wa.me/' + whatsappNumber.replace(/[^0-9]/g, ''), '_blank');
+            try {
+                const snap = await database.ref('settings/serviceContacts').once('value');
+                const contacts = snap.val() || { whatsapp: '+1 234 567 8900' };
+                const whatsappNumber = contacts.whatsapp;
+                window.open('https://wa.me/' + whatsappNumber.replace(/[^0-9]/g, ''), '_blank');
+            } catch (err) {
+                console.error('Error loading whatsapp:', err);
+            }
         });
     }
     
     if (telegramBtn) {
-        telegramBtn.addEventListener('click', function(e) {
+        telegramBtn.addEventListener('click', async function(e) {
             e.preventDefault();
-            const telegramUser = localStorage.getItem('depositTelegram') || '@ClutchSupport';
-            window.open('https://t.me/' + telegramUser.replace('@', ''), '_blank');
+            try {
+                const snap = await database.ref('settings/serviceContacts').once('value');
+                const contacts = snap.val() || { telegram: '@ClutchSupport' };
+                const telegramUser = contacts.telegram;
+                window.open('https://t.me/' + telegramUser.replace('@', ''), '_blank');
+            } catch (err) {
+                console.error('Error loading telegram:', err);
+            }
         });
     }
 });
 
-function loadContactNumbers() {
-    const whatsappNumber = localStorage.getItem('depositWhatsapp') || '+1 234 567 8900';
-    const telegramUsername = localStorage.getItem('depositTelegram') || '@ClutchSupport';
-    
-    const whatsappElement = document.getElementById('whatsappNumber');
-    const telegramElement = document.getElementById('telegramUsername');
-    
-    if (whatsappElement) {
-        whatsappElement.textContent = whatsappNumber;
-    }
-    
-    if (telegramElement) {
-        telegramElement.textContent = telegramUsername;
+async function loadContactNumbers() {
+    try {
+        const snap = await database.ref('settings/serviceContacts').once('value');
+        const contacts = snap.val() || { whatsapp: '+1 234 567 8900', telegram: '@ClutchSupport' };
+        const whatsappNumber = contacts.whatsapp;
+        const telegramUsername = contacts.telegram;
+        
+        const whatsappElement = document.getElementById('whatsappNumber');
+        const telegramElement = document.getElementById('telegramUsername');
+        
+        if (whatsappElement) {
+            whatsappElement.textContent = whatsappNumber;
+        }
+        
+        if (telegramElement) {
+            telegramElement.textContent = telegramUsername;
+        }
+    } catch (e) {
+        console.error('Error loading contact numbers:', e);
     }
 }
 

@@ -17,22 +17,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function loadFAQSFile() {
-    const pdfUrl = localStorage.getItem('faqsPDF');
-    const pdfFrame = document.getElementById('pdfFrame');
-    const noPdfPlaceholder = document.getElementById('noPdfPlaceholder');
-    
-    if (pdfUrl && pdfUrl !== '') {
-        pdfFrame.src = pdfUrl;
-        pdfFrame.style.display = 'block';
-        if (noPdfPlaceholder) {
-            noPdfPlaceholder.style.display = 'none';
+async function loadFAQSFile() {
+    try {
+        const snap = await database.ref('settings/faqsPDF').once('value');
+        const pdfUrl = snap.val();
+        const pdfFrame = document.getElementById('pdfFrame');
+        const noPdfPlaceholder = document.getElementById('noPdfPlaceholder');
+        
+        if (pdfUrl && pdfUrl !== '') {
+            pdfFrame.src = pdfUrl;
+            pdfFrame.style.display = 'block';
+            if (noPdfPlaceholder) {
+                noPdfPlaceholder.style.display = 'none';
+            }
+        } else {
+            pdfFrame.style.display = 'none';
+            if (noPdfPlaceholder) {
+                noPdfPlaceholder.style.display = 'block';
+            }
         }
-    } else {
-        pdfFrame.style.display = 'none';
-        if (noPdfPlaceholder) {
-            noPdfPlaceholder.style.display = 'block';
-        }
+    } catch (e) {
+        console.error('Error loading FAQs PDF:', e);
     }
 }
 

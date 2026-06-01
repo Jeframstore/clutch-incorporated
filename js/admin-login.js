@@ -53,22 +53,34 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Sub Admins
-        let subAdmins = JSON.parse(localStorage.getItem('adminUsers') || '[]');
-        const subAdmin = subAdmins.find(function(a) {
-            return (a.username === identifier || a.email === identifier) && a.password === password;
+        // Sub Admins - Firebase
+        database.ref('admins/sub').once('value').then(function(snapshot) {
+            const subAdmins = snapshot.val() || {};
+            let foundSubAdmin = null;
+            let foundSubAdminId = null;
+            
+            for (let id in subAdmins) {
+                const admin = subAdmins[id];
+                if ((admin.username === identifier || admin.email === identifier) && admin.password === password) {
+                    foundSubAdmin = admin;
+                    foundSubAdminId = id;
+                    break;
+                }
+            }
+            
+            if (foundSubAdmin) {
+                sessionStorage.setItem('isAdminLoggedIn', 'true');
+                sessionStorage.setItem('adminType', 'sub');
+                sessionStorage.setItem('adminUsername', foundSubAdmin.username);
+                sessionStorage.setItem('adminId', foundSubAdminId);
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                showMessage('Invalid admin credentials', 'error');
+            }
+        }).catch(function(error) {
+            console.error('Error checking sub admins:', error);
+            showMessage('Database error. Please try again.', 'error');
         });
-        
-        if (subAdmin) {
-            sessionStorage.setItem('isAdminLoggedIn', 'true');
-            sessionStorage.setItem('adminType', 'sub');
-            sessionStorage.setItem('adminUsername', subAdmin.username);
-            sessionStorage.setItem('adminId', subAdmin.id);
-            window.location.href = 'admin-dashboard.html';
-            return;
-        }
-        
-        showMessage('Invalid admin credentials', 'error');
     });
 });
 

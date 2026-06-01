@@ -26,16 +26,22 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.addEventListener('click', function() {
             profileMenu.style.display = 'none';
         });
-        
-        const profileMenuItem = document.getElementById('profileMenuItem');
-        const logoutMenuItem = document.getElementById('logoutMenuItem');
-        
-        if (profileMenuItem) {
-            profileMenuItem.addEventListener('click', function() {
-                window.location.href = 'profile.html';
-            });
-        }
-        
+    }
+    
+    const profileMenuItem = document.getElementById('profileMenuItem');
+    const logoutMenuItem = document.getElementById('logoutMenuItem');
+    
+    if (profileMenuItem) {
+        profileMenuItem.addEventListener('click', function() {
+            window.location.href = 'profile.html';
+        });
+    }
+    
+    if (logoutMenuItem) {
+        logoutMenuItem.addEventListener('click', logout);
+    }
+});
+
 function logout() {
     sessionStorage.clear();
     window.location.href = 'index.html';
@@ -118,10 +124,4 @@ async function loadUserData() {
     } catch (error) {
         console.error('Error loading user data:', error);
     }
-}
-
-
-function logout() {
-    sessionStorage.clear();
-    window.location.href = 'index.html';
 }
