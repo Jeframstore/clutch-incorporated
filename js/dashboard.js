@@ -40,6 +40,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (logoutMenuItem) {
         logoutMenuItem.addEventListener('click', logout);
     }
+    
+    // Menu button navigation
+    const menuButtons = document.querySelectorAll('.menu-btn');
+    menuButtons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const page = this.getAttribute('data-page');
+            if (page === 'service') window.location.href = 'service.html';
+            else if (page === 'withdraw') window.location.href = 'withdraw.html';
+            else if (page === 'deposit') window.location.href = 'deposit.html';
+            else if (page === 'terms') window.location.href = 'terms.html';
+            else if (page === 'certificate') window.location.href = 'certificate.html';
+            else if (page === 'faqs') window.location.href = 'faqs.html';
+            else if (page === 'about') window.location.href = 'about.html';
+        });
+    });
+    
+    // Bottom navigation
+    const navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const page = this.getAttribute('data-page');
+            if (page === 'home') window.location.href = 'dashboard.html';
+            else if (page === 'starting') window.location.href = 'starting.html';
+            else if (page === 'records') window.location.href = 'records.html';
+        });
+    });
 });
 
 function logout() {
