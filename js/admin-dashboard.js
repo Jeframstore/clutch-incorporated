@@ -3,6 +3,7 @@
 let adminType = '';
 let adminId = '';
 let adminName = '';
+let currentPage = 'dashboard';
 
 document.addEventListener('DOMContentLoaded', async function() {
     const isAdmin = localStorage.getItem('isAdminLoggedIn');
@@ -17,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     loadSidebar();
     loadDashboard();
+    watchWithdrawals();
     
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
@@ -41,7 +43,7 @@ function loadSidebar() {
         <button class="nav-item active" data-page="dashboard">📊 Dashboard</button>
         <button class="nav-item" data-page="users">👥 User Management</button>
         <button class="nav-item" data-page="tasks">📋 Task Management</button>
-        <button class="nav-item" data-page="withdrawals">💰 Withdrawal Requests</button>
+        <button class="nav-item" data-page="withdrawals">💰 Withdrawal Requests <span id="withdrawalCountBadge" class="sidebar-badge"></span></button>
         <button class="nav-item" data-page="deposits">💳 Deposit Records</button>
         <button class="nav-item" data-page="content">📝 Content Management</button>
         <button class="nav-item" data-page="vip">⭐ VIP Settings</button>
@@ -61,6 +63,7 @@ function loadSidebar() {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const page = this.getAttribute('data-page');
+            currentPage = page;
             const pageTitle = document.getElementById('pageTitle');
             if (pageTitle) pageTitle.textContent = this.textContent.trim();
             
@@ -94,6 +97,32 @@ async function loadDashboard() {
     await loadDashboardStats();
 }
 
+function watchWithdrawals() {
+    const withdrawalsRef = database.ref('withdrawals');
+    withdrawalsRef.on('value', snapshot => {
+        const withdrawals = snapshot.val() || {};
+        let pending = 0;
+        for (let id in withdrawals) {
+            if (withdrawals[id].status === 'pending') pending++;
+        }
+
+        const pendingEl = document.getElementById('pendingWithdrawals');
+        if (pendingEl) pendingEl.textContent = pending;
+        updateWithdrawalBadge(pending);
+
+        if (currentPage === 'withdrawals') {
+            loadWithdrawalRequests();
+        }
+    });
+}
+
+function updateWithdrawalBadge(pending) {
+    const badge = document.getElementById('withdrawalCountBadge');
+    if (!badge) return;
+    badge.textContent = pending > 0 ? pending : '';
+    badge.style.display = pending > 0 ? 'inline-block' : 'none';
+}
+
 async function loadDashboardStats() {
     try {
         const usersSnap = await database.ref('users').once('value');
@@ -117,6 +146,7 @@ async function loadDashboardStats() {
         
         const pendingEl = document.getElementById('pendingWithdrawals');
         if (pendingEl) pendingEl.textContent = pending;
+        updateWithdrawalBadge(pending);
         
         const tasksSnap = await database.ref('tasks').once('value');
         const tasks = tasksSnap.val() || {};
@@ -539,6 +569,13 @@ async function loadWithdrawalRequests() {
 window.approveWithdrawal = async function(id) {
     const snap = await database.ref('withdrawals/' + id).once('value');
     const w = snap.val();
+    if (!w) return;
+
+    const userSnap = await database.ref('users/' + w.userId).once('value');
+    const user = userSnap.val();
+    const newBalance = (parseFloat(user.balance || 0) - parseFloat(w.amount || 0)).toFixed(2);
+
+    await database.ref('users/' + w.userId).update({ balance: newBalance });
     await database.ref('withdrawals/' + id).update({ status: 'confirmed', processedDate: new Date().toISOString() });
     Swal.fire('Approved', `Withdrawal of ${w.amount} USDT approved`, 'success');
     loadWithdrawalRequests();
@@ -548,12 +585,10 @@ window.approveWithdrawal = async function(id) {
 window.rejectWithdrawal = async function(id) {
     const snap = await database.ref('withdrawals/' + id).once('value');
     const w = snap.val();
-    const userSnap = await database.ref('users/' + w.userId).once('value');
-    const user = userSnap.val();
-    const newBalance = (parseFloat(user.balance || 0) + parseFloat(w.amount)).toFixed(2);
-    await database.ref('users/' + w.userId).update({ balance: newBalance });
+    if (!w) return;
+
     await database.ref('withdrawals/' + id).update({ status: 'rejected', processedDate: new Date().toISOString() });
-    Swal.fire('Rejected', `Withdrawal rejected. Funds returned.`, 'info');
+    Swal.fire('Rejected', `Withdrawal rejected.`, 'info');
     loadWithdrawalRequests();
     loadDashboardStats();
 };

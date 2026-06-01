@@ -2,8 +2,10 @@
 
 let currentImageIndex = 0;
 let currentImages = [];
+let currentTask = null;
+let isProcessingTask = false;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
@@ -11,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     loadUserStats();
-    loadCurrentTask();
+    await loadCurrentTask();
     loadTaskProgress();
     
     const backBtn = document.getElementById('backBtn');
@@ -57,28 +59,48 @@ function loadUserStats() {
     }
 }
 
-function loadCurrentTask() {
-    let currentTask = localStorage.getItem('currentTask');
-    
-    if (!currentTask) {
-        currentTask = {
-            id: 'TSK001',
-            taskId: 'TSK001',
-            productName: 'Sample Product',
-            price: '25.99',
-            profit: '0.75',
-            image1: '',
-            image2: '',
-            image3: '',
-            completed: false
-        };
-        localStorage.setItem('currentTask', JSON.stringify(currentTask));
-    } else {
-        currentTask = JSON.parse(currentTask);
+async function loadCurrentTask() {
+    currentTask = JSON.parse(localStorage.getItem('currentTask') || 'null');
+    const completedTaskIds = JSON.parse(localStorage.getItem('completedTaskIds') || '[]');
+
+    if (!currentTask || currentTask.completed === true) {
+        try {
+            const tasksSnap = await database.ref('tasks').once('value');
+            const tasks = tasksSnap.val() || {};
+            const now = new Date();
+            currentTask = null;
+
+            for (let taskKey in tasks) {
+                const task = tasks[taskKey];
+                if (!task) continue;
+                if (completedTaskIds.includes(taskKey)) continue;
+                if (task.availableFrom) {
+                    const availableFrom = new Date(task.availableFrom);
+                    if (availableFrom > now) continue;
+                }
+
+                currentTask = {
+                    firebaseKey: taskKey,
+                    taskId: task.taskId || taskKey,
+                    productName: task.productName || 'Sample Product',
+                    price: task.price || '0.00',
+                    profit: task.profit || task.commission || '0.10',
+                    image1: task.image1 || '',
+                    image2: task.image2 || '',
+                    image3: task.image3 || '',
+                    completed: false
+                };
+                localStorage.setItem('currentTask', JSON.stringify(currentTask));
+                break;
+            }
+        } catch (e) {
+            console.error('Error loading task from Firebase:', e);
+        }
     }
-    
+
     displayTask(currentTask);
-    loadImages(currentTask);
+    loadImages(currentTask || {});
+    updateStartButtonState(currentTask);
 }
 
 function loadImages(task) {
@@ -140,10 +162,67 @@ function nextImage() {
 }
 
 function displayTask(task) {
-    document.getElementById('taskId').textContent = task.taskId;
-    document.getElementById('productName').textContent = task.productName;
-    document.getElementById('productPrice').textContent = '$' + task.price;
-    document.getElementById('taskProfit').textContent = '+' + task.profit + ' USDT';
+    const taskIdEl = document.getElementById('taskId');
+    const productNameEl = document.getElementById('productName');
+    const productPriceEl = document.getElementById('productPrice');
+    const taskProfitEl = document.getElementById('taskProfit');
+    const statusBadge = document.getElementById('statusBadge');
+
+    if (!task) {
+        if (taskIdEl) taskIdEl.textContent = 'N/A';
+        if (productNameEl) productNameEl.textContent = 'No Tasks Available';
+        if (productPriceEl) productPriceEl.textContent = '$0.00';
+        if (taskProfitEl) taskProfitEl.textContent = '+0.00 USDT';
+        if (statusBadge) statusBadge.textContent = 'No Task';
+        return;
+    }
+
+    if (taskIdEl) taskIdEl.textContent = task.taskId;
+    if (productNameEl) productNameEl.textContent = task.productName;
+    if (productPriceEl) productPriceEl.textContent = '$' + parseFloat(task.price || 0).toFixed(2);
+    const profitValue = parseFloat(task.profit || task.commission || 0.10);
+    if (taskProfitEl) taskProfitEl.textContent = '+' + profitValue.toFixed(2) + ' USDT';
+    if (statusBadge) statusBadge.textContent = task.completed === true ? 'Completed' : 'Available';
+}
+
+function updateStartButtonState(task) {
+    const startBtn = document.getElementById('startTaskBtn');
+    if (!startBtn) return;
+
+    if (isProcessingTask) {
+        startBtn.textContent = 'Processing...';
+        startBtn.disabled = true;
+        return;
+    }
+
+    if (!task) {
+        startBtn.textContent = 'No Task Available';
+        startBtn.disabled = true;
+        return;
+    }
+
+    if (task.completed === true) {
+        startBtn.textContent = 'Task Completed';
+        startBtn.disabled = true;
+        return;
+    }
+
+    startBtn.textContent = 'Start Optimization';
+    startBtn.disabled = false;
+}
+
+function saveTransactionRecord(task, profit) {
+    const records = JSON.parse(localStorage.getItem('transactionRecords') || '[]');
+    records.push({
+        id: 'TR' + Date.now(),
+        type: 'optimization',
+        taskId: task.taskId || 'Unknown',
+        amount: parseFloat(profit).toFixed(2),
+        status: 'completed',
+        date: new Date().toISOString(),
+        remark: 'Task profit added to commission'
+    });
+    localStorage.setItem('transactionRecords', JSON.stringify(records));
 }
 
 function loadTaskProgress() {
@@ -169,38 +248,63 @@ function loadTaskProgress() {
     document.getElementById('progressFill').style.width = percentage + '%';
 }
 
-function completeTask() {
-    let currentTask = JSON.parse(localStorage.getItem('currentTask') || '{}');
-    let completedTasks = parseInt(localStorage.getItem('completedTasks') || 0);
-    let totalTasks = parseInt(localStorage.getItem('totalTasksPerRound') || 40);
-    let balance = parseFloat(localStorage.getItem('walletBalance') || 0);
-    let commission = parseFloat(localStorage.getItem('commission') || 0);
-    
+async function completeTask() {
+    if (isProcessingTask) return;
+
+    currentTask = JSON.parse(localStorage.getItem('currentTask') || 'null');
+    if (!currentTask) {
+        alert('No task is currently available.');
+        return;
+    }
+
     if (currentTask.completed === true) {
         alert('This task has already been completed.');
         return;
     }
-    
-    const profit = parseFloat(currentTask.profit || 0.10);
-    const newBalance = balance + profit;
-    const newCommission = commission + profit;
-    
-    localStorage.setItem('walletBalance', newBalance.toFixed(2));
-    localStorage.setItem('commission', newCommission.toFixed(2));
-    
-    currentTask.completed = true;
-    localStorage.setItem('currentTask', JSON.stringify(currentTask));
-    
-    completedTasks++;
-    localStorage.setItem('completedTasks', completedTasks);
-    
-    loadUserStats();
-    loadTaskProgress();
-    
-    alert('Task completed! +' + profit.toFixed(2) + ' USDT added to your balance.');
-    
-    if (completedTasks >= totalTasks) {
-        alert('Congratulations! You completed all ' + totalTasks + ' tasks! Round complete!');
+
+    isProcessingTask = true;
+    updateStartButtonState(currentTask);
+
+    try {
+        let completedTasks = parseInt(localStorage.getItem('completedTasks') || 0);
+        let totalTasks = parseInt(localStorage.getItem('totalTasksPerRound') || 40);
+        let balance = parseFloat(localStorage.getItem('walletBalance') || 0);
+        let commission = parseFloat(localStorage.getItem('commission') || 0);
+        
+        const profit = parseFloat(currentTask.profit || currentTask.commission || 0.10);
+        const newBalance = balance + profit;
+        const newCommission = commission + profit;
+        
+        localStorage.setItem('walletBalance', newBalance.toFixed(2));
+        localStorage.setItem('commission', newCommission.toFixed(2));
+        
+        currentTask.completed = true;
+        localStorage.setItem('currentTask', JSON.stringify(currentTask));
+
+        const completedTaskIds = JSON.parse(localStorage.getItem('completedTaskIds') || '[]');
+        if (currentTask.firebaseKey && !completedTaskIds.includes(currentTask.firebaseKey)) {
+            completedTaskIds.push(currentTask.firebaseKey);
+            localStorage.setItem('completedTaskIds', JSON.stringify(completedTaskIds));
+        }
+        
+        completedTasks++;
+        localStorage.setItem('completedTasks', completedTasks);
+        
+        saveTransactionRecord(currentTask, profit);
+        loadUserStats();
+        loadTaskProgress();
+        updateStartButtonState(currentTask);
+        
+        alert('Task completed! +' + profit.toFixed(2) + ' USDT added to your balance.');
+        
+        if (completedTasks >= totalTasks) {
+            alert('Congratulations! You completed all ' + totalTasks + ' tasks! Round complete!');
+        }
+        
+        await loadCurrentTask();
+    } finally {
+        isProcessingTask = false;
+        updateStartButtonState(currentTask);
     }
 }
 
