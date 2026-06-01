@@ -45,10 +45,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            localStorage.setItem('isAdminLoggedIn', 'true');
-            localStorage.setItem('adminType', 'master');
-            localStorage.setItem('adminUsername', 'master');
-            localStorage.setItem('adminId', 'master');
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
+            sessionStorage.setItem('adminType', 'master');
+            sessionStorage.setItem('adminUsername', 'master');
+            sessionStorage.setItem('adminId', 'master');
             window.location.href = 'admin-dashboard.html';
             return;
         }
@@ -60,10 +60,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         if (subAdmin) {
-            localStorage.setItem('isAdminLoggedIn', 'true');
-            localStorage.setItem('adminType', 'sub');
-            localStorage.setItem('adminUsername', subAdmin.username);
-            localStorage.setItem('adminId', subAdmin.id);
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
+            sessionStorage.setItem('adminType', 'sub');
+            sessionStorage.setItem('adminUsername', subAdmin.username);
+            sessionStorage.setItem('adminId', subAdmin.id);
             window.location.href = 'admin-dashboard.html';
             return;
         }

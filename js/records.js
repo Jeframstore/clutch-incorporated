@@ -11,8 +11,8 @@ const statusMap = {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    userId = localStorage.getItem('userId');
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+    userId = sessionStorage.getItem('userId');
 
     if (!isLoggedIn || isLoggedIn !== 'true' || !userId) {
         window.location.href = 'index.html';

@@ -3,16 +3,14 @@
 let userId = null;
 
 document.addEventListener('DOMContentLoaded', async function() {
-    userId = localStorage.getItem('userId');
-    const username = localStorage.getItem('username');
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    userId = sessionStorage.getItem('userId');
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
     
-    if (!isLoggedIn || isLoggedIn !== 'true') {
+    if (!isLoggedIn || isLoggedIn !== 'true' || !userId) {
         window.location.href = 'index.html';
         return;
     }
     
-    document.getElementById('usernameDisplay').textContent = username || 'User';
     await loadUserData();
     
     // Profile Menu
@@ -38,41 +36,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        if (logoutMenuItem) {
-            logoutMenuItem.addEventListener('click', function() {
-                localStorage.clear();
-                window.location.href = 'index.html';
-            });
-        }
-    }
-    
-    // Menu buttons
-    document.querySelectorAll('.menu-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const page = this.getAttribute('data-page');
-            if (page === 'service') window.location.href = 'service.html';
-            if (page === 'withdraw') window.location.href = 'withdraw.html';
-            if (page === 'deposit') window.location.href = 'deposit.html';
-            if (page === 'terms') window.location.href = 'terms.html';
-            if (page === 'certificate') window.location.href = 'certificate.html';
-            if (page === 'faqs') window.location.href = 'faqs.html';
-            if (page === 'about') window.location.href = 'about.html';
-        });
-    });
-    
-    // Bottom navigation
-    document.querySelectorAll('.nav-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.nav-btn').forEach(function(b) {
-                b.classList.remove('active');
-            });
-            this.classList.add('active');
-            const page = this.getAttribute('data-page');
-            if (page === 'starting') window.location.href = 'starting.html';
-            if (page === 'records') window.location.href = 'records.html';
-        });
-    });
-});
+function logout() {
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+}
 
 async function loadUserData() {
     try {
@@ -82,7 +49,7 @@ async function loadUserData() {
         const user = snapshot.val();
         
         if (user) {
-            // Update display
+            // Update display from Firebase
             document.getElementById('usernameDisplay').textContent = user.username;
             
             // Process sign-in streak
@@ -147,17 +114,14 @@ async function loadUserData() {
                     counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
                 }
             }
-            
-            localStorage.setItem('walletBalance', user.balance || '0');
-            localStorage.setItem('commission', user.commission || '0');
-            localStorage.setItem('userInviteCode', user.inviteCode || '');
         }
     } catch (error) {
         console.error('Error loading user data:', error);
     }
 }
 
+
 function logout() {
-    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = 'index.html';
 }

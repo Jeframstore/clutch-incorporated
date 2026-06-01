@@ -17,10 +17,10 @@ if (document.getElementById('loginForm')) {
             const master = masterSnap.val();
             
             if (master && (identifier === master.username || identifier === master.email) && password === master.password) {
-                localStorage.setItem('isAdminLoggedIn', 'true');
-                localStorage.setItem('adminType', 'master');
-                localStorage.setItem('adminUsername', master.username);
-                localStorage.setItem('adminId', 'master');
+                sessionStorage.setItem('isAdminLoggedIn', 'true');
+                sessionStorage.setItem('adminType', 'master');
+                sessionStorage.setItem('adminUsername', master.username);
+                sessionStorage.setItem('adminId', 'master');
                 window.location.href = 'admin-dashboard.html';
                 return;
             }
@@ -31,10 +31,10 @@ if (document.getElementById('loginForm')) {
             for (let id in subs) {
                 const admin = subs[id];
                 if ((admin.username === identifier || admin.email === identifier) && admin.password === password) {
-                    localStorage.setItem('isAdminLoggedIn', 'true');
-                    localStorage.setItem('adminType', 'sub');
-                    localStorage.setItem('adminUsername', admin.username);
-                    localStorage.setItem('adminId', id);
+                    sessionStorage.setItem('isAdminLoggedIn', 'true');
+                    sessionStorage.setItem('adminType', 'sub');
+                    sessionStorage.setItem('adminUsername', admin.username);
+                    sessionStorage.setItem('adminId', id);
                     window.location.href = 'admin-dashboard.html';
                     return;
                 }
@@ -57,17 +57,9 @@ if (document.getElementById('loginForm')) {
             }
             
             if (foundUser) {
-                // Clear old localStorage
-                localStorage.clear();
-                
-                // Set new session
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('username', foundUser.username);
-                localStorage.setItem('userEmail', foundUser.email);
-                localStorage.setItem('userId', foundUserId);
-                localStorage.setItem('userInviteCode', foundUser.inviteCode || '');
-                localStorage.setItem('walletBalance', foundUser.balance || '0');
-                localStorage.setItem('commission', foundUser.commission || '0');
+                // Set session storage only for auth state
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userId', foundUserId);
                 
                 window.location.href = 'dashboard.html';
             } else {

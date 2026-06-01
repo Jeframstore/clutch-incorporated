@@ -3,8 +3,8 @@
 let userId = null;
 
 document.addEventListener('DOMContentLoaded', async function() {
-    userId = localStorage.getItem('userId');
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    userId = sessionStorage.getItem('userId');
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
     
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('bindWalletBtn').addEventListener('click', () => window.location.href = 'bind-wallet.html');
     document.getElementById('contactUsBtn').addEventListener('click', () => window.location.href = 'service.html');
     document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.clear();
+        sessionStorage.clear();
         window.location.href = 'index.html';
     });
 });
@@ -46,12 +46,6 @@ async function loadProfile() {
             document.getElementById('profileBalance').textContent = parseFloat(user.balance || 0).toFixed(2) + ' USDT';
             document.getElementById('profileProfits').textContent = parseFloat(user.commission || 0).toFixed(2) + ' USDT';
             document.getElementById('creditScore').textContent = '97%';
-            
-            // Update localStorage to match Firebase (for other pages)
-            localStorage.setItem('username', user.username);
-            localStorage.setItem('userInviteCode', user.inviteCode);
-            localStorage.setItem('walletBalance', user.balance);
-            localStorage.setItem('commission', user.commission);
         } else {
             console.error('User not found');
             document.getElementById('profileUserName').textContent = 'Error';

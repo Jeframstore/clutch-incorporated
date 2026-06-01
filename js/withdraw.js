@@ -3,8 +3,8 @@
 let userId = null;
 
 document.addEventListener('DOMContentLoaded', async function() {
-    userId = localStorage.getItem('userId');
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    userId = sessionStorage.getItem('userId');
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
     
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';

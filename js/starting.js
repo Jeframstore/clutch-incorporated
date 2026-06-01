@@ -4,15 +4,17 @@ let currentImageIndex = 0;
 let currentImages = [];
 let currentTask = null;
 let isProcessingTask = false;
+let userId = null;
 
 document.addEventListener('DOMContentLoaded', async function() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
     if (!isLoggedIn || isLoggedIn !== 'true') {
         window.location.href = 'index.html';
         return;
     }
     
-    loadUserStats();
+    userId = sessionStorage.getItem('userId');
+    await loadUserStats();
     await loadCurrentTask();
     loadTaskProgress();
     
@@ -34,28 +36,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
-function loadUserStats() {
-    let balance = localStorage.getItem('walletBalance');
-    let commission = localStorage.getItem('commission');
-    
-    if (!balance) {
-        balance = '0.00';
-        localStorage.setItem('walletBalance', balance);
-    }
-    
-    if (!commission) {
-        commission = '0.00';
-        localStorage.setItem('commission', commission);
-    }
-    
-    const balanceElement = document.getElementById('walletBalance');
-    const commissionElement = document.getElementById('commission');
-    
-    if (balanceElement) {
-        balanceElement.innerHTML = parseFloat(balance).toFixed(2) + ' <span>USDT</span>';
-    }
-    if (commissionElement) {
-        commissionElement.innerHTML = parseFloat(commission).toFixed(2) + ' <span>USDT</span>';
+async function loadUserStats() {
+    try {
+        if (!userId) return;
+        const snapshot = await database.ref('users/' + userId).once('value');
+        const user = snapshot.val();
+        if (!user) return;
+
+        const balance = user.balance || '0.00';
+        const commission = user.commission || '0.00';
+        
+        const balanceElement = document.getElementById('walletBalance');
+        const commissionElement = document.getElementById('commission');
+        
+        if (balanceElement) {
+            balanceElement.innerHTML = parseFloat(balance).toFixed(2) + ' <span>USDT</span>';
+        }
+        if (commissionElement) {
+            commissionElement.innerHTML = parseFloat(commission).toFixed(2) + ' <span>USDT</span>';
+        }
+    } catch(e) {
+        console.error('Error loading user stats:', e);
     }
 }
 
@@ -268,15 +269,23 @@ async function completeTask() {
     try {
         let completedTasks = parseInt(localStorage.getItem('completedTasks') || 0);
         let totalTasks = parseInt(localStorage.getItem('totalTasksPerRound') || 40);
-        let balance = parseFloat(localStorage.getItem('walletBalance') || 0);
-        let commission = parseFloat(localStorage.getItem('commission') || 0);
+        
+        // Get current user data from Firebase
+        const userSnap = await database.ref('users/' + userId).once('value');
+        const user = userSnap.val() || { balance: 0, commission: 0 };
+        
+        let balance = parseFloat(user.balance || 0);
+        let commission = parseFloat(user.commission || 0);
         
         const profit = parseFloat(currentTask.profit || currentTask.commission || 0.10);
         const newBalance = balance + profit;
         const newCommission = commission + profit;
         
-        localStorage.setItem('walletBalance', newBalance.toFixed(2));
-        localStorage.setItem('commission', newCommission.toFixed(2));
+        // Write updated balance/commission to Firebase
+        await database.ref('users/' + userId).update({
+            balance: newBalance.toFixed(2),
+            commission: newCommission.toFixed(2)
+        });
         
         currentTask.completed = true;
         localStorage.setItem('currentTask', JSON.stringify(currentTask));
@@ -291,7 +300,7 @@ async function completeTask() {
         localStorage.setItem('completedTasks', completedTasks);
         
         saveTransactionRecord(currentTask, profit);
-        loadUserStats();
+        await loadUserStats();
         loadTaskProgress();
         updateStartButtonState(currentTask);
         

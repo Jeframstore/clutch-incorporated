@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (existingError) existingError.remove();
         
         if (username === adminUsername && password === adminPassword) {
-            localStorage.setItem('isAdminLoggedIn', 'true');
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
             window.location.href = 'admin-dashboard.html';
         } else {
             const errorDiv = document.createElement('div');

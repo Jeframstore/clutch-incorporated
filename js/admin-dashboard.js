@@ -6,10 +6,10 @@ let adminName = '';
 let currentPage = 'dashboard';
 
 document.addEventListener('DOMContentLoaded', async function() {
-    const isAdmin = localStorage.getItem('isAdminLoggedIn');
-    adminType = localStorage.getItem('adminType') || 'sub';
-    adminId = localStorage.getItem('adminId') || '';
-    adminName = localStorage.getItem('adminUsername') || '';
+    const isAdmin = sessionStorage.getItem('isAdminLoggedIn');
+    adminType = sessionStorage.getItem('adminType') || 'sub';
+    adminId = sessionStorage.getItem('adminId') || '';
+    adminName = sessionStorage.getItem('adminUsername') || '';
     
     if (!isAdmin || isAdmin !== 'true') {
         window.location.href = 'admin-login.html';
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function logout() {
-    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = 'admin-login.html';
 }
 
