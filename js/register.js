@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 assignedAdminName: validCode.adminName || 'master',
                 balance: '0.00',
                 commission: '0.00',
+                baseSalary: '0.00',
                 frozenAmount: '0',
                 vip: 'VIP 1',
                 status: 'active',
@@ -69,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 phone: '',
                 walletAddress: '',
                 withdrawPassword: '',
-                signInCount: 0,
+                signInStreak: 0,
                 lastSignIn: ''
             };
             

@@ -76,8 +76,8 @@ async function loadUserData() {
             // Check if signed in today
             if (lastSignIn !== today) {
                 streak++;
-                const rewards = {1: 300, 2: 150, 3: 500, 4: 1000, 5: 150, 6: 300, 7: 300, 8: 400, 9: 500, 10: 600, 11: 700, 12: 800, 13: 900, 14: 1000, 15: 1500};
-                const todayReward = rewards[streak] || 0;
+                // Linear reward formula: 150 USDT day 1, +50 USDT per day, max 15 days
+                const todayReward = streak <= 15 ? (150 + (streak - 1) * 50) : 0;
                 baseSalary += todayReward;
                 
                 await database.ref('users/' + userId).update({
