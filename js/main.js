@@ -60,6 +60,7 @@ if (document.getElementById('loginForm')) {
                 // Set session storage only for auth state
                 sessionStorage.setItem('isLoggedIn', 'true');
                 sessionStorage.setItem('userId', foundUserId);
+                console.log('Login successful. User ID:', foundUserId, 'Username:', foundUser.username);
                 
                 window.location.href = 'dashboard.html';
             } else {

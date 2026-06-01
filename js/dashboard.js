@@ -77,14 +77,18 @@ async function loadUserData() {
     try {
         if (!userId) return;
         
+        console.log('Loading user data for userId:', userId);
         const snapshot = await database.ref('users/' + userId).once('value');
         const user = snapshot.val();
+        
+        console.log('User data loaded:', user);
         
         if (user) {
             // Update display from Firebase
             const usernameDisplay = document.getElementById('usernameDisplay');
             if (usernameDisplay) {
                 usernameDisplay.textContent = user.username || 'User';
+                console.log('Username displayed:', user.username);
             }
             
             // Process sign-in streak
