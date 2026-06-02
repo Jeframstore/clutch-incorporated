@@ -171,6 +171,7 @@ function displayTask(task) {
     const productNameEl = document.getElementById('productName');
     const productPriceEl = document.getElementById('productPrice');
     const taskProfitEl = document.getElementById('taskProfit');
+    const taskTimeEl = document.getElementById('taskTime');
     const statusBadge = document.getElementById('statusBadge');
 
     if (!task) {
@@ -178,6 +179,7 @@ function displayTask(task) {
         if (productNameEl) productNameEl.textContent = 'No Tasks Available';
         if (productPriceEl) productPriceEl.textContent = '$0.00';
         if (taskProfitEl) taskProfitEl.textContent = '+0.00 USDT';
+        if (taskTimeEl) taskTimeEl.textContent = '--:-- --';
         if (statusBadge) statusBadge.textContent = 'No Task';
         return;
     }
@@ -187,6 +189,20 @@ function displayTask(task) {
     if (productPriceEl) productPriceEl.textContent = '$' + parseFloat(task.price || 0).toFixed(2);
     const profitValue = parseFloat(task.profit || task.commission || 0.10);
     if (taskProfitEl) taskProfitEl.textContent = '+' + profitValue.toFixed(2) + ' USDT';
+    
+    // Display available time if set
+    if (taskTimeEl) {
+        if (task.availableFrom) {
+            const availableDate = new Date(task.availableFrom);
+            const hours = availableDate.getHours().toString().padStart(2, '0');
+            const minutes = availableDate.getMinutes().toString().padStart(2, '0');
+            const ampm = availableDate.getHours() >= 12 ? 'PM' : 'AM';
+            taskTimeEl.textContent = `${hours}:${minutes} ${ampm}`;
+        } else {
+            taskTimeEl.textContent = 'Available Now';
+        }
+    }
+    
     if (statusBadge) statusBadge.textContent = task.completed === true ? 'Completed' : 'Available';
 }
 

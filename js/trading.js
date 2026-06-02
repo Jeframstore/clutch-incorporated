@@ -1,10 +1,14 @@
-// Trading Page - LBank Inspired Trading Interface
+// Trading Page - New Order System with Firebase
 
 let userId = null;
-let selectedCoin = null;
-let currentTradeType = 'buy';
-let currentTradeTab = 'limit';
-let allCoins = [];
+let currentSymbol = 'BTC';
+let currentPrice = 0;
+let tradeType = 'buy';
+let currentBalance = 0;
+let selectedDuration = 60;
+let prices = {};
+
+const coins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC', 'LINK', 'AVAX', 'UNI', 'ATOM', 'LTC', 'BCH'];
 
 document.addEventListener('DOMContentLoaded', async function() {
     userId = sessionStorage.getItem('userId');
@@ -16,115 +20,69 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     await loadBalance();
-    await loadCoins();
-    await loadTradeHistory();
+    fetchLivePrices();
+    loadOpenOrders();
+    loadOrderHistory();
     
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            filterCoins(this.value);
-        });
-    }
-    
-    // Trade type buttons (Buy/Sell)
-    const tradeTypeBtns = document.querySelectorAll('.trade-type-btn');
-    tradeTypeBtns.forEach(btn => {
+    // Symbol selector buttons
+    document.querySelectorAll('.symbol-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            tradeTypeBtns.forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.symbol-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.remove('bg-[#FFD800]/10', 'border-[#FFD800]/30', 'text-[#FFD800]');
+                b.classList.add('bg-black/40', 'border-white/5', 'text-white/60');
+            });
             this.classList.add('active');
-            currentTradeType = this.getAttribute('data-type');
-            
-            const buyBtn = document.getElementById('buyBtn');
-            const sellBtn = document.getElementById('sellBtn');
-            if (currentTradeType === 'buy') {
-                buyBtn.style.display = 'block';
-                sellBtn.style.display = 'none';
-            } else {
-                buyBtn.style.display = 'none';
-                sellBtn.style.display = 'block';
-            }
+            this.classList.remove('bg-black/40', 'border-white/5', 'text-white/60');
+            this.classList.add('bg-[#FFD800]/10', 'border-[#FFD800]/30', 'text-[#FFD800]');
+            currentSymbol = this.dataset.symbol;
+            updatePrice();
         });
     });
     
-    // Trade tabs (Limit/Market)
-    const tradeTabBtns = document.querySelectorAll('.trade-tab-btn');
-    tradeTabBtns.forEach(btn => {
+    // Buy/Sell type buttons
+    const buyBtn = document.getElementById('buyTypeBtn');
+    const sellBtn = document.getElementById('sellTypeBtn');
+    
+    buyBtn.addEventListener('click', function() {
+        tradeType = 'buy';
+        this.classList.add('bg-[#80FF00]', 'text-black');
+        this.classList.remove('bg-[#FF4B4B]', 'text-white');
+        sellBtn.classList.remove('bg-[#80FF00]', 'text-black');
+        sellBtn.classList.add('bg-[#FF4B4B]', 'text-white');
+        document.getElementById('placeOrderBtn').textContent = 'Place Buy Order';
+    });
+    
+    sellBtn.addEventListener('click', function() {
+        tradeType = 'sell';
+        this.classList.add('bg-[#80FF00]', 'text-black');
+        this.classList.remove('bg-[#FF4B4B]', 'text-white');
+        buyBtn.classList.remove('bg-[#80FF00]', 'text-black');
+        buyBtn.classList.add('bg-[#FF4B4B]', 'text-white');
+        document.getElementById('placeOrderBtn').textContent = 'Place Sell Order';
+    });
+    
+    // Duration buttons
+    document.querySelectorAll('.duration-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            tradeTabBtns.forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.duration-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.remove('bg-[#FFD800]/10', 'border-[#FFD800]/30', 'text-[#FFD800]');
+                b.classList.add('bg-black/40', 'border-white/5', 'text-white/60');
+            });
             this.classList.add('active');
-            currentTradeTab = this.getAttribute('data-tab');
-            
-            const tradePrice = document.getElementById('tradePrice');
-            if (currentTradeTab === 'market') {
-                tradePrice.value = '';
-                tradePrice.placeholder = 'Market Price';
-                tradePrice.readOnly = true;
-            } else {
-                tradePrice.placeholder = 'Price';
-                tradePrice.readOnly = false;
-                if (selectedCoin) {
-                    tradePrice.value = parseFloat(selectedCoin.lastPrice).toFixed(4);
-                }
-            }
+            this.classList.remove('bg-black/40', 'border-white/5', 'text-white/60');
+            this.classList.add('bg-[#FFD800]/10', 'border-[#FFD800]/30', 'text-[#FFD800]');
+            selectedDuration = parseInt(this.dataset.minutes);
         });
     });
     
-    // Slider
-    const slider = document.getElementById('amountSlider');
-    if (slider) {
-        slider.addEventListener('input', function() {
-            const percent = parseInt(this.value);
-            const balanceEl = document.getElementById('tradingBalance');
-            const balance = parseFloat(balanceEl.textContent.replace(' USDT', '')) || 0;
-            const amount = (balance * percent / 100).toFixed(2);
-            document.getElementById('tradeAmount').value = amount;
-            updateTotal();
-        });
-    }
+    // Input listeners
+    document.getElementById('limitPrice').addEventListener('input', updateQuantity);
+    document.getElementById('tradeAmount').addEventListener('input', updateQuantity);
     
-    // Trade amount input
-    const tradeAmount = document.getElementById('tradeAmount');
-    if (tradeAmount) {
-        tradeAmount.addEventListener('input', updateTotal);
-    }
-    
-    // Price input
-    const tradePrice = document.getElementById('tradePrice');
-    if (tradePrice) {
-        tradePrice.addEventListener('input', updateTotal);
-    }
-    
-    // Control buttons (up/down)
-    const controlBtns = document.querySelectorAll('.control-btn');
-    controlBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tradePrice = document.getElementById('tradePrice');
-            let currentPrice = parseFloat(tradePrice.value) || 0;
-            const step = 0.0001;
-            
-            if (this.classList.contains('up')) {
-                currentPrice += step;
-            } else {
-                currentPrice -= step;
-            }
-            
-            tradePrice.value = currentPrice.toFixed(4);
-            updateTotal();
-        });
-    });
-    
-    // Buy button
-    const buyBtn = document.getElementById('buyBtn');
-    if (buyBtn) {
-        buyBtn.addEventListener('click', executeTrade);
-    }
-    
-    // Sell button
-    const sellBtn = document.getElementById('sellBtn');
-    if (sellBtn) {
-        sellBtn.addEventListener('click', executeTrade);
-    }
+    // Place order button
+    document.getElementById('placeOrderBtn').addEventListener('click', placeOrder);
     
     // Back button
     const backBtn = document.getElementById('backBtn');
@@ -135,8 +93,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     // Bottom navigation
-    const navButtons = document.querySelectorAll('.nav-btn');
-    navButtons.forEach(function(btn) {
+    document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const page = this.getAttribute('data-page');
             if (page === 'home') window.location.href = 'dashboard.html';
@@ -145,10 +102,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     });
     
-    // Select first coin by default
-    if (allCoins.length > 0) {
-        selectCoin(allCoins[0].symbol);
-    }
+    // Auto-refresh prices
+    setInterval(fetchLivePrices, 10000);
+    setInterval(loadOpenOrders, 5000);
 });
 
 async function loadBalance() {
@@ -157,13 +113,10 @@ async function loadBalance() {
         const user = snapshot.val();
         
         if (user) {
+            currentBalance = parseFloat(user.balance || 0);
             const balanceEl = document.getElementById('tradingBalance');
-            const usdtBalanceEl = document.getElementById('usdtBalance');
             if (balanceEl) {
-                balanceEl.textContent = (user.balance || 0).toFixed(2) + ' USDT';
-            }
-            if (usdtBalanceEl) {
-                usdtBalanceEl.textContent = (user.balance || 0).toFixed(2);
+                balanceEl.textContent = '$' + currentBalance.toFixed(2);
             }
         }
     } catch (error) {
@@ -171,291 +124,227 @@ async function loadBalance() {
     }
 }
 
-async function loadCoins() {
-    const coinsList = document.getElementById('coinsList');
-    if (!coinsList) return;
-    
+async function fetchLivePrices() {
     try {
-        // Fetch top 20 coins from Binance API
-        const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
-        const data = await response.json();
+        const symbols = coins.map(coin => coin + 'USDT');
+        const responses = await Promise.all(
+            symbols.map(symbol => 
+                fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)
+                    .then(res => res.json())
+            )
+        );
         
-        // Filter for USDT pairs and sort by volume
-        allCoins = data
-            .filter(coin => coin.symbol.endsWith('USDT'))
-            .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
-            .slice(0, 20);
+        responses.forEach(data => {
+            const coinSymbol = data.symbol.replace('USDT', '');
+            prices[coinSymbol] = parseFloat(data.price);
+        });
         
-        displayCoins(allCoins);
+        document.getElementById('priceSource').innerHTML = `Live from Binance • Updated ${new Date().toLocaleTimeString()}`;
+        updatePrice();
     } catch (error) {
-        console.error('Error loading coins:', error);
-        coinsList.innerHTML = '<div class="error">Error loading coins. Please try again.</div>';
+        console.error('Error fetching prices:', error);
     }
 }
 
-async function loadTradeHistory() {
-    const tradeHistoryEl = document.getElementById('tradeHistory');
-    if (!tradeHistoryEl) return;
-    
-    try {
-        const snapshot = await database.ref('trades').orderByChild('userId').equalTo(userId).limitToLast(10).once('value');
-        const trades = snapshot.val();
-        
-        if (trades) {
-            let html = '';
-            Object.values(trades).reverse().forEach(trade => {
-                const typeClass = trade.type === 'buy' ? '' : 'sell';
-                html += `
-                    <div class="trade-history-row">
-                        <span class="time">${trade.date}</span>
-                        <span class="price">${parseFloat(trade.price).toFixed(4)}</span>
-                        <span class="amount">${parseFloat(trade.amount).toFixed(4)}</span>
-                        <span class="type ${typeClass}">${trade.type.toUpperCase()}</span>
-                    </div>
-                `;
-            });
-            tradeHistoryEl.innerHTML = html;
-        }
-    } catch (error) {
-        console.error('Error loading trade history:', error);
+function updatePrice() {
+    currentPrice = prices[currentSymbol] || 0;
+    if (currentPrice > 0) {
+        document.getElementById('currentPrice').textContent = '$' + currentPrice.toFixed(2);
+        updateQuantity();
+    } else {
+        document.getElementById('currentPrice').textContent = 'Loading...';
     }
 }
 
-function displayCoins(coins) {
-    const coinsList = document.getElementById('coinsList');
-    if (!coinsList) return;
-    
-    let html = '';
-    
-    coins.forEach(coin => {
-        const priceChange = parseFloat(coin.priceChangePercent);
-        const priceChangeClass = priceChange >= 0 ? 'positive' : 'negative';
-        const priceChangeIcon = priceChange >= 0 ? '▲' : '▼';
-        
-        html += `
-            <div class="coin-item" data-symbol="${coin.symbol}" onclick="selectCoin('${coin.symbol}')">
-                <div class="coin-info">
-                    <div class="coin-symbol">${coin.symbol.replace('USDT', '')}/USDT</div>
-                    <div class="coin-price">${parseFloat(coin.lastPrice).toFixed(4)}</div>
-                </div>
-                <div class="coin-change ${priceChangeClass}">
-                    ${priceChangeIcon} ${Math.abs(priceChange).toFixed(2)}%
-                </div>
-                <div class="coin-volume">
-                    Vol: ${formatVolume(coin.quoteVolume)}
-                </div>
-            </div>
-        `;
-    });
-    
-    coinsList.innerHTML = html;
-}
-
-window.selectCoin = function(symbol) {
-    const coin = allCoins.find(c => c.symbol === symbol);
-    if (!coin) return;
-    
-    selectedCoin = coin;
-    
-    const coinName = document.getElementById('selectedCoinName');
-    const coinPrice = document.getElementById('selectedCoinPrice');
-    const coinChange = document.getElementById('selectedCoinChange');
-    const tradePrice = document.getElementById('tradePrice');
-    const orderBookMid = document.getElementById('orderBookMid');
-    
-    coinName.textContent = coin.symbol.replace('USDT', '') + '/USDT';
-    coinPrice.textContent = parseFloat(coin.lastPrice).toFixed(4);
-    
-    const priceChange = parseFloat(coin.priceChangePercent);
-    coinChange.textContent = (priceChange >= 0 ? '+' : '') + priceChange.toFixed(2) + '%';
-    coinChange.className = 'price-change ' + (priceChange >= 0 ? 'positive' : 'negative');
-    
-    if (currentTradeTab === 'limit') {
-        tradePrice.value = parseFloat(coin.lastPrice).toFixed(4);
-    }
-    
-    orderBookMid.textContent = parseFloat(coin.lastPrice).toFixed(4);
-    
-    // Update order book with simulated data
-    updateOrderBook(coin);
-};
-
-function updateOrderBook(coin) {
-    const asksEl = document.getElementById('orderBookAsks');
-    const bidsEl = document.getElementById('orderBookBids');
-    const currentPrice = parseFloat(coin.lastPrice);
-    
-    // Simulate order book data
-    let asksHtml = '';
-    let bidsHtml = '';
-    
-    for (let i = 0; i < 5; i++) {
-        const askPrice = (currentPrice * (1 + (i + 1) * 0.001)).toFixed(4);
-        const bidPrice = (currentPrice * (1 - (i + 1) * 0.001)).toFixed(4);
-        const amount = (Math.random() * 10).toFixed(4);
-        const total = (askPrice * amount).toFixed(2);
-        
-        asksHtml += `
-            <div class="order-book-row">
-                <span class="price">${askPrice}</span>
-                <span class="amount">${amount}</span>
-                <span class="total">${total}</span>
-            </div>
-        `;
-        
-        const bidTotal = (bidPrice * amount).toFixed(2);
-        bidsHtml += `
-            <div class="order-book-row">
-                <span class="price">${bidPrice}</span>
-                <span class="amount">${amount}</span>
-                <span class="total">${bidTotal}</span>
-            </div>
-        `;
-    }
-    
-    asksEl.innerHTML = asksHtml;
-    bidsEl.innerHTML = bidsHtml;
-}
-
-function updateTotal() {
-    const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
-    const price = parseFloat(document.getElementById('tradePrice').value) || 0;
-    const total = amount * price;
-    document.getElementById('tradeTotal').value = total.toFixed(2);
-}
-
-async function executeTrade() {
-    if (!selectedCoin) {
-        Swal.fire('Error', 'Please select a coin to trade', 'error');
-        return;
-    }
-    
+function updateQuantity() {
     const amount = parseFloat(document.getElementById('tradeAmount').value);
-    let price = parseFloat(document.getElementById('tradePrice').value);
-    const total = parseFloat(document.getElementById('tradeTotal').value);
-    const duration = parseInt(document.getElementById('tradeDuration').value);
+    const limitPrice = parseFloat(document.getElementById('limitPrice').value);
+    const priceToUse = limitPrice && limitPrice > 0 ? limitPrice : currentPrice;
     
+    if (amount && priceToUse && priceToUse > 0) {
+        const quantity = amount / priceToUse;
+        document.getElementById('quantity').value = quantity.toFixed(8);
+    } else {
+        document.getElementById('quantity').value = '';
+    }
+}
+
+async function placeOrder() {
+    const amount = parseFloat(document.getElementById('tradeAmount').value);
+    const limitPrice = parseFloat(document.getElementById('limitPrice').value);
+    const messageDiv = document.getElementById('tradeMessage');
+
     if (!amount || amount <= 0) {
-        Swal.fire('Error', 'Please enter a valid amount', 'error');
+        messageDiv.className = 'text-red-500';
+        messageDiv.innerText = 'Please enter a valid amount';
         return;
     }
-    
-    if (currentTradeTab === 'market') {
-        price = parseFloat(selectedCoin.lastPrice);
-    }
-    
-    if (!price || price <= 0) {
-        Swal.fire('Error', 'Please enter a valid price', 'error');
+
+    if (!limitPrice || limitPrice <= 0) {
+        messageDiv.className = 'text-red-500';
+        messageDiv.innerText = 'Please enter a valid limit price';
         return;
     }
-    
-    if (!duration || duration <= 0) {
-        Swal.fire('Error', 'Please select a trade duration', 'error');
+
+    if (currentPrice <= 0) {
+        messageDiv.className = 'text-red-500';
+        messageDiv.innerText = 'Waiting for live prices...';
         return;
     }
-    
+
+    if (tradeType === 'buy' && amount > currentBalance) {
+        messageDiv.className = 'text-red-500';
+        messageDiv.innerText = `Insufficient balance. You have $${currentBalance.toFixed(2)}`;
+        return;
+    }
+
     try {
-        const snapshot = await database.ref('users/' + userId).once('value');
-        const user = snapshot.val();
-        const currentBalance = parseFloat(user.balance || 0);
+        const orderId = 'ORD' + Date.now();
+        const endTime = new Date(Date.now() + selectedDuration * 60 * 1000).toISOString();
         
-        if (currentTradeType === 'buy') {
-            if (total > currentBalance) {
-                Swal.fire('Error', 'Insufficient balance', 'error');
-                return;
-            }
-            
-            // Deduct balance and create pending trade
-            const newBalance = currentBalance - total;
-            await database.ref('users/' + userId).update({ balance: newBalance.toFixed(2) });
-            
-            // Calculate end time
-            const endTime = new Date(Date.now() + duration * 60 * 1000).getTime();
-            
-            // Save pending trade record
-            await database.ref('openTrades/' + Date.now()).set({
-                userId: userId,
-                username: user.username,
-                coin: selectedCoin.symbol,
-                coinName: selectedCoin.symbol.replace('USDT', ''),
-                type: 'buy',
-                amount: amount,
-                price: price,
-                total: total,
-                duration: duration,
-                startTime: Date.now(),
-                endTime: endTime,
-                entryPrice: parseFloat(selectedCoin.lastPrice),
-                date: new Date().toLocaleString(),
-                status: 'open'
+        const orderData = {
+            id: orderId,
+            userId: userId,
+            symbol: currentSymbol,
+            type: 'limit',
+            side: tradeType,
+            amount: amount,
+            price: limitPrice,
+            currentPrice: currentPrice,
+            duration: selectedDuration,
+            endTime: endTime,
+            status: 'pending_execution',
+            createdAt: new Date().toISOString()
+        };
+        
+        await database.ref('tradingOrders/' + orderId).set(orderData);
+        
+        if (tradeType === 'buy') {
+            await database.ref('users/' + userId).update({
+                balance: (currentBalance - amount).toFixed(2)
             });
-            
-            Swal.fire('Success', `Trade opened! Waiting for admin confirmation after ${duration} minutes.`, 'success');
-        } else {
-            // Sell - deduct balance and create pending trade
-            if (total > currentBalance) {
-                Swal.fire('Error', 'Insufficient balance', 'error');
-                return;
-            }
-            
-            const newBalance = currentBalance - total;
-            await database.ref('users/' + userId).update({ balance: newBalance.toFixed(2) });
-            
-            // Calculate end time
-            const endTime = new Date(Date.now() + duration * 60 * 1000).getTime();
-            
-            // Save pending trade record
-            await database.ref('openTrades/' + Date.now()).set({
-                userId: userId,
-                username: user.username,
-                coin: selectedCoin.symbol,
-                coinName: selectedCoin.symbol.replace('USDT', ''),
-                type: 'sell',
-                amount: amount,
-                price: price,
-                total: total,
-                duration: duration,
-                startTime: Date.now(),
-                endTime: endTime,
-                entryPrice: parseFloat(selectedCoin.lastPrice),
-                date: new Date().toLocaleString(),
-                status: 'open'
-            });
-            
-            Swal.fire('Success', `Trade opened! Waiting for admin confirmation after ${duration} minutes.`, 'success');
         }
         
-        await loadBalance();
+        messageDiv.className = 'text-green-500';
+        messageDiv.innerText = `${tradeType.toUpperCase()} order placed! Waiting for admin approval.`;
+        
         document.getElementById('tradeAmount').value = '';
-        document.getElementById('tradeTotal').value = '';
-        document.getElementById('amountSlider').value = 0;
+        document.getElementById('limitPrice').value = '';
+        loadBalance();
+        loadOpenOrders();
+        loadOrderHistory();
         
+        Swal.fire({
+            title: 'Order Placed!',
+            text: `Your ${tradeType.toUpperCase()} order for ${amount} USD at ${limitPrice} has been placed. Admin will approve execution after ${selectedDuration} minutes.`,
+            icon: 'success'
+        });
     } catch (error) {
-        console.error('Trade error:', error);
-        Swal.fire('Error', 'Trade failed. Please try again.', 'error');
+        console.error('Error placing order:', error);
+        messageDiv.className = 'text-red-500';
+        messageDiv.innerText = 'Network error. Please try again.';
     }
 }
 
-function filterCoins(searchTerm) {
-    const coins = document.querySelectorAll('.coin-item');
-    const term = searchTerm.toLowerCase();
+function formatTimeRemaining(createdAt, minutes, status) {
+    if (status === 'pending_execution') return '⏱️ Awaiting Admin Approval';
+    if (status === 'executed') return 'Completed';
+    if (status === 'rejected') return 'Rejected';
     
-    coins.forEach(coin => {
-        const symbol = coin.getAttribute('data-symbol').toLowerCase();
-        if (symbol.includes(term)) {
-            coin.style.display = 'flex';
-        } else {
-            coin.style.display = 'none';
-        }
-    });
+    const created = new Date(createdAt);
+    const expiry = new Date(created.getTime() + (minutes * 60 * 1000));
+    const now = new Date();
+    const remaining = expiry - now;
+    
+    if (remaining <= 0) return 'Ready for admin';
+    
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    return `${mins}m ${secs}s`;
 }
 
-function formatVolume(volume) {
-    const num = parseFloat(volume);
-    if (num >= 1000000) {
-        return (num / 1000000).toFixed(2) + 'M';
-    } else if (num >= 1000) {
-        return (num / 1000).toFixed(2) + 'K';
+async function loadOpenOrders() {
+    try {
+        const snapshot = await database.ref('tradingOrders').once('value');
+        const orders = snapshot.val() || {};
+        
+        const container = document.getElementById('openOrdersList');
+        const userOrders = Object.values(orders).filter(order => order.userId === userId && (order.status === 'open' || order.status === 'pending_execution'));
+        
+        if (userOrders.length === 0) {
+            container.innerHTML = '<p class="text-[10px] text-white/30 text-center">No pending orders</p>';
+            return;
+        }
+        
+        container.innerHTML = userOrders.map(order => {
+            const statusDisplay = order.status === 'pending_execution' 
+                ? '<span class="text-[9px] text-[#FFD800]">⏱️ Awaiting Admin Approval</span>'
+                : `<span class="text-[9px] text-white/60">⏱️ ${formatTimeRemaining(order.createdAt, order.duration || 60, order.status)}</span>`;
+            
+            const typeClass = order.side === 'buy' ? 'text-[#80FF00]' : 'text-[#FF4B4B]';
+            
+            return `
+                <div class="bg-black/40 border border-white/5 rounded-xl p-3 mb-2">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-[10px] font-bold">${order.symbol}/USD</span>
+                            <span class="ml-2 ${typeClass} font-bold">${order.side.toUpperCase()}</span>
+                        </div>
+                        <span class="text-[9px] text-white/40">${new Date(order.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between text-[9px] text-white/60">
+                        <span>Limit: $${order.price}</span>
+                        <span>Amount: $${order.amount}</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2">
+                        ${statusDisplay}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading open orders:', error);
     }
-    return num.toFixed(2);
+}
+
+async function loadOrderHistory() {
+    try {
+        const snapshot = await database.ref('tradingOrders').once('value');
+        const orders = snapshot.val() || {};
+        
+        const container = document.getElementById('orderHistory');
+        const userOrders = Object.values(orders).filter(order => order.userId === userId && (order.status === 'executed' || order.status === 'rejected'));
+        
+        if (userOrders.length === 0) {
+            container.innerHTML = '<p class="text-[10px] text-white/30 text-center">No orders yet</p>';
+            return;
+        }
+        
+        container.innerHTML = userOrders.map(order => {
+            const typeClass = order.side === 'buy' ? 'text-[#80FF00]' : 'text-[#FF4B4B]';
+            const statusColor = order.status === 'executed' ? 'text-[#80FF00]' : 'text-[#FF4B4B]';
+            
+            return `
+                <div class="bg-black/40 border border-white/5 rounded-xl p-3 mb-2">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-[10px] font-bold">${order.symbol}/USD</span>
+                            <span class="ml-2 ${typeClass} font-bold">${order.side.toUpperCase()}</span>
+                        </div>
+                        <span class="text-[9px] text-white/40">${new Date(order.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between text-[9px] text-white/60">
+                        <span>Limit: $${order.price}</span>
+                        <span>Amount: $${order.amount}</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-[9px] ${statusColor} font-bold">${order.status.toUpperCase()}</span>
+                        ${order.profit ? `<span class="text-[9px] text-[#80FF00]">Profit: $${order.profit.toFixed(2)}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading order history:', error);
+    }
 }
