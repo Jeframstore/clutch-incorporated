@@ -3,10 +3,13 @@
 let userId = null;
 let currentSymbol = 'BTC';
 let currentPrice = 0;
+let previousPrice = 0;
 let tradeType = 'buy';
 let currentBalance = 0;
 let selectedDuration = 60;
 let prices = {};
+let priceHistory = [];
+let selectedTimeFrame = '2h';
 
 const coins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC', 'LINK', 'AVAX', 'UNI', 'ATOM', 'LTC', 'BCH'];
 
@@ -24,23 +27,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadOpenOrders();
     loadOrderHistory();
     
-    // Symbol selector buttons
-    document.querySelectorAll('.symbol-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.symbol-btn').forEach(b => {
-                b.classList.remove('active');
-                b.classList.remove('bg-[#FFD800]/10', 'border-[#FFD800]/30', 'text-[#FFD800]');
-                b.classList.add('bg-black/40', 'border-white/5', 'text-white/60');
-            });
-            this.classList.add('active');
-            this.classList.remove('bg-black/40', 'border-white/5', 'text-white/60');
-            this.classList.add('bg-[#FFD800]/10', 'border-[#FFD800]/30', 'text-[#FFD800]');
-            currentSymbol = this.dataset.symbol;
+    // Symbol selector dropdown
+    const symbolSelector = document.getElementById('symbolSelector');
+    if (symbolSelector) {
+        symbolSelector.addEventListener('change', function() {
+            currentSymbol = this.value;
             updatePrice();
+            fetchHistoricalData();
         });
-    });
+    }
     
-    // Buy/Sell type buttons
+    // Buy/Sell type buttons - FIXED COLOR TOGGLE
     const buyBtn = document.getElementById('buyTypeBtn');
     const sellBtn = document.getElementById('sellTypeBtn');
     
@@ -55,8 +52,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     sellBtn.addEventListener('click', function() {
         tradeType = 'sell';
-        this.classList.add('bg-[#80FF00]', 'text-black');
-        this.classList.remove('bg-[#FF4B4B]', 'text-white');
+        this.classList.add('bg-[#FF4B4B]', 'text-white');
+        this.classList.remove('bg-[#80FF00]', 'text-black');
         buyBtn.classList.remove('bg-[#80FF00]', 'text-black');
         buyBtn.classList.add('bg-[#FF4B4B]', 'text-white');
         document.getElementById('placeOrderBtn').textContent = 'Place Sell Order';
@@ -77,9 +74,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     });
     
-    // Input listeners
-    document.getElementById('limitPrice').addEventListener('input', updateQuantity);
-    document.getElementById('tradeAmount').addEventListener('input', updateQuantity);
+    // Time frame buttons for chart
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.time-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.remove('bg-[#FFD800]/10', 'border-[#FFD800]/30', 'text-[#FFD800]');
+                b.classList.add('bg-black/40', 'border-white/5', 'text-white/60');
+            });
+            this.classList.add('active');
+            this.classList.remove('bg-black/40', 'border-white/5', 'text-white/60');
+            this.classList.add('bg-[#FFD800]/10', 'border-[#FFD800]/30', 'text-[#FFD800]');
+            selectedTimeFrame = this.dataset.time;
+            fetchHistoricalData();
+        });
+    });
     
     // Place order button
     document.getElementById('placeOrderBtn').addEventListener('click', placeOrder);
@@ -103,8 +112,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     
     // Auto-refresh prices
-    setInterval(fetchLivePrices, 10000);
+    setInterval(fetchLivePrices, 5000);
     setInterval(loadOpenOrders, 5000);
+    
+    // Initialize chart
+    fetchHistoricalData();
 });
 
 async function loadBalance() {
@@ -147,42 +159,144 @@ async function fetchLivePrices() {
 }
 
 function updatePrice() {
+    previousPrice = currentPrice;
     currentPrice = prices[currentSymbol] || 0;
+    
     if (currentPrice > 0) {
         document.getElementById('currentPrice').textContent = '$' + currentPrice.toFixed(2);
-        updateQuantity();
+        
+        // Update price indicator and change percentage
+        const indicator = document.getElementById('priceIndicator');
+        const priceChangeEl = document.getElementById('priceChange');
+        
+        if (previousPrice > 0) {
+            const change = ((currentPrice - previousPrice) / previousPrice) * 100;
+            const changeText = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+            priceChangeEl.textContent = changeText;
+            
+            if (change >= 0) {
+                indicator.className = 'w-3 h-3 rounded-full bg-[#80FF00]';
+                priceChangeEl.className = 'text-[9px] font-black uppercase tracking-widest mt-1 text-[#80FF00]';
+            } else {
+                indicator.className = 'w-3 h-3 rounded-full bg-[#FF4B4B]';
+                priceChangeEl.className = 'text-[9px] font-black uppercase tracking-widest mt-1 text-[#FF4B4B]';
+            }
+        }
+        
+        // Update price history for chart
+        priceHistory.push({ time: Date.now(), price: currentPrice });
+        if (priceHistory.length > 100) {
+            priceHistory.shift();
+        }
+        drawChart();
     } else {
         document.getElementById('currentPrice').textContent = 'Loading...';
     }
 }
 
-function updateQuantity() {
-    const amount = parseFloat(document.getElementById('tradeAmount').value);
-    const limitPrice = parseFloat(document.getElementById('limitPrice').value);
-    const priceToUse = limitPrice && limitPrice > 0 ? limitPrice : currentPrice;
-    
-    if (amount && priceToUse && priceToUse > 0) {
-        const quantity = amount / priceToUse;
-        document.getElementById('quantity').value = quantity.toFixed(8);
-    } else {
-        document.getElementById('quantity').value = '';
+async function fetchHistoricalData() {
+    try {
+        const symbol = currentSymbol + 'USDT';
+        let interval = '1m';
+        let limit = 120;
+        
+        switch(selectedTimeFrame) {
+            case '2h':
+                interval = '1m';
+                limit = 120;
+                break;
+            case '12h':
+                interval = '5m';
+                limit = 144;
+                break;
+            case '1d':
+                interval = '15m';
+                limit = 96;
+                break;
+            case '30d':
+                interval = '1h';
+                limit = 720;
+                break;
+        }
+        
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`);
+        const data = await response.json();
+        
+        priceHistory = data.map(candle => ({
+            time: candle[0],
+            price: parseFloat(candle[4])
+        }));
+        
+        drawChart();
+    } catch (error) {
+        console.error('Error fetching historical data:', error);
     }
+}
+
+function drawChart() {
+    const canvas = document.getElementById('priceChart');
+    if (!canvas || priceHistory.length === 0) return;
+    
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    
+    const width = rect.width;
+    const height = rect.height;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    // Find min and max prices
+    const prices = priceHistory.map(p => p.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const priceRange = maxPrice - minPrice;
+    
+    // Determine color based on price trend
+    const firstPrice = priceHistory[0].price;
+    const lastPrice = priceHistory[priceHistory.length - 1].price;
+    const isUp = lastPrice >= firstPrice;
+    const lineColor = isUp ? '#80FF00' : '#FF4B4B';
+    
+    // Draw line
+    ctx.beginPath();
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 2;
+    
+    priceHistory.forEach((point, index) => {
+        const x = (index / (priceHistory.length - 1)) * width;
+        const y = height - ((point.price - minPrice) / priceRange) * (height - 20) - 10;
+        
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+    
+    ctx.stroke();
+    
+    // Draw gradient fill
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, isUp ? 'rgba(128, 255, 0, 0.2)' : 'rgba(255, 75, 75, 0.2)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
 }
 
 async function placeOrder() {
     const amount = parseFloat(document.getElementById('tradeAmount').value);
-    const limitPrice = parseFloat(document.getElementById('limitPrice').value);
     const messageDiv = document.getElementById('tradeMessage');
 
     if (!amount || amount <= 0) {
         messageDiv.className = 'text-red-500';
         messageDiv.innerText = 'Please enter a valid amount';
-        return;
-    }
-
-    if (!limitPrice || limitPrice <= 0) {
-        messageDiv.className = 'text-red-500';
-        messageDiv.innerText = 'Please enter a valid limit price';
         return;
     }
 
@@ -206,11 +320,10 @@ async function placeOrder() {
             id: orderId,
             userId: userId,
             symbol: currentSymbol,
-            type: 'limit',
+            type: 'market',
             side: tradeType,
             amount: amount,
-            price: limitPrice,
-            currentPrice: currentPrice,
+            price: currentPrice,
             duration: selectedDuration,
             endTime: endTime,
             status: 'pending_execution',
@@ -229,14 +342,13 @@ async function placeOrder() {
         messageDiv.innerText = `${tradeType.toUpperCase()} order placed! Waiting for admin approval.`;
         
         document.getElementById('tradeAmount').value = '';
-        document.getElementById('limitPrice').value = '';
         loadBalance();
         loadOpenOrders();
         loadOrderHistory();
         
         Swal.fire({
             title: 'Order Placed!',
-            text: `Your ${tradeType.toUpperCase()} order for ${amount} USD at ${limitPrice} has been placed. Admin will approve execution after ${selectedDuration} minutes.`,
+            text: `Your ${tradeType.toUpperCase()} order for ${amount} USD at market price $${currentPrice.toFixed(2)} has been placed. Admin will approve execution after ${selectedDuration} minutes.`,
             icon: 'success'
         });
     } catch (error) {
