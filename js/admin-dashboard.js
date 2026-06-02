@@ -127,12 +127,12 @@ function updateWithdrawalBadge(pending) {
 }
 
 function watchOpenTrades() {
-    const openTradesRef = database.ref('openTrades');
+    const openTradesRef = database.ref('tradingOrders');
     openTradesRef.on('value', snapshot => {
         const openTrades = snapshot.val() || {};
         let pending = 0;
         for (let id in openTrades) {
-            if (openTrades[id].status === 'open') pending++;
+            if (openTrades[id].status === 'pending_execution') pending++;
         }
 
         const badge = document.getElementById('openTradesBadge');
@@ -710,16 +710,21 @@ async function loadOpenTradesTable() {
     if (!tbody) return;
     
     try {
-        const openTradesSnap = await database.ref('openTrades').once('value');
+        const openTradesSnap = await database.ref('tradingOrders').once('value');
         const openTrades = openTradesSnap.val() || {};
         let html = '';
         
         for (let id in openTrades) {
             const trade = openTrades[id];
-            if (trade.status !== 'open') continue;
+            if (trade.status !== 'pending_execution') continue;
+            
+            // Get user info
+            const userSnap = await database.ref('users/' + trade.userId).once('value');
+            const user = userSnap.val();
+            const username = user ? user.username : 'Unknown';
             
             const now = Date.now();
-            const endTime = trade.endTime;
+            const endTime = new Date(trade.endTime).getTime();
             const timeLeft = Math.max(0, endTime - now);
             const minutesLeft = Math.floor(timeLeft / 60000);
             const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
@@ -727,19 +732,19 @@ async function loadOpenTradesTable() {
             const timeLeftDisplay = timeLeft > 0 ? `${minutesLeft}m ${secondsLeft}s` : 'Ready';
             const isReady = timeLeft <= 0;
             
-            const typeColor = trade.type === 'buy' ? '#00ff00' : '#ff6666';
+            const typeColor = trade.side === 'buy' ? '#00ff00' : '#ff6666';
             
             html += `<tr>
                 <td>${id.substring(0, 10)}...<\/td>
-                <td><strong>${trade.username || 'Unknown'}<\/strong><\/td>
-                <td>${trade.coinName || trade.coin}<\/td>
-                <td style="color:${typeColor}; font-weight:bold;">${trade.type.toUpperCase()}<\/td>
-                <td>${trade.amount}<\/td>
-                <td>${trade.price}<\/td>
-                <td>${trade.total} USDT<\/td>
+                <td><strong>${username}<\/strong><\/td>
+                <td>${trade.symbol}/USD<\/td>
+                <td style="color:${typeColor}; font-weight:bold;">${trade.side.toUpperCase()}<\/td>
+                <td>${trade.amount} USDT<\/td>
+                <td>${trade.price.toFixed(2)}<\/td>
+                <td>${trade.amount} USDT<\/td>
                 <td>${trade.duration} min<\/td>
                 <td style="color:${isReady ? '#ffd700' : '#888'}; font-weight:bold;">${timeLeftDisplay}<\/td>
-                <td>${trade.entryPrice}<\/td>
+                <td>${trade.price.toFixed(2)}<\/td>
                 <td>
                     ${isReady ? `<button class="approve-btn" onclick="confirmTrade('${id}')">Confirm</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>` : '<span style="color:#888;">Waiting...</span>'}
                 <\/td>
@@ -758,31 +763,28 @@ async function loadOpenTradesTable() {
 }
 
 window.confirmTrade = async function(tradeId) {
-    const snap = await database.ref('openTrades/' + tradeId).once('value');
+    const snap = await database.ref('tradingOrders/' + tradeId).once('value');
     const trade = snap.val();
     if (!trade) return;
     
-    // Calculate profit/loss based on price change
-    const entryPrice = parseFloat(trade.entryPrice);
-    const currentPrice = parseFloat(trade.price);
-    const priceChange = ((currentPrice - entryPrice) / entryPrice) * 100;
-    const profit = (trade.total * (priceChange / 100)).toFixed(2);
+    // Get user info
+    const userSnap = await database.ref('users/' + trade.userId).once('value');
+    const user = userSnap.val();
+    const username = user ? user.username : 'Unknown';
     
     const { value: profitAmount } = await Swal.fire({
         title: 'Confirm Trade',
         html: `<div style="text-align:left;">
-            <p><strong>User:</strong> ${trade.username}</p>
-            <p><strong>Coin:</strong> ${trade.coinName}</p>
-            <p><strong>Type:</strong> ${trade.type.toUpperCase()}</p>
-            <p><strong>Entry Price:</strong> ${entryPrice}</p>
-            <p><strong>Current Price:</strong> ${currentPrice}</p>
-            <p><strong>Price Change:</strong> ${priceChange.toFixed(2)}%</p>
-            <p><strong>Estimated Profit/Loss:</strong> ${profit} USDT</p>
-            <p><strong>Trade Total:</strong> ${trade.total} USDT</p>
+            <p><strong>User:</strong> ${username}</p>
+            <p><strong>Coin:</strong> ${trade.symbol}/USD</p>
+            <p><strong>Type:</strong> ${trade.side.toUpperCase()}</p>
+            <p><strong>Order Price:</strong> ${trade.price.toFixed(2)} USD</p>
+            <p><strong>Amount:</strong> ${trade.amount} USDT</p>
+            <p><strong>Duration:</strong> ${trade.duration} min</p>
         </div>`,
         input: 'number',
         inputLabel: 'Enter final profit/loss amount (USDT)',
-        inputPlaceholder: profit,
+        inputPlaceholder: '0.00',
         showCancelButton: true,
         confirmButtonColor: '#00ff00',
         confirmButtonText: 'Confirm & Add Funds'
@@ -790,55 +792,45 @@ window.confirmTrade = async function(tradeId) {
     
     if (profitAmount !== null && !isNaN(profitAmount)) {
         const finalProfit = parseFloat(profitAmount);
-        const totalReturn = (parseFloat(trade.total) + finalProfit).toFixed(2);
+        const totalReturn = (parseFloat(trade.amount) + finalProfit).toFixed(2);
         
         // Add funds to user balance
-        const userSnap = await database.ref('users/' + trade.userId).once('value');
-        const user = userSnap.val();
         const currentBalance = parseFloat(user.balance || 0);
         const newBalance = (currentBalance + totalReturn).toFixed(2);
         
         await database.ref('users/' + trade.userId).update({ balance: newBalance });
         
-        // Move trade to completed trades
-        await database.ref('trades/' + Date.now()).set({
-            userId: trade.userId,
-            username: trade.username,
-            coin: trade.coin,
-            coinName: trade.coinName,
-            type: trade.type,
-            amount: trade.amount,
-            price: trade.price,
-            total: trade.total,
-            duration: trade.duration,
-            entryPrice: trade.entryPrice,
+        // Update trade status to executed
+        await database.ref('tradingOrders/' + tradeId).update({
+            status: 'executed',
             profit: finalProfit,
             totalReturn: totalReturn,
-            date: new Date().toLocaleString(),
-            status: 'completed'
+            executedAt: new Date().toISOString()
         });
         
-        // Remove from open trades
-        await database.ref('openTrades/' + tradeId).remove();
-        
-        Swal.fire('Success', `Trade confirmed. Added ${totalReturn} USDT to ${trade.username}'s balance.`, 'success');
+        Swal.fire('Success', `Trade confirmed. Added ${totalReturn} USDT to ${username}'s balance.`, 'success');
         loadOpenTradesTable();
         loadDashboardStats();
     }
 };
 
 window.rejectTrade = async function(tradeId) {
-    const snap = await database.ref('openTrades/' + tradeId).once('value');
+    const snap = await database.ref('tradingOrders/' + tradeId).once('value');
     const trade = snap.val();
     if (!trade) return;
+    
+    // Get user info
+    const userSnap = await database.ref('users/' + trade.userId).once('value');
+    const user = userSnap.val();
+    const username = user ? user.username : 'Unknown';
     
     const { value: refundAmount } = await Swal.fire({
         title: 'Reject Trade',
         html: `<div style="text-align:left;">
-            <p><strong>User:</strong> ${trade.username}</p>
-            <p><strong>Coin:</strong> ${trade.coinName}</p>
-            <p><strong>Type:</strong> ${trade.type.toUpperCase()}</p>
-            <p><strong>Trade Total:</strong> ${trade.total} USDT</p>
+            <p><strong>User:</strong> ${username}</p>
+            <p><strong>Coin:</strong> ${trade.symbol}/USD</p>
+            <p><strong>Type:</strong> ${trade.side.toUpperCase()}</p>
+            <p><strong>Trade Amount:</strong> ${trade.amount} USDT</p>
             <p>Enter refund amount (0 = no refund):</p>
         </div>`,
         input: 'number',
@@ -854,35 +846,20 @@ window.rejectTrade = async function(tradeId) {
         
         if (refund > 0) {
             // Add refund to user balance
-            const userSnap = await database.ref('users/' + trade.userId).once('value');
-            const user = userSnap.val();
             const currentBalance = parseFloat(user.balance || 0);
             const newBalance = (currentBalance + refund).toFixed(2);
             
             await database.ref('users/' + trade.userId).update({ balance: newBalance });
         }
         
-        // Move to completed trades with rejected status
-        await database.ref('trades/' + Date.now()).set({
-            userId: trade.userId,
-            username: trade.username,
-            coin: trade.coin,
-            coinName: trade.coinName,
-            type: trade.type,
-            amount: trade.amount,
-            price: trade.price,
-            total: trade.total,
-            duration: trade.duration,
-            entryPrice: trade.entryPrice,
+        // Update trade status to rejected
+        await database.ref('tradingOrders/' + tradeId).update({
+            status: 'rejected',
             refund: refund,
-            date: new Date().toLocaleString(),
-            status: 'rejected'
+            rejectedAt: new Date().toISOString()
         });
         
-        // Remove from open trades
-        await database.ref('openTrades/' + tradeId).remove();
-        
-        Swal.fire('Rejected', `Trade rejected. Refunded ${refund} USDT to ${trade.username}.`, 'info');
+        Swal.fire('Rejected', `Trade rejected. Refunded ${refund} USDT to ${username}.`, 'info');
         loadOpenTradesTable();
         loadDashboardStats();
     }
