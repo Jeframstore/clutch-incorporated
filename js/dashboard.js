@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (page === 'service') window.location.href = 'service.html';
             else if (page === 'withdraw') window.location.href = 'withdraw.html';
             else if (page === 'deposit') window.location.href = 'deposit.html';
+            else if (page === 'trading') window.location.href = 'trading.html';
             else if (page === 'terms') window.location.href = 'terms.html';
             else if (page === 'certificate') window.location.href = 'certificate.html';
             else if (page === 'faqs') window.location.href = 'faqs.html';
@@ -112,11 +113,25 @@ async function loadUserData() {
                 console.log('Streak reset - missed a day');
             }
             
+            // Check if completed 15 days - payout and reset
+            if (streak >= 15 && lastSignIn !== today) {
+                // Add base salary to balance
+                const currentBalance = user.balance || 0;
+                await database.ref('users/' + userId).update({
+                    balance: currentBalance + baseSalary,
+                    signInStreak: 0,
+                    baseSalary: 0
+                });
+                streak = 0;
+                baseSalary = 0;
+                console.log('15 days completed - payout and reset');
+            }
+            
             // Check if signed in today
             if (lastSignIn !== today) {
                 streak++;
-                // Linear reward formula: 150 USDT day 1, +50 USDT per day, max 15 days
-                const todayReward = streak <= 15 ? (150 + (streak - 1) * 50) : 0;
+                // Reward formula: +150 day 1, +50 each day for 15 days
+                const todayReward = streak <= 15 ? (streak === 1 ? 150 : 50) : 0;
                 baseSalary += todayReward;
                 
                 await database.ref('users/' + userId).update({

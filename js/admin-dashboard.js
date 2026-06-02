@@ -180,8 +180,24 @@ async function loadUsersTable() {
         const users = usersSnap.val() || {};
         let html = '';
         
+        // Get admin's invitation codes if sub admin
+        let adminCodes = [];
+        if (adminType === 'sub') {
+            const codesSnap = await database.ref('invitationCodes').once('value');
+            const codes = codesSnap.val() || {};
+            for (let id in codes) {
+                if (codes[id].adminId === adminId) {
+                    adminCodes.push(codes[id].code);
+                }
+            }
+        }
+        
         for (let id in users) {
             const user = users[id];
+            
+            // Sub admins only see users who registered with their codes
+            if (adminType === 'sub' && !adminCodes.includes(user.inviteCode)) continue;
+            
             const balance = parseFloat(user.balance || 0).toFixed(2);
             const frozen = parseFloat(user.frozenAmount || 0).toFixed(2);
             const available = (parseFloat(balance) - parseFloat(frozen)).toFixed(2);
@@ -347,8 +363,54 @@ window.assignCustomerService = async function(userId) {
             assignedWhatsapp: formValues.whatsapp,
             assignedTelegram: formValues.telegram
         });
-        Swal.fire('Success', 'Customer service assigned!', 'success');
+        Swal.fire('Success', 'Customer service assigned', 'success');
         loadUsersTable();
+    }
+};
+
+window.viewBaseSalary = async function(userId) {
+    const snap = await database.ref('users/' + userId).once('value');
+    const user = snap.val();
+    const streak = user.signInStreak || 0;
+    const baseSalary = user.baseSalary || 0;
+    const lastSignIn = user.lastSignIn || 'Never';
+    
+    const { value: action } = await Swal.fire({
+        title: `Base Salary: ${user.username}`,
+        html: `<div style="text-align:left;">
+            <p><strong>Current Streak:</strong> ${streak}/15 days</p>
+            <p><strong>Base Salary:</strong> ${baseSalary.toFixed(2)} USDT</p>
+            <p><strong>Last Sign In:</strong> ${lastSignIn}</p>
+            <p><strong>Reward System:</strong> +150 day 1, +50 each day for 15 days</p>
+            <p><strong>Reset on skip:</strong> Yes</p>
+            <p><strong>Payout after 15 days:</strong> Yes (to balance)</p>
+        </div>`,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Reset Streak & Salary',
+        cancelButtonText: 'Close',
+        confirmButtonColor: '#ff4444',
+        cancelButtonColor: '#ffd700'
+    });
+    
+    if (action === 'confirm') {
+        const { value: confirm } = await Swal.fire({
+            title: 'Confirm Reset',
+            text: 'This will reset the user\'s sign-in streak to 0 and base salary to 0. Continue?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff4444',
+            cancelButtonColor: '#ffd700'
+        });
+        
+        if (confirm) {
+            await database.ref('users/' + userId).update({
+                signInStreak: 0,
+                baseSalary: 0
+            });
+            Swal.fire('Reset', 'Sign-in streak and base salary reset to 0', 'success');
+            loadUsersTable();
+        }
     }
 };
 
@@ -746,6 +808,9 @@ async function loadInvitationCodes() {
     let historyHtml = '';
     for (let id in codes) {
         const code = codes[id];
+        // Sub admins only see their own codes
+        if (adminType === 'sub' && code.adminId !== adminId) continue;
+        
         if (code.date === today && code.active === true) todaysCode = code;
         historyHtml += `<tr>
             <td>${code.date}<\/td>

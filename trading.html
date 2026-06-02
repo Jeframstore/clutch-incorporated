@@ -4,19 +4,19 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clutch Incorporated - Profile</title>
+    <title>Clutch Incorporated - Trading</title>
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/header-footer.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/trading.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
 </head>
 <body>
-    <div class="profile-container">
-        <div class="profile-header">
+    <div class="trading-container">
+        <div class="trading-header">
             <div class="top-bar">
                 <div class="logo-section">
                     <div class="big-c">C</div>
@@ -27,37 +27,20 @@
                 </div>
                 <button class="back-btn" id="backBtn">←</button>
             </div>
-            <h1 class="revenue-title">Revenue</h1>
+            <h1 class="page-title">Crypto Trading</h1>
         </div>
 
-        <div class="user-info-card">
-            <h2><span id="profileUserName">Jefram</span>-VIP 1</h2>
-            <p>Invitation Code: <span id="inviteCode">A4832E73</span></p>
-            <p>Personal Account</p>
-            <div class="credit-score">
-                <span>Credit score</span>
-                <span class="score-value" id="creditScore">97%</span>
-            </div>
+        <div class="balance-display">
+            <p>Available Balance</p>
+            <p class="balance-amount" id="tradingBalance">0.00 USDT</p>
         </div>
 
-        <div class="balance-info">
-            <div class="balance-row">
-                <span>Account Balance</span>
-                <span class="balance-value" id="profileBalance">0.00 USDT</span>
-            </div>
-            <div class="balance-row">
-                <span>Total Earning</span>
-                <span class="profit-value" id="profileProfits">0.00 USDT</span>
-            </div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search coins...">
         </div>
 
-        <div class="menu-list">
-            <button class="menu-list-item" id="depositBtn">💳 Deposit</button>
-            <button class="menu-list-item" id="withdrawBtn">💰 Withdraw</button>
-            <button class="menu-list-item" id="changePasswordBtn">🔐 Change passwords</button>
-            <button class="menu-list-item" id="bindWalletBtn">🔗 Bind Wallet Address</button>
-            <button class="menu-list-item" id="contactUsBtn">📞 Contact us</button>
-            <button class="menu-list-item" id="logoutBtn">🚪 Log Out</button>
+        <div class="coins-list" id="coinsList">
+            <div class="loading">Loading coins...</div>
         </div>
 
         <div class="bottom-nav">
@@ -67,7 +50,7 @@
             </button>
             <button class="nav-btn" data-page="starting">
                 <span>🚀</span>
-                <span>Starting</span>
+                <span>Tasks</span>
             </button>
             <button class="nav-btn" data-page="records">
                 <span>📊</span>
@@ -77,6 +60,6 @@
     </div>
 
     <script src="js/main.js"></script>
-    <script src="js/profile.js"></script>
+    <script src="js/trading.js"></script>
 </body>
 </html>
