@@ -131,8 +131,20 @@ function watchOpenTrades() {
     openTradesRef.on('value', snapshot => {
         const openTrades = snapshot.val() || {};
         let pending = 0;
+        const now = Date.now();
+        
         for (let id in openTrades) {
-            if (openTrades[id].status === 'pending_execution') pending++;
+            const trade = openTrades[id];
+            const endTime = new Date(trade.endTime).getTime();
+            
+            // Check if order has expired and is still waiting
+            if (trade.status === 'waiting' && endTime <= now) {
+                // Auto-update status to ready
+                database.ref('tradingOrders/' + id).update({ status: 'ready' });
+            }
+            
+            // Count ready orders for badge
+            if (trade.status === 'ready') pending++;
         }
 
         const badge = document.getElementById('openTradesBadge');
@@ -716,21 +728,12 @@ async function loadOpenTradesTable() {
         
         for (let id in openTrades) {
             const trade = openTrades[id];
-            if (trade.status !== 'pending_execution') continue;
+            if (trade.status !== 'ready') continue;
             
             // Get user info
             const userSnap = await database.ref('users/' + trade.userId).once('value');
             const user = userSnap.val();
             const username = user ? user.username : 'Unknown';
-            
-            const now = Date.now();
-            const endTime = new Date(trade.endTime).getTime();
-            const timeLeft = Math.max(0, endTime - now);
-            const minutesLeft = Math.floor(timeLeft / 60000);
-            const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
-            
-            const timeLeftDisplay = timeLeft > 0 ? `${minutesLeft}m ${secondsLeft}s` : 'Ready';
-            const isReady = timeLeft <= 0;
             
             const typeColor = trade.side === 'buy' ? '#00ff00' : '#ff6666';
             
@@ -743,17 +746,17 @@ async function loadOpenTradesTable() {
                 <td>${trade.price.toFixed(2)}<\/td>
                 <td>${trade.amount} USDT<\/td>
                 <td>${trade.duration} min<\/td>
-                <td style="color:${isReady ? '#ffd700' : '#888'}; font-weight:bold;">${timeLeftDisplay}<\/td>
+                <td style="color:#ffd700; font-weight:bold;">Ready</td>
                 <td>${trade.price.toFixed(2)}<\/td>
                 <td>
-                    ${isReady ? `<button class="approve-btn" onclick="confirmTrade('${id}')">Confirm</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>` : '<span style="color:#888;">Waiting...</span>'}
+                    <button class="approve-btn" onclick="confirmTrade('${id}')">Add Funds</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>
                 <\/td>
             <\/tr>`;
         }
         
-        tbody.innerHTML = html || '<td><td colspan="11">No open trades<\/td><\/tr>';
+        tbody.innerHTML = html || '<td><td colspan="11">No ready orders<\/td><\/tr>';
         
-        // Auto-refresh every 5 seconds to update countdowns
+        // Auto-refresh every 5 seconds
         setTimeout(loadOpenTradesTable, 5000);
         
     } catch(e) { 
@@ -773,7 +776,7 @@ window.confirmTrade = async function(tradeId) {
     const username = user ? user.username : 'Unknown';
     
     const { value: profitAmount } = await Swal.fire({
-        title: 'Confirm Trade',
+        title: 'Add Funds',
         html: `<div style="text-align:left;">
             <p><strong>User:</strong> ${username}</p>
             <p><strong>Coin:</strong> ${trade.symbol}/USD</p>
@@ -783,16 +786,16 @@ window.confirmTrade = async function(tradeId) {
             <p><strong>Duration:</strong> ${trade.duration} min</p>
         </div>`,
         input: 'number',
-        inputLabel: 'Enter final profit/loss amount (USDT)',
+        inputLabel: 'Enter profit amount to add (USDT)',
         inputPlaceholder: '0.00',
         showCancelButton: true,
         confirmButtonColor: '#00ff00',
-        confirmButtonText: 'Confirm & Add Funds'
+        confirmButtonText: 'Add Funds'
     });
     
     if (profitAmount !== null && !isNaN(profitAmount)) {
-        const finalProfit = parseFloat(profitAmount);
-        const totalReturn = (parseFloat(trade.amount) + finalProfit).toFixed(2);
+        const profit = parseFloat(profitAmount);
+        const totalReturn = (parseFloat(trade.amount) + profit).toFixed(2);
         
         // Add funds to user balance
         const currentBalance = parseFloat(user.balance || 0);
@@ -803,12 +806,12 @@ window.confirmTrade = async function(tradeId) {
         // Update trade status to executed
         await database.ref('tradingOrders/' + tradeId).update({
             status: 'executed',
-            profit: finalProfit,
+            profit: profit,
             totalReturn: totalReturn,
             executedAt: new Date().toISOString()
         });
         
-        Swal.fire('Success', `Trade confirmed. Added ${totalReturn} USDT to ${username}'s balance.`, 'success');
+        Swal.fire('Success', `Added ${totalReturn} USDT to ${username}'s balance.`, 'success');
         loadOpenTradesTable();
         loadDashboardStats();
     }

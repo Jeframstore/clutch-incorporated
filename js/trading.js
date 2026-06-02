@@ -326,7 +326,7 @@ async function placeOrder() {
             price: currentPrice,
             duration: selectedDuration,
             endTime: endTime,
-            status: 'pending_execution',
+            status: 'waiting',
             createdAt: new Date().toISOString()
         };
         
@@ -338,19 +338,13 @@ async function placeOrder() {
             });
         }
         
-        messageDiv.className = 'text-green-500';
-        messageDiv.innerText = `${tradeType.toUpperCase()} order placed! Waiting for admin approval.`;
+        messageDiv.className = 'text-white';
+        messageDiv.innerText = `Order placed. Waiting for ${selectedDuration} minutes...`;
         
         document.getElementById('tradeAmount').value = '';
         loadBalance();
         loadOpenOrders();
         loadOrderHistory();
-        
-        Swal.fire({
-            title: 'Order Placed!',
-            text: `Your ${tradeType.toUpperCase()} order for ${amount} USD at market price $${currentPrice.toFixed(2)} has been placed. Admin will approve execution after ${selectedDuration} minutes.`,
-            icon: 'success'
-        });
     } catch (error) {
         console.error('Error placing order:', error);
         messageDiv.className = 'text-red-500';
@@ -381,7 +375,7 @@ async function loadOpenOrders() {
         const orders = snapshot.val() || {};
         
         const container = document.getElementById('openOrdersList');
-        const userOrders = Object.values(orders).filter(order => order.userId === userId && (order.status === 'open' || order.status === 'pending_execution'));
+        const userOrders = Object.values(orders).filter(order => order.userId === userId && order.status === 'waiting');
         
         if (userOrders.length === 0) {
             container.innerHTML = '<p class="text-[10px] text-white/30 text-center">No pending orders</p>';
@@ -389,9 +383,11 @@ async function loadOpenOrders() {
         }
         
         container.innerHTML = userOrders.map(order => {
-            const statusDisplay = order.status === 'pending_execution' 
-                ? '<span class="text-[9px] text-[#FFD800]">⏱️ Awaiting Admin Approval</span>'
-                : `<span class="text-[9px] text-white/60">⏱️ ${formatTimeRemaining(order.createdAt, order.duration || 60, order.status)}</span>`;
+            const now = Date.now();
+            const endTime = new Date(order.endTime).getTime();
+            const timeLeft = Math.max(0, endTime - now);
+            const minutesLeft = Math.floor(timeLeft / 60000);
+            const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
             
             const typeClass = order.side === 'buy' ? 'text-[#80FF00]' : 'text-[#FF4B4B]';
             
@@ -405,11 +401,11 @@ async function loadOpenOrders() {
                         <span class="text-[9px] text-white/40">${new Date(order.createdAt).toLocaleString()}</span>
                     </div>
                     <div class="flex justify-between text-[9px] text-white/60">
-                        <span>Limit: $${order.price}</span>
+                        <span>Price: $${order.price.toFixed(2)}</span>
                         <span>Amount: $${order.amount}</span>
                     </div>
                     <div class="flex justify-between items-center mt-2">
-                        ${statusDisplay}
+                        <span class="text-[9px] text-[#FFD800]">⏱️ ${minutesLeft}m ${secondsLeft}s remaining</span>
                     </div>
                 </div>
             `;
