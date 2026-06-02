@@ -12,7 +12,13 @@ body {
 .starting-container {
     background: linear-gradient(135deg, #0a0a0a 0%, #0d0d1a 100%);
     min-height: 100vh;
-    padding: 20px 16px 80px 16px;
+    padding: 80px var(--spacing-md) 90px;
+}
+
+@media (max-width: 640px) {
+    .starting-container {
+        padding: 60px 15px 90px;
+    }
 }
 
 .top-bar {
