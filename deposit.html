@@ -7,25 +7,56 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
-        body { background-color: #0A0A0A; color: white; font-family: 'IBM Plex Sans', sans-serif; margin: 0; }
-        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass { background: rgba(27, 27, 27, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+        
+        body { font-family: 'IBM Plex Sans', sans-serif; background-color: #0A0A0A; color: white; margin: 0; }
+        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        .glass-header { 
+            background: rgba(10, 10, 10, 0.85); 
+            backdrop-filter: blur(20px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .marquee-container { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .marquee-anim { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        
+        .nav-btn.active { color: #FFD800; }
+        .nav-indicator { box-shadow: 0 0 15px #FFD800; }
+        
+        ::-webkit-scrollbar { display: none; }
+
         .qr-card { background: white; padding: 1.5rem; border-radius: 2rem; box-shadow: 0 20px 50px rgba(255, 216, 0, 0.15); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-[#0A0A0A] flex justify-center">
-    <div class="relative w-full max-w-[375px] min-h-screen bg-[#0A0A0A] flex flex-col border-x border-white/5 pb-[100px]">
+    <div class="flex flex-col min-h-screen w-full max-w-[375px] bg-[#0A0A0A] text-white relative pb-[100px] border-x border-white/5">
         
-        <header class="sticky top-0 z-[100] h-16 glass px-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-[#FFD800] flex items-center justify-center shadow-[0_0_15px_rgba(255,216,0,0.3)]">
-                    <span class="text-black font-black text-lg">C</span>
+        <!-- Header -->
+        <header class="sticky top-0 z-[60] glass-header px-6 py-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FFD800] shadow-[0_0_20px_rgba(255,216,0,0.3)]">
+                        <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/cog.svg" class="w-7 h-7" alt="Logo">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-jakarta text-lg font-extrabold tracking-tighter leading-none">CLUTCH</span>
+                        <span class="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-0.5">Incorporated</span>
+                    </div>
                 </div>
-                <h1 class="font-heading font-extrabold text-[12px] tracking-widest text-white uppercase">The Clutch Co</h1>
+                <div class="flex items-center gap-4">
+                    <button id="backBtn" class="w-11 h-11 rounded-full border-2 border-white/10 flex items-center justify-center hover:border-[#FFD800] transition-colors">
+                        <i class="ti ti-arrow-left text-white text-xl"></i>
+                    </button>
+                </div>
             </div>
-            <button id="backBtn" class="text-white/40 hover:text-white transition-colors"><i class="ti ti-arrow-left"></i></button>
+            
+            <div class="overflow-hidden marquee-container rounded-lg py-1.5 mt-2">
+                <div class="marquee-anim text-[9px] font-black text-[#80FF00]/90 uppercase tracking-widest px-4">
+                    • Secure Deposit • Fund Your Portfolio • Welcome <span id="usernameDisplay" class="text-white">User</span> •
+                </div>
+            </div>
         </header>
 
         <main class="flex-1 overflow-y-auto no-scrollbar px-5 py-6 space-y-8">
@@ -34,7 +65,7 @@
                     <div class="w-1.5 h-1.5 rounded-full bg-[#FFD800] animate-pulse"></div>
                     <span class="text-[9px] font-black text-[#FFD800] uppercase tracking-widest">Instant Nodes</span>
                 </div>
-                <h1 class="font-heading text-4xl font-extrabold tracking-tight">Deposit</h1>
+                <h1 class="font-jakarta text-4xl font-extrabold tracking-tight">Deposit</h1>
                 <p class="text-white/40 text-xs mt-2">Fund your high-performance portfolio via USDT.</p>
             </div>
 
@@ -60,7 +91,7 @@
             </section>
 
             <div class="bg-gradient-to-br from-[#80FF00]/10 to-transparent p-6 rounded-[32px] border border-[#80FF00]/20 space-y-5">
-                <h4 class="font-heading font-bold text-sm text-[#80FF00] uppercase tracking-widest text-center">Concierge Sync</h4>
+                <h4 class="font-jakarta font-bold text-sm text-[#80FF00] uppercase tracking-widest text-center">Concierge Sync</h4>
                 <p class="text-white/60 text-[11px] text-center px-4">Please contact support after sending funds for priority node activation.</p>
                 
                 <div class="flex gap-3">
@@ -76,18 +107,25 @@
             </div>
         </main>
 
-        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-3xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+        <!-- Bottom Tab Bar -->
+        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-2xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
             <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
-                <i class="ti ti-home text-white/20 text-2xl"></i>
-                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Home</span>
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-home text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
             </div>
             <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
-                <i class="ti ti-rocket text-white/20 text-2xl"></i>
-                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Start</span>
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-rocket text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Start</span>
             </div>
             <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
-                <i class="ti ti-list text-white/20 text-2xl"></i>
-                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Records</span>
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-list text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Records</span>
             </div>
         </nav>
     </div>

@@ -1,62 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Incorporated - Certificate</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/certificate.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+        
+        body { font-family: 'IBM Plex Sans', sans-serif; background-color: #0A0A0A; color: white; margin: 0; }
+        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        .glass-header { 
+            background: rgba(10, 10, 10, 0.85); 
+            backdrop-filter: blur(20px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .marquee-container { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .marquee-anim { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        
+        .nav-btn.active { color: #FFD800; }
+        .nav-indicator { box-shadow: 0 0 15px #FFD800; }
+        
+        ::-webkit-scrollbar { display: none; }
+
+        .certificate-image-container { background: #1B1B1B; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 32px; padding: 24px; min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .certificate-image { max-width: 100%; border-radius: 16px; }
+        .no-image-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: rgba(255, 255, 255, 0.3); }
+        .no-image-placeholder span { font-size: 48px; margin-bottom: 16px; }
+        .no-image-placeholder p { font-size: 14px; margin: 4px 0; }
+        .certificate-text { margin-top: 20px; padding: 20px; background: #1B1B1B; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="flex flex-col min-h-screen w-full max-w-[375px] bg-[#0A0A0A] text-white relative pb-[100px] border-x border-white/5">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-[60] glass-header px-6 py-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FFD800] shadow-[0_0_20px_rgba(255,216,0,0.3)]">
+                        <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/cog.svg" class="w-7 h-7" alt="Logo">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-jakarta text-lg font-extrabold tracking-tighter leading-none">CLUTCH</span>
+                        <span class="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-0.5">Incorporated</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="backBtn" class="w-11 h-11 rounded-full border-2 border-white/10 flex items-center justify-center hover:border-[#FFD800] transition-colors">
+                        <i class="ti ti-arrow-left text-white text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-hidden marquee-container rounded-lg py-1.5 mt-2">
+                <div class="marquee-anim text-[9px] font-black text-[#80FF00]/90 uppercase tracking-widest px-4">
+                    • Certificate • Your Achievement • Welcome <span id="usernameDisplay" class="text-white">User</span> •
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar px-5 py-6">
+            <div class="mb-8">
+                <h1 class="font-jakarta text-3xl font-extrabold tracking-tight">Certificate</h1>
+                <p class="text-white/40 text-xs mt-2">View your achievement certificate.</p>
+            </div>
+
+            <div class="certificate-content" id="certificateContent">
+                <div class="certificate-image-container" id="certificateImageContainer">
+                    <img id="certificateImage" class="certificate-image" src="" alt="Certificate Image">
+                    <div class="no-image-placeholder" id="noImagePlaceholder">
+                        <span>📜</span>
+                        <p>No Certificate Uploaded Yet</p>
+                    </div>
+                </div>
+                <div class="certificate-text" id="certificateText"></div>
+            </div>
+        </main>
+
+        <!-- Bottom Tab Bar -->
+        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-2xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-home text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-rocket text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Start</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-list text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Records</span>
+            </div>
+        </nav>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="certificate-container">
-        <div class="certificate-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="back-btn" id="backBtn">←</button>
-            </div>
-            <h1 class="page-title">Certificate</h1>
-        </div>
-
-        <div class="certificate-content" id="certificateContent">
-            <div class="certificate-image-container" id="certificateImageContainer">
-                <img id="certificateImage" class="certificate-image" src="" alt="Certificate Image">
-                <div class="no-image-placeholder" id="noImagePlaceholder">
-                    <span>📜</span>
-                    <p>No Certificate Uploaded Yet</p>
-                </div>
-            </div>
-            <div class="certificate-text" id="certificateText"></div>
-        </div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn" data-page="starting">
-                <span>🚀</span>
-                <span>Starting</span>
-            </button>
-            <button class="nav-btn" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/certificate.js"></script>
 </body>

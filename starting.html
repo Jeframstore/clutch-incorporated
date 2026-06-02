@@ -1,113 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Incorporated - Starting</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/starting.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+        
+        body { font-family: 'IBM Plex Sans', sans-serif; background-color: #0A0A0A; color: white; margin: 0; }
+        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        .glass-header { 
+            background: rgba(10, 10, 10, 0.85); 
+            backdrop-filter: blur(20px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .marquee-container { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .marquee-anim { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        
+        .nav-btn.active { color: #FFD800; }
+        .nav-indicator { box-shadow: 0 0 15px #FFD800; }
+        
+        ::-webkit-scrollbar { display: none; }
+
+        .stats-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
+        .stat-card { background: linear-gradient(135deg, #1B1B1B 0%, #0F0F0F 100%); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 20px; text-align: center; }
+        .stat-label { color: rgba(255, 255, 255, 0.4); font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #FFD800; margin-bottom: 4px; }
+        .stat-value span { font-size: 12px; color: rgba(255, 255, 255, 0.4); }
+        .stat-note { font-size: 10px; color: rgba(255, 255, 255, 0.3); }
+
+        .progress-section { padding: 0 20px 20px; }
+        .progress-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; font-weight: bold; }
+        .task-count { color: #FFD800; }
+        .progress-bar { height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #FFD800, #FFA500); transition: width 0.3s ease; }
+
+        .timer-section { padding: 0 20px 20px; }
+        .timer-card { background: rgba(139, 69, 19, 0.2); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 20px; padding: 20px; text-align: center; }
+        .countdown { font-size: 32px; font-weight: bold; color: #FFD800; margin: 10px 0; }
+        .next-task-time { font-size: 12px; color: rgba(255, 255, 255, 0.5); }
+
+        .task-card { background: #1B1B1B; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; margin: 0 20px 20px; overflow: hidden; }
+        .task-image-slider { position: relative; height: 200px; background: #0F0F0F; }
+        .slider-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .slider-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.5); border: none; color: white; padding: 10px 15px; cursor: pointer; z-index: 10; }
+        .slider-btn.prev { left: 10px; }
+        .slider-btn.next { right: 10px; }
+        .slider-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+        .slider-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); cursor: pointer; }
+        .slider-dot.active { background: #FFD800; }
+
+        .task-info { padding: 20px; }
+        .product-name { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+        .price-section { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .price-label { color: rgba(255, 255, 255, 0.5); font-size: 12px; }
+        .price-value { color: #FFD800; font-size: 18px; font-weight: bold; }
+        .task-meta { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; font-size: 12px; color: rgba(255, 255, 255, 0.5); }
+        .task-meta span { color: white; }
+        .task-status { margin-bottom: 15px; }
+        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .status-badge.available { background: rgba(0, 255, 0, 0.2); color: #00FF00; }
+        .status-badge.completed { background: rgba(255, 215, 0, 0.2); color: #FFD800; }
+        .status-badge.locked { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
+        .start-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #FFD800, #FFA500); border: none; border-radius: 12px; color: black; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
+        .start-btn:disabled { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.3); cursor: not-allowed; }
+
+        .notice { background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3); border-radius: 12px; margin: 0 20px 20px; padding: 15px; text-align: center; }
+        .notice p:first-child { color: #FF4444; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .notice p:last-child { font-size: 12px; color: rgba(255, 255, 255, 0.7); }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="flex flex-col min-h-screen w-full max-w-[375px] bg-[#0A0A0A] text-white relative pb-[100px] border-x border-white/5">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-[60] glass-header px-6 py-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FFD800] shadow-[0_0_20px_rgba(255,216,0,0.3)]">
+                        <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/cog.svg" class="w-7 h-7" alt="Logo">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-jakarta text-lg font-extrabold tracking-tighter leading-none">CLUTCH</span>
+                        <span class="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-0.5">Incorporated</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="backBtn" class="w-11 h-11 rounded-full border-2 border-white/10 flex items-center justify-center hover:border-[#FFD800] transition-colors">
+                        <i class="ti ti-arrow-left text-white text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-hidden marquee-container rounded-lg py-1.5 mt-2">
+                <div class="marquee-anim text-[9px] font-black text-[#80FF00]/90 uppercase tracking-widest px-4">
+                    • Task Optimization Active • Complete Tasks to Earn Rewards • Welcome <span id="usernameDisplay" class="text-white">User</span> •
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar">
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <p class="stat-label">Wallet Balance</p>
+                    <p class="stat-value" id="walletBalance">0.00 <span>USDT</span></p>
+                    <p class="stat-note">Profits will be added here</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Commission</p>
+                    <p class="stat-value" id="commission">0.00 <span>USDT</span></p>
+                    <p class="stat-note">Commission Earned</p>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span>Task Progress</span>
+                    <span class="task-count" id="taskCount">0/40</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="timer-section" id="timerSection" style="display: none;">
+                <div class="timer-card">
+                    <p>⏰ Next Task Available In:</p>
+                    <div class="countdown" id="countdown">--:--:--</div>
+                    <p class="next-task-time" id="nextTaskTime"></p>
+                </div>
+            </div>
+
+            <div class="task-card" id="taskCard">
+                <div class="task-image-slider" id="taskImageSlider">
+                    <button class="slider-btn prev" id="prevBtn">❮</button>
+                    <div class="slider-container">
+                        <img id="sliderImage" class="slider-image" src="" alt="Product Image">
+                    </div>
+                    <button class="slider-btn next" id="nextBtn">❯</button>
+                    <div class="slider-dots" id="sliderDots"></div>
+                </div>
+                <div class="task-info">
+                    <h3 class="product-name" id="productName">Product Name</h3>
+                    <div class="price-section">
+                        <span class="price-label">Total Price:</span>
+                        <span class="price-value" id="productPrice">$0.00</span>
+                    </div>
+                    <div class="task-meta">
+                        <span>Task ID: <span id="taskId">TSK001</span></span>
+                        <span>Available: <span id="taskTime">--:-- --</span></span>
+                        <span>Profit: <span id="taskProfit">+0.00 USDT</span></span>
+                    </div>
+                    <div class="task-status" id="taskStatus">
+                        <span class="status-badge" id="statusBadge">Available</span>
+                    </div>
+                    <button class="start-btn" id="startTaskBtn" disabled>Start Optimization</button>
+                </div>
+            </div>
+
+            <div class="notice" id="noticeArea">
+                <p>NOTICE</p>
+                <p id="noticeText">Online Support Hours: 10:00 - 22:00</p>
+            </div>
+        </main>
+
+        <!-- Bottom Tab Bar -->
+        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-2xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-home text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn active" data-page="starting">
+                <div class="w-12 h-12 rounded-2xl bg-[#FFD800]/10 flex items-center justify-center relative">
+                    <i class="ti ti-rocket text-[#FFD800] text-2xl"></i>
+                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#FFD800] rounded-full nav-indicator"></div>
+                </div>
+                <span class="text-[#FFD800] text-[10px] font-black uppercase tracking-[0.2em]">Start</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-list text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Records</span>
+            </div>
+        </nav>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="starting-container">
-        <div class="starting-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="back-btn" id="backBtn">←</button>
-            </div>
-        </div>
-
-        <div class="stats-cards">
-            <div class="stat-card">
-                <p class="stat-label">Wallet Balance</p>
-                <p class="stat-value" id="walletBalance">0.00 <span>USDT</span></p>
-                <p class="stat-note">Profits will be added here</p>
-            </div>
-            <div class="stat-card">
-                <p class="stat-label">Commission</p>
-                <p class="stat-value" id="commission">0.00 <span>USDT</span></p>
-                <p class="stat-note">Commission Earned</p>
-            </div>
-        </div>
-
-        <div class="progress-section">
-            <div class="progress-header">
-                <span>Task Progress</span>
-                <span class="task-count" id="taskCount">0/40</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-            </div>
-        </div>
-
-        <div class="timer-section" id="timerSection" style="display: none;">
-            <div class="timer-card">
-                <p>⏰ Next Task Available In:</p>
-                <div class="countdown" id="countdown">--:--:--</div>
-                <p class="next-task-time" id="nextTaskTime"></p>
-            </div>
-        </div>
-
-        <div class="task-card" id="taskCard">
-            <div class="task-image-slider" id="taskImageSlider">
-                <button class="slider-btn prev" id="prevBtn">❮</button>
-                <div class="slider-container">
-                    <img id="sliderImage" class="slider-image" src="" alt="Product Image">
-                </div>
-                <button class="slider-btn next" id="nextBtn">❯</button>
-                <div class="slider-dots" id="sliderDots"></div>
-            </div>
-            <div class="task-info">
-                <h3 class="product-name" id="productName">Product Name</h3>
-                <div class="price-section">
-                    <span class="price-label">Total Price:</span>
-                    <span class="price-value" id="productPrice">$0.00</span>
-                </div>
-                <div class="task-meta">
-                    <span>Task ID: <span id="taskId">TSK001</span></span>
-                    <span>Available: <span id="taskTime">--:-- --</span></span>
-                    <span>Profit: <span id="taskProfit">+0.00 USDT</span></span>
-                </div>
-                <div class="task-status" id="taskStatus">
-                    <span class="status-badge" id="statusBadge">Available</span>
-                </div>
-                <button class="start-btn" id="startTaskBtn" disabled>Start Optimization</button>
-            </div>
-        </div>
-
-        <div class="notice" id="noticeArea">
-            <p>NOTICE</p>
-            <p id="noticeText">Online Support Hours: 10:00 - 22:00</p>
-        </div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn active" data-page="starting">
-                <span>🚀</span>
-                <span>Starting</span>
-            </button>
-            <button class="nav-btn" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/starting.js"></script>
 </body>
