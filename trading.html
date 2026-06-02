@@ -100,6 +100,25 @@
                         </div>
                     </div>
 
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Trade Duration</label>
+                        <div class="relative group">
+                            <select id="tradeDuration" class="w-full bg-black/60 border border-white/5 group-hover:border-[#FFD800]/40 focus:border-[#FFD800] rounded-2xl px-5 py-4 text-sm font-bold font-mono transition-all outline-none appearance-none cursor-pointer">
+                                <option value="5">5 Minutes</option>
+                                <option value="10">10 Minutes</option>
+                                <option value="25">25 Minutes</option>
+                                <option value="30">30 Minutes</option>
+                                <option value="60">1 Hour</option>
+                                <option value="360">6 Hours</option>
+                                <option value="720">12 Hours</option>
+                                <option value="1440">24 Hours</option>
+                            </select>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <i class="ti ti-chevron-down text-white/40"></i>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="px-1">
                         <input type="range" id="amountSlider" min="0" max="100" value="0" class="w-full h-1.5 bg-white/5 rounded-full appearance-none accent-[#FFD800] cursor-pointer">
                         <div class="flex justify-between mt-3 text-[8px] font-black text-white/20 uppercase tracking-widest">

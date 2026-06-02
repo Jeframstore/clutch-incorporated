@@ -333,6 +333,7 @@ async function executeTrade() {
     const amount = parseFloat(document.getElementById('tradeAmount').value);
     let price = parseFloat(document.getElementById('tradePrice').value);
     const total = parseFloat(document.getElementById('tradeTotal').value);
+    const duration = parseInt(document.getElementById('tradeDuration').value);
     
     if (!amount || amount <= 0) {
         Swal.fire('Error', 'Please enter a valid amount', 'error');
@@ -348,6 +349,11 @@ async function executeTrade() {
         return;
     }
     
+    if (!duration || duration <= 0) {
+        Swal.fire('Error', 'Please select a trade duration', 'error');
+        return;
+    }
+    
     try {
         const snapshot = await database.ref('users/' + userId).once('value');
         const user = snapshot.val();
@@ -359,46 +365,67 @@ async function executeTrade() {
                 return;
             }
             
+            // Deduct balance and create pending trade
             const newBalance = currentBalance - total;
             await database.ref('users/' + userId).update({ balance: newBalance.toFixed(2) });
             
-            // Save trade record
-            await database.ref('trades/' + Date.now()).set({
+            // Calculate end time
+            const endTime = new Date(Date.now() + duration * 60 * 1000).getTime();
+            
+            // Save pending trade record
+            await database.ref('openTrades/' + Date.now()).set({
                 userId: userId,
                 username: user.username,
                 coin: selectedCoin.symbol,
+                coinName: selectedCoin.symbol.replace('USDT', ''),
                 type: 'buy',
                 amount: amount,
                 price: price,
                 total: total,
+                duration: duration,
+                startTime: Date.now(),
+                endTime: endTime,
+                entryPrice: parseFloat(selectedCoin.lastPrice),
                 date: new Date().toLocaleString(),
-                status: 'completed'
+                status: 'open'
             });
             
-            Swal.fire('Success', `Bought ${amount} ${selectedCoin.symbol.replace('USDT', '')} at ${price}`, 'success');
+            Swal.fire('Success', `Trade opened! Waiting for admin confirmation after ${duration} minutes.`, 'success');
         } else {
-            // Sell - for demo, just add to balance (in real app, would check holdings)
-            const newBalance = currentBalance + total;
+            // Sell - deduct balance and create pending trade
+            if (total > currentBalance) {
+                Swal.fire('Error', 'Insufficient balance', 'error');
+                return;
+            }
+            
+            const newBalance = currentBalance - total;
             await database.ref('users/' + userId).update({ balance: newBalance.toFixed(2) });
             
-            // Save trade record
-            await database.ref('trades/' + Date.now()).set({
+            // Calculate end time
+            const endTime = new Date(Date.now() + duration * 60 * 1000).getTime();
+            
+            // Save pending trade record
+            await database.ref('openTrades/' + Date.now()).set({
                 userId: userId,
                 username: user.username,
                 coin: selectedCoin.symbol,
+                coinName: selectedCoin.symbol.replace('USDT', ''),
                 type: 'sell',
                 amount: amount,
                 price: price,
                 total: total,
+                duration: duration,
+                startTime: Date.now(),
+                endTime: endTime,
+                entryPrice: parseFloat(selectedCoin.lastPrice),
                 date: new Date().toLocaleString(),
-                status: 'completed'
+                status: 'open'
             });
             
-            Swal.fire('Success', `Sold ${amount} ${selectedCoin.symbol.replace('USDT', '')} at ${price}`, 'success');
+            Swal.fire('Success', `Trade opened! Waiting for admin confirmation after ${duration} minutes.`, 'success');
         }
         
         await loadBalance();
-        await loadTradeHistory();
         document.getElementById('tradeAmount').value = '';
         document.getElementById('tradeTotal').value = '';
         document.getElementById('amountSlider').value = 0;

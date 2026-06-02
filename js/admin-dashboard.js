@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadSidebar();
     loadDashboard();
     watchWithdrawals();
+    watchOpenTrades();
     
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
@@ -45,6 +46,7 @@ function loadSidebar() {
         <button class="nav-item" data-page="tasks">📋 Task Management</button>
         <button class="nav-item" data-page="withdrawals">💰 Withdrawal Requests <span id="withdrawalCountBadge" class="sidebar-badge"></span></button>
         <button class="nav-item" data-page="deposits">💳 Deposit Records</button>
+        <button class="nav-item" data-page="opentrades">📈 Open Trades <span id="openTradesBadge" class="sidebar-badge"></span></button>
         <button class="nav-item" data-page="content">📝 Content Management</button>
         <button class="nav-item" data-page="vip">⭐ VIP Settings</button>
         <button class="nav-item" data-page="service">📞 Service Settings</button>
@@ -72,6 +74,7 @@ function loadSidebar() {
             else if (page === 'tasks') loadTaskManagement();
             else if (page === 'withdrawals') loadWithdrawalRequests();
             else if (page === 'deposits') loadDepositRecords();
+            else if (page === 'opentrades') loadOpenTrades();
             else if (page === 'content') loadContentManagement();
             else if (page === 'vip') loadVIPSettings();
             else if (page === 'service') loadServiceSettings();
@@ -121,6 +124,27 @@ function updateWithdrawalBadge(pending) {
     if (!badge) return;
     badge.textContent = pending > 0 ? pending : '';
     badge.style.display = pending > 0 ? 'inline-block' : 'none';
+}
+
+function watchOpenTrades() {
+    const openTradesRef = database.ref('openTrades');
+    openTradesRef.on('value', snapshot => {
+        const openTrades = snapshot.val() || {};
+        let pending = 0;
+        for (let id in openTrades) {
+            if (openTrades[id].status === 'open') pending++;
+        }
+
+        const badge = document.getElementById('openTradesBadge');
+        if (badge) {
+            badge.textContent = pending > 0 ? pending : '';
+            badge.style.display = pending > 0 ? 'inline-block' : 'none';
+        }
+
+        if (currentPage === 'opentrades') {
+            loadOpenTrades();
+        }
+    });
 }
 
 async function loadDashboardStats() {
@@ -667,6 +691,202 @@ async function loadDepositRecords() {
     if (depositBtn) depositBtn.addEventListener('click', manualDeposit);
     await loadDepositsTable();
 }
+
+async function loadOpenTrades() {
+    const content = document.getElementById('adminContent');
+    if (!content) return;
+    
+    content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="refreshTradesBtn">🔄 Refresh Trades</button></div>
+        <div class="table-container"><table class="data-table"><thead><tr><th>Trade ID</th><th>User</th><th>Coin</th><th>Type</th><th>Amount</th><th>Price</th><th>Total</th><th>Duration</th><th>Time Left</th><th>Entry Price</th><th>Actions</th></tr></thead>
+        <tbody id="openTradesTableBody"><td><td colspan="11">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
+    
+    const refreshBtn = document.getElementById('refreshTradesBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => loadOpenTradesTable());
+    await loadOpenTradesTable();
+}
+
+async function loadOpenTradesTable() {
+    const tbody = document.getElementById('openTradesTableBody');
+    if (!tbody) return;
+    
+    try {
+        const openTradesSnap = await database.ref('openTrades').once('value');
+        const openTrades = openTradesSnap.val() || {};
+        let html = '';
+        
+        for (let id in openTrades) {
+            const trade = openTrades[id];
+            if (trade.status !== 'open') continue;
+            
+            const now = Date.now();
+            const endTime = trade.endTime;
+            const timeLeft = Math.max(0, endTime - now);
+            const minutesLeft = Math.floor(timeLeft / 60000);
+            const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
+            
+            const timeLeftDisplay = timeLeft > 0 ? `${minutesLeft}m ${secondsLeft}s` : 'Ready';
+            const isReady = timeLeft <= 0;
+            
+            const typeColor = trade.type === 'buy' ? '#00ff00' : '#ff6666';
+            
+            html += `<tr>
+                <td>${id.substring(0, 10)}...<\/td>
+                <td><strong>${trade.username || 'Unknown'}<\/strong><\/td>
+                <td>${trade.coinName || trade.coin}<\/td>
+                <td style="color:${typeColor}; font-weight:bold;">${trade.type.toUpperCase()}<\/td>
+                <td>${trade.amount}<\/td>
+                <td>${trade.price}<\/td>
+                <td>${trade.total} USDT<\/td>
+                <td>${trade.duration} min<\/td>
+                <td style="color:${isReady ? '#ffd700' : '#888'}; font-weight:bold;">${timeLeftDisplay}<\/td>
+                <td>${trade.entryPrice}<\/td>
+                <td>
+                    ${isReady ? `<button class="approve-btn" onclick="confirmTrade('${id}')">Confirm</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>` : '<span style="color:#888;">Waiting...</span>'}
+                <\/td>
+            <\/tr>`;
+        }
+        
+        tbody.innerHTML = html || '<td><td colspan="11">No open trades<\/td><\/tr>';
+        
+        // Auto-refresh every 5 seconds to update countdowns
+        setTimeout(loadOpenTradesTable, 5000);
+        
+    } catch(e) { 
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="11">Error loading open trades<\/td><\/tr>';
+    }
+}
+
+window.confirmTrade = async function(tradeId) {
+    const snap = await database.ref('openTrades/' + tradeId).once('value');
+    const trade = snap.val();
+    if (!trade) return;
+    
+    // Calculate profit/loss based on price change
+    const entryPrice = parseFloat(trade.entryPrice);
+    const currentPrice = parseFloat(trade.price);
+    const priceChange = ((currentPrice - entryPrice) / entryPrice) * 100;
+    const profit = (trade.total * (priceChange / 100)).toFixed(2);
+    
+    const { value: profitAmount } = await Swal.fire({
+        title: 'Confirm Trade',
+        html: `<div style="text-align:left;">
+            <p><strong>User:</strong> ${trade.username}</p>
+            <p><strong>Coin:</strong> ${trade.coinName}</p>
+            <p><strong>Type:</strong> ${trade.type.toUpperCase()}</p>
+            <p><strong>Entry Price:</strong> ${entryPrice}</p>
+            <p><strong>Current Price:</strong> ${currentPrice}</p>
+            <p><strong>Price Change:</strong> ${priceChange.toFixed(2)}%</p>
+            <p><strong>Estimated Profit/Loss:</strong> ${profit} USDT</p>
+            <p><strong>Trade Total:</strong> ${trade.total} USDT</p>
+        </div>`,
+        input: 'number',
+        inputLabel: 'Enter final profit/loss amount (USDT)',
+        inputPlaceholder: profit,
+        showCancelButton: true,
+        confirmButtonColor: '#00ff00',
+        confirmButtonText: 'Confirm & Add Funds'
+    });
+    
+    if (profitAmount !== null && !isNaN(profitAmount)) {
+        const finalProfit = parseFloat(profitAmount);
+        const totalReturn = (parseFloat(trade.total) + finalProfit).toFixed(2);
+        
+        // Add funds to user balance
+        const userSnap = await database.ref('users/' + trade.userId).once('value');
+        const user = userSnap.val();
+        const currentBalance = parseFloat(user.balance || 0);
+        const newBalance = (currentBalance + totalReturn).toFixed(2);
+        
+        await database.ref('users/' + trade.userId).update({ balance: newBalance });
+        
+        // Move trade to completed trades
+        await database.ref('trades/' + Date.now()).set({
+            userId: trade.userId,
+            username: trade.username,
+            coin: trade.coin,
+            coinName: trade.coinName,
+            type: trade.type,
+            amount: trade.amount,
+            price: trade.price,
+            total: trade.total,
+            duration: trade.duration,
+            entryPrice: trade.entryPrice,
+            profit: finalProfit,
+            totalReturn: totalReturn,
+            date: new Date().toLocaleString(),
+            status: 'completed'
+        });
+        
+        // Remove from open trades
+        await database.ref('openTrades/' + tradeId).remove();
+        
+        Swal.fire('Success', `Trade confirmed. Added ${totalReturn} USDT to ${trade.username}'s balance.`, 'success');
+        loadOpenTradesTable();
+        loadDashboardStats();
+    }
+};
+
+window.rejectTrade = async function(tradeId) {
+    const snap = await database.ref('openTrades/' + tradeId).once('value');
+    const trade = snap.val();
+    if (!trade) return;
+    
+    const { value: refundAmount } = await Swal.fire({
+        title: 'Reject Trade',
+        html: `<div style="text-align:left;">
+            <p><strong>User:</strong> ${trade.username}</p>
+            <p><strong>Coin:</strong> ${trade.coinName}</p>
+            <p><strong>Type:</strong> ${trade.type.toUpperCase()}</p>
+            <p><strong>Trade Total:</strong> ${trade.total} USDT</p>
+            <p>Enter refund amount (0 = no refund):</p>
+        </div>`,
+        input: 'number',
+        inputLabel: 'Refund Amount (USDT)',
+        inputPlaceholder: '0',
+        showCancelButton: true,
+        confirmButtonColor: '#ff6666',
+        confirmButtonText: 'Reject Trade'
+    });
+    
+    if (refundAmount !== null && !isNaN(refundAmount)) {
+        const refund = parseFloat(refundAmount);
+        
+        if (refund > 0) {
+            // Add refund to user balance
+            const userSnap = await database.ref('users/' + trade.userId).once('value');
+            const user = userSnap.val();
+            const currentBalance = parseFloat(user.balance || 0);
+            const newBalance = (currentBalance + refund).toFixed(2);
+            
+            await database.ref('users/' + trade.userId).update({ balance: newBalance });
+        }
+        
+        // Move to completed trades with rejected status
+        await database.ref('trades/' + Date.now()).set({
+            userId: trade.userId,
+            username: trade.username,
+            coin: trade.coin,
+            coinName: trade.coinName,
+            type: trade.type,
+            amount: trade.amount,
+            price: trade.price,
+            total: trade.total,
+            duration: trade.duration,
+            entryPrice: trade.entryPrice,
+            refund: refund,
+            date: new Date().toLocaleString(),
+            status: 'rejected'
+        });
+        
+        // Remove from open trades
+        await database.ref('openTrades/' + tradeId).remove();
+        
+        Swal.fire('Rejected', `Trade rejected. Refunded ${refund} USDT to ${trade.username}.`, 'info');
+        loadOpenTradesTable();
+        loadDashboardStats();
+    }
+};
 
 async function loadDepositsTable() {
     const tbody = document.getElementById('depositsTableBody');
