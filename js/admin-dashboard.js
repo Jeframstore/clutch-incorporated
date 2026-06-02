@@ -137,14 +137,14 @@ function watchOpenTrades() {
             const trade = openTrades[id];
             const endTime = new Date(trade.endTime).getTime();
             
-            // Check if order has expired and is still waiting
-            if (trade.status === 'waiting' && endTime <= now) {
-                // Auto-update status to ready
-                database.ref('tradingOrders/' + id).update({ status: 'ready' });
+            // Check if order has expired and is still open
+            if (trade.status === 'open' && endTime <= now) {
+                // Auto-update status to closed
+                database.ref('tradingOrders/' + id).update({ status: 'closed' });
             }
             
-            // Count ready orders for badge
-            if (trade.status === 'ready') pending++;
+            // Count open orders for badge
+            if (trade.status === 'open') pending++;
         }
 
         const badge = document.getElementById('openTradesBadge');
@@ -728,14 +728,21 @@ async function loadOpenTradesTable() {
         
         for (let id in openTrades) {
             const trade = openTrades[id];
-            if (trade.status !== 'ready') continue;
+            if (trade.status !== 'open' && trade.status !== 'closed') continue;
             
             // Get user info
             const userSnap = await database.ref('users/' + trade.userId).once('value');
             const user = userSnap.val();
             const username = user ? user.username : 'Unknown';
             
+            const now = Date.now();
+            const endTime = new Date(trade.endTime).getTime();
+            const timeLeft = Math.max(0, endTime - now);
+            const minutesLeft = Math.floor(timeLeft / 60000);
+            const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
+            
             const typeColor = trade.side === 'buy' ? '#00ff00' : '#ff6666';
+            const isClosed = trade.status === 'closed';
             
             html += `<tr>
                 <td>${id.substring(0, 10)}...<\/td>
@@ -746,15 +753,15 @@ async function loadOpenTradesTable() {
                 <td>${trade.price.toFixed(2)}<\/td>
                 <td>${trade.amount} USDT<\/td>
                 <td>${trade.duration} min<\/td>
-                <td style="color:#ffd700; font-weight:bold;">Ready</td>
+                <td style="color:${isClosed ? '#00ff00' : '#ffd700'}; font-weight:bold;">${isClosed ? 'Closed' : `${minutesLeft}m ${secondsLeft}s`}<\/td>
                 <td>${trade.price.toFixed(2)}<\/td>
                 <td>
-                    <button class="approve-btn" onclick="confirmTrade('${id}')">Add Funds</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>
+                    ${isClosed ? `<button class="approve-btn" onclick="confirmTrade('${id}')">Add Funds</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>` : '<span style="color:#888;">Waiting...</span>'}
                 <\/td>
             <\/tr>`;
         }
         
-        tbody.innerHTML = html || '<td><td colspan="11">No ready orders<\/td><\/tr>';
+        tbody.innerHTML = html || '<td><td colspan="11">No orders<\/td><\/tr>';
         
         // Auto-refresh every 5 seconds
         setTimeout(loadOpenTradesTable, 5000);
@@ -784,6 +791,7 @@ window.confirmTrade = async function(tradeId) {
             <p><strong>Order Price:</strong> ${trade.price.toFixed(2)} USD</p>
             <p><strong>Amount:</strong> ${trade.amount} USDT</p>
             <p><strong>Duration:</strong> ${trade.duration} min</p>
+            <p><strong>Status:</strong> Closed</p>
         </div>`,
         input: 'number',
         inputLabel: 'Enter profit amount to add (USDT)',

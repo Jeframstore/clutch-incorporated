@@ -326,7 +326,7 @@ async function placeOrder() {
             price: currentPrice,
             duration: selectedDuration,
             endTime: endTime,
-            status: 'waiting',
+            status: 'open',
             createdAt: new Date().toISOString()
         };
         
@@ -339,7 +339,7 @@ async function placeOrder() {
         }
         
         messageDiv.className = 'text-white';
-        messageDiv.innerText = `Order placed. Waiting for ${selectedDuration} minutes...`;
+        messageDiv.innerText = `Order placed successfully.`;
         
         document.getElementById('tradeAmount').value = '';
         loadBalance();
@@ -375,7 +375,7 @@ async function loadOpenOrders() {
         const orders = snapshot.val() || {};
         
         const container = document.getElementById('openOrdersList');
-        const userOrders = Object.values(orders).filter(order => order.userId === userId && order.status === 'waiting');
+        const userOrders = Object.values(orders).filter(order => order.userId === userId && order.status === 'open');
         
         if (userOrders.length === 0) {
             container.innerHTML = '<p class="text-[10px] text-white/30 text-center">No pending orders</p>';
