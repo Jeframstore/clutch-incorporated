@@ -28,56 +28,125 @@
                 </div>
                 <button class="back-btn" id="backBtn">←</button>
             </div>
-            <h1 class="page-title">Crypto Trading</h1>
         </div>
 
-        <div class="balance-display">
-            <p>Available Balance</p>
-            <p class="balance-amount" id="tradingBalance">0.00 USDT</p>
-        </div>
+        <div class="trading-layout">
+            <div class="trading-main">
+                <div class="coin-info-header">
+                    <h2 id="selectedCoinName">BTC/USDT</h2>
+                    <p id="selectedCoinPrice" class="current-price">0.00</p>
+                    <div class="price-change" id="selectedCoinChange">0.00%</div>
+                </div>
 
-        <div class="selected-coin" id="selectedCoinSection" style="display: none;">
-            <div class="coin-header">
-                <h2 id="selectedCoinName">BTC/USDT</h2>
-                <p id="selectedCoinPrice" class="current-price">0.00</p>
+                <div class="order-book-section">
+                    <h3>Order Book</h3>
+                    <div class="order-book">
+                        <div class="order-book-header">
+                            <span>Price</span>
+                            <span>Amount</span>
+                            <span>Total</span>
+                        </div>
+                        <div class="order-book-asks" id="orderBookAsks">
+                            <div class="order-book-row">
+                                <span class="price">--</span>
+                                <span class="amount">--</span>
+                                <span class="total">--</span>
+                            </div>
+                        </div>
+                        <div class="order-book-mid" id="orderBookMid">--</div>
+                        <div class="order-book-bids" id="orderBookBids">
+                            <div class="order-book-row">
+                                <span class="price">--</span>
+                                <span class="amount">--</span>
+                                <span class="total">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trade-history-section">
+                    <h3>Trade History</h3>
+                    <div class="trade-history" id="tradeHistory">
+                        <div class="trade-history-row">
+                            <span class="time">--</span>
+                            <span class="price">--</span>
+                            <span class="amount">--</span>
+                            <span class="type">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="coins-section">
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search coins...">
+                    </div>
+                    <div class="coins-list" id="coinsList">
+                        <div class="loading">Loading coins...</div>
+                    </div>
+                </div>
             </div>
-            <div class="price-change" id="selectedCoinChange">0.00%</div>
-        </div>
 
-        <div class="trading-tabs">
-            <button class="tab-btn active" data-tab="buy">Buy</button>
-            <button class="tab-btn" data-tab="sell">Sell</button>
-        </div>
+            <div class="trading-sidebar">
+                <div class="trade-buttons">
+                    <button class="trade-type-btn active" data-type="buy">Buy</button>
+                    <button class="trade-type-btn" data-type="sell">Sell</button>
+                </div>
 
-        <div class="trading-form">
-            <div class="form-group">
-                <label>Amount (USDT)</label>
-                <input type="number" id="tradeAmount" placeholder="Enter amount" min="0" step="0.01">
-            </div>
-            <div class="form-group">
-                <label>Price</label>
-                <input type="number" id="tradePrice" placeholder="Current price" min="0" step="0.0001" readonly>
-            </div>
-            <div class="form-group">
-                <label>Total (USDT)</label>
-                <input type="number" id="tradeTotal" placeholder="Total" min="0" step="0.01" readonly>
-            </div>
-            <div class="quick-amounts">
-                <button class="quick-btn" data-percent="25">25%</button>
-                <button class="quick-btn" data-percent="50">50%</button>
-                <button class="quick-btn" data-percent="75">75%</button>
-                <button class="quick-btn" data-percent="100">100%</button>
-            </div>
-            <button class="trade-btn" id="buyBtn">Buy</button>
-            <button class="trade-btn sell" id="sellBtn" style="display: none;">Sell</button>
-        </div>
+                <div class="trade-tabs">
+                    <button class="trade-tab-btn active" data-tab="limit">Limit</button>
+                    <button class="trade-tab-btn" data-tab="market">Market</button>
+                </div>
 
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search coins...">
-        </div>
+                <div class="trading-form">
+                    <div class="balance-info">
+                        <span>Available</span>
+                        <span id="tradingBalance">0.00 USDT</span>
+                    </div>
 
-        <div class="coins-list" id="coinsList">
-            <div class="loading">Loading coins...</div>
+                    <div class="form-group">
+                        <label>Price</label>
+                        <div class="input-with-controls">
+                            <input type="number" id="tradePrice" placeholder="Price" min="0" step="0.0001">
+                            <button class="control-btn up">▲</button>
+                            <button class="control-btn down">▼</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" id="tradeAmount" placeholder="Amount" min="0" step="0.01">
+                    </div>
+
+                    <div class="slider-section">
+                        <input type="range" id="amountSlider" min="0" max="100" value="0" class="trade-slider">
+                        <div class="slider-labels">
+                            <span>0%</span>
+                            <span>25%</span>
+                            <span>50%</span>
+                            <span>75%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Total</label>
+                        <input type="number" id="tradeTotal" placeholder="Total" min="0" step="0.01" readonly>
+                    </div>
+
+                    <button class="trade-btn" id="buyBtn">Buy</button>
+                    <button class="trade-btn sell" id="sellBtn" style="display: none;">Sell</button>
+                </div>
+
+                <div class="assets-section">
+                    <h3>Assets</h3>
+                    <div class="assets-list" id="assetsList">
+                        <div class="asset-item">
+                            <span class="asset-name">USDT</span>
+                            <span class="asset-balance" id="usdtBalance">0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="bottom-nav">

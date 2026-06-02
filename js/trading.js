@@ -1,8 +1,9 @@
-// Trading Page - Top 20 Binance Coins with Real Prices and Trading Functionality
+// Trading Page - LBank Inspired Trading Interface
 
 let userId = null;
 let selectedCoin = null;
 let currentTradeType = 'buy';
+let currentTradeTab = 'limit';
 let allCoins = [];
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     await loadBalance();
     await loadCoins();
+    await loadTradeHistory();
     
     // Search functionality
     const searchInput = document.getElementById('searchInput');
@@ -25,13 +27,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     
-    // Trading tabs
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => {
+    // Trade type buttons (Buy/Sell)
+    const tradeTypeBtns = document.querySelectorAll('.trade-type-btn');
+    tradeTypeBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-            tabBtns.forEach(b => b.classList.remove('active'));
+            tradeTypeBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            currentTradeType = this.getAttribute('data-tab');
+            currentTradeType = this.getAttribute('data-type');
             
             const buyBtn = document.getElementById('buyBtn');
             const sellBtn = document.getElementById('sellBtn');
@@ -45,24 +47,72 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     });
     
-    // Quick amount buttons
-    const quickBtns = document.querySelectorAll('.quick-btn');
-    quickBtns.forEach(btn => {
+    // Trade tabs (Limit/Market)
+    const tradeTabBtns = document.querySelectorAll('.trade-tab-btn');
+    tradeTabBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-            const percent = parseInt(this.getAttribute('data-percent'));
+            tradeTabBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentTradeTab = this.getAttribute('data-tab');
+            
+            const tradePrice = document.getElementById('tradePrice');
+            if (currentTradeTab === 'market') {
+                tradePrice.value = '';
+                tradePrice.placeholder = 'Market Price';
+                tradePrice.readOnly = true;
+            } else {
+                tradePrice.placeholder = 'Price';
+                tradePrice.readOnly = false;
+                if (selectedCoin) {
+                    tradePrice.value = parseFloat(selectedCoin.lastPrice).toFixed(4);
+                }
+            }
+        });
+    });
+    
+    // Slider
+    const slider = document.getElementById('amountSlider');
+    if (slider) {
+        slider.addEventListener('input', function() {
+            const percent = parseInt(this.value);
             const balanceEl = document.getElementById('tradingBalance');
             const balance = parseFloat(balanceEl.textContent.replace(' USDT', '')) || 0;
             const amount = (balance * percent / 100).toFixed(2);
             document.getElementById('tradeAmount').value = amount;
             updateTotal();
         });
-    });
+    }
     
     // Trade amount input
     const tradeAmount = document.getElementById('tradeAmount');
     if (tradeAmount) {
         tradeAmount.addEventListener('input', updateTotal);
     }
+    
+    // Price input
+    const tradePrice = document.getElementById('tradePrice');
+    if (tradePrice) {
+        tradePrice.addEventListener('input', updateTotal);
+    }
+    
+    // Control buttons (up/down)
+    const controlBtns = document.querySelectorAll('.control-btn');
+    controlBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tradePrice = document.getElementById('tradePrice');
+            let currentPrice = parseFloat(tradePrice.value) || 0;
+            const step = 0.0001;
+            
+            if (this.classList.contains('up')) {
+                currentPrice += step;
+            } else {
+                currentPrice -= step;
+            }
+            
+            tradePrice.value = currentPrice.toFixed(4);
+            updateTotal();
+        });
+    });
     
     // Buy button
     const buyBtn = document.getElementById('buyBtn');
@@ -94,6 +144,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             else if (page === 'records') window.location.href = 'records.html';
         });
     });
+    
+    // Select first coin by default
+    if (allCoins.length > 0) {
+        selectCoin(allCoins[0].symbol);
+    }
 });
 
 async function loadBalance() {
@@ -103,8 +158,12 @@ async function loadBalance() {
         
         if (user) {
             const balanceEl = document.getElementById('tradingBalance');
+            const usdtBalanceEl = document.getElementById('usdtBalance');
             if (balanceEl) {
                 balanceEl.textContent = (user.balance || 0).toFixed(2) + ' USDT';
+            }
+            if (usdtBalanceEl) {
+                usdtBalanceEl.textContent = (user.balance || 0).toFixed(2);
             }
         }
     } catch (error) {
@@ -131,6 +190,34 @@ async function loadCoins() {
     } catch (error) {
         console.error('Error loading coins:', error);
         coinsList.innerHTML = '<div class="error">Error loading coins. Please try again.</div>';
+    }
+}
+
+async function loadTradeHistory() {
+    const tradeHistoryEl = document.getElementById('tradeHistory');
+    if (!tradeHistoryEl) return;
+    
+    try {
+        const snapshot = await database.ref('trades').orderByChild('userId').equalTo(userId).limitToLast(10).once('value');
+        const trades = snapshot.val();
+        
+        if (trades) {
+            let html = '';
+            Object.values(trades).reverse().forEach(trade => {
+                const typeClass = trade.type === 'buy' ? '' : 'sell';
+                html += `
+                    <div class="trade-history-row">
+                        <span class="time">${trade.date}</span>
+                        <span class="price">${parseFloat(trade.price).toFixed(4)}</span>
+                        <span class="amount">${parseFloat(trade.amount).toFixed(4)}</span>
+                        <span class="type ${typeClass}">${trade.type.toUpperCase()}</span>
+                    </div>
+                `;
+            });
+            tradeHistoryEl.innerHTML = html;
+        }
+    } catch (error) {
+        console.error('Error loading trade history:', error);
     }
 }
 
@@ -170,13 +257,12 @@ window.selectCoin = function(symbol) {
     
     selectedCoin = coin;
     
-    const selectedSection = document.getElementById('selectedCoinSection');
     const coinName = document.getElementById('selectedCoinName');
     const coinPrice = document.getElementById('selectedCoinPrice');
     const coinChange = document.getElementById('selectedCoinChange');
     const tradePrice = document.getElementById('tradePrice');
+    const orderBookMid = document.getElementById('orderBookMid');
     
-    selectedSection.style.display = 'block';
     coinName.textContent = coin.symbol.replace('USDT', '') + '/USDT';
     coinPrice.textContent = parseFloat(coin.lastPrice).toFixed(4);
     
@@ -184,11 +270,52 @@ window.selectCoin = function(symbol) {
     coinChange.textContent = (priceChange >= 0 ? '+' : '') + priceChange.toFixed(2) + '%';
     coinChange.className = 'price-change ' + (priceChange >= 0 ? 'positive' : 'negative');
     
-    tradePrice.value = parseFloat(coin.lastPrice).toFixed(4);
+    if (currentTradeTab === 'limit') {
+        tradePrice.value = parseFloat(coin.lastPrice).toFixed(4);
+    }
     
-    // Scroll to top
-    selectedSection.scrollIntoView({ behavior: 'smooth' });
+    orderBookMid.textContent = parseFloat(coin.lastPrice).toFixed(4);
+    
+    // Update order book with simulated data
+    updateOrderBook(coin);
 };
+
+function updateOrderBook(coin) {
+    const asksEl = document.getElementById('orderBookAsks');
+    const bidsEl = document.getElementById('orderBookBids');
+    const currentPrice = parseFloat(coin.lastPrice);
+    
+    // Simulate order book data
+    let asksHtml = '';
+    let bidsHtml = '';
+    
+    for (let i = 0; i < 5; i++) {
+        const askPrice = (currentPrice * (1 + (i + 1) * 0.001)).toFixed(4);
+        const bidPrice = (currentPrice * (1 - (i + 1) * 0.001)).toFixed(4);
+        const amount = (Math.random() * 10).toFixed(4);
+        const total = (askPrice * amount).toFixed(2);
+        
+        asksHtml += `
+            <div class="order-book-row">
+                <span class="price">${askPrice}</span>
+                <span class="amount">${amount}</span>
+                <span class="total">${total}</span>
+            </div>
+        `;
+        
+        const bidTotal = (bidPrice * amount).toFixed(2);
+        bidsHtml += `
+            <div class="order-book-row">
+                <span class="price">${bidPrice}</span>
+                <span class="amount">${amount}</span>
+                <span class="total">${bidTotal}</span>
+            </div>
+        `;
+    }
+    
+    asksEl.innerHTML = asksHtml;
+    bidsEl.innerHTML = bidsHtml;
+}
 
 function updateTotal() {
     const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
@@ -204,11 +331,20 @@ async function executeTrade() {
     }
     
     const amount = parseFloat(document.getElementById('tradeAmount').value);
-    const price = parseFloat(document.getElementById('tradePrice').value);
+    let price = parseFloat(document.getElementById('tradePrice').value);
     const total = parseFloat(document.getElementById('tradeTotal').value);
     
     if (!amount || amount <= 0) {
         Swal.fire('Error', 'Please enter a valid amount', 'error');
+        return;
+    }
+    
+    if (currentTradeTab === 'market') {
+        price = parseFloat(selectedCoin.lastPrice);
+    }
+    
+    if (!price || price <= 0) {
+        Swal.fire('Error', 'Please enter a valid price', 'error');
         return;
     }
     
@@ -262,8 +398,10 @@ async function executeTrade() {
         }
         
         await loadBalance();
+        await loadTradeHistory();
         document.getElementById('tradeAmount').value = '';
         document.getElementById('tradeTotal').value = '';
+        document.getElementById('amountSlider').value = 0;
         
     } catch (error) {
         console.error('Trade error:', error);
