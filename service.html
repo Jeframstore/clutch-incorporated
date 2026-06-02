@@ -1,76 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clutch Incorporated - Customer Service</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/service.css">
-    <!-- Firebase SDK -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Incorporated - Tasks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        body { background-color: #0A0A0A; color: white; font-family: 'IBM Plex Sans', sans-serif; margin: 0; }
+        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-header { background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .task-card { background: #1B1B1B; border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="relative w-full max-w-[375px] min-h-screen bg-[#0A0A0A] flex flex-col border-x border-white/5 pb-[100px]">
+        
+        <header class="sticky top-0 z-[100] h-16 glass-header px-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-[#FFD800] flex items-center justify-center shadow-[0_0_15px_rgba(255,216,0,0.3)]">
+                    <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/cog.svg" class="w-6 h-6" alt="Logo">
+                </div>
+                <h1 class="font-heading font-extrabold text-[12px] tracking-widest text-white uppercase">The Clutch Co</h1>
+            </div>
+            <button id="backBtn" class="text-white/40 hover:text-white transition-colors"><i class="ti ti-arrow-left"></i></button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar px-5 py-6 space-y-8">
+            <div>
+                <h1 class="font-heading text-3xl font-extrabold tracking-tight">Active <span class="text-[#FFD800]">Tasks</span></h1>
+                <p class="text-white/40 text-xs mt-2">Complete your daily optimization tasks to unlock rewards.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="task-card p-5 rounded-2xl relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-heading font-bold text-lg">Product Optimization</h3>
+                            <p class="text-white/40 text-[10px] uppercase tracking-widest mt-1">Status: Operational</p>
+                        </div>
+                        <div class="w-11 h-11 bg-[#FFD800]/10 rounded-xl flex items-center justify-center border border-[#FFD800]/20">
+                            <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/delapouite/star-medal.svg" class="w-7 h-7" style="filter: invert(78%) sepia(85%) saturate(1000%) hue-rotate(1deg) brightness(105%) contrast(105%);">
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-[10px] font-bold text-white/30">
+                            <span>CURRENT PROGRESS</span>
+                            <span class="text-[#FFD800]">0 / 15</span>
+                        </div>
+                        <div class="w-full bg-black/40 rounded-full h-2 overflow-hidden border border-white/5">
+                            <div class="bg-gradient-to-r from-[#FFD800] to-[#FFB800] h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-[#80FF00]/10 to-transparent p-6 rounded-3xl border border-[#80FF00]/20 space-y-4">
+                    <h4 class="font-heading font-bold text-sm text-[#80FF00] uppercase tracking-widest text-center">Concierge Desk</h4>
+                    <div class="flex flex-col gap-3">
+                        <a href="#" id="whatsappLink" class="flex items-center justify-between bg-black/40 border border-white/5 p-4 rounded-2xl hover:border-[#80FF00]/40 transition-all">
+                            <div class="flex items-center gap-3">
+                                <i class="ti ti-brand-whatsapp text-[#80FF00] text-xl"></i>
+                                <span class="text-xs font-bold" id="whatsappNumber">Loading...</span>
+                            </div>
+                            <i class="ti ti-external-link text-white/20"></i>
+                        </a>
+                        <a href="#" id="telegramLink" class="flex items-center justify-between bg-black/40 border border-white/5 p-4 rounded-2xl hover:border-[#80FF00]/40 transition-all">
+                            <div class="flex items-center gap-3">
+                                <i class="ti ti-brand-telegram text-[#80FF00] text-xl"></i>
+                                <span class="text-xs font-bold" id="telegramUsername">Loading...</span>
+                            </div>
+                            <i class="ti ti-external-link text-white/20"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-3xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
+                <i class="ti ti-home text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn active" data-page="service">
+                <div class="w-12 h-12 rounded-2xl bg-[#FFD800]/10 flex items-center justify-center relative">
+                    <i class="ti ti-check-square text-[#FFD800] text-2xl"></i>
+                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#FFD800] rounded-full shadow-[0_0_12px_#FFD800]"></div>
+                </div>
+                <span class="text-[#FFD800] text-[9px] font-black uppercase tracking-widest">Tasks</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
+                <i class="ti ti-list text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Records</span>
+            </div>
+        </nav>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="service-container">
-        <div class="service-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="back-btn" id="backBtn">←</button>
-            </div>
-            <h1 class="page-title">Customer Service</h1>
-        </div>
-
-        <div class="contact-options">
-            <a href="#" class="contact-card" id="whatsappLink">
-                <div class="contact-icon">📱</div>
-                <div class="contact-info">
-                    <h3>WhatsApp Service</h3>
-                    <p id="whatsappNumber">+1 234 567 8900</p>
-                </div>
-                <div class="contact-arrow">→</div>
-            </a>
-
-            <a href="#" class="contact-card" id="telegramLink">
-                <div class="contact-icon">✈️</div>
-                <div class="contact-info">
-                    <h3>Telegram Service</h3>
-                    <p id="telegramUsername">@ClutchSupport</p>
-                </div>
-                <div class="contact-arrow">→</div>
-            </a>
-        </div>
-
-        <div class="notice-card">
-            <p>📞 Support Hours: 10:00 AM - 10:00 PM EST</p>
-            <p>⏱ Response time: Within 30 minutes</p>
-        </div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn" data-page="starting">
-                <span>🚀</span>
-                <span>Starting</span>
-            </button>
-            <button class="nav-btn" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/service.js"></script>
 </body>

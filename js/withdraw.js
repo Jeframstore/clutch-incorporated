@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
     
-    await loadBalance();
+    attachBalanceListener();
     
     const backBtn = document.getElementById('backBtn');
     if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'dashboard.html');
@@ -20,12 +20,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (submitBtn) submitBtn.addEventListener('click', submitWithdraw);
 });
 
-async function loadBalance() {
+function attachBalanceListener() {
     try {
-        const snapshot = await database.ref('users/' + userId).once('value');
-        const user = snapshot.val();
-        const balance = parseFloat(user?.balance || 0).toFixed(2);
-        document.getElementById('withdrawBalance').textContent = balance + ' USDT';
+        database.ref('users/' + userId + '/balance').on('value', function(snapshot) {
+            const balance = parseFloat(snapshot.val() || 0).toFixed(2);
+            document.getElementById('withdrawBalance').textContent = balance + ' USDT';
+        });
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('withdrawBalance').textContent = '0.00 USDT';
@@ -62,7 +62,6 @@ async function submitWithdraw() {
         await database.ref('withdrawals/' + withdrawId).set(withdrawData);
         showSuccess('Withdrawal request submitted! Amount: ' + amount + ' USDT');
         document.getElementById('withdrawAmount').value = '';
-        await loadBalance();
         
     } catch (error) {
         console.error('Error:', error);

@@ -1,102 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Incorporated - Deposit</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/deposit.css">
-    <!-- Firebase SDK -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+        body { background-color: #0A0A0A; color: white; font-family: 'IBM Plex Sans', sans-serif; margin: 0; }
+        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(27, 27, 27, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .qr-card { background: white; padding: 1.5rem; border-radius: 2rem; box-shadow: 0 20px 50px rgba(255, 216, 0, 0.15); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="relative w-full max-w-[375px] min-h-screen bg-[#0A0A0A] flex flex-col border-x border-white/5 pb-[100px]">
+        
+        <header class="sticky top-0 z-[100] h-16 glass px-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-[#FFD800] flex items-center justify-center shadow-[0_0_15px_rgba(255,216,0,0.3)]">
+                    <span class="text-black font-black text-lg">C</span>
+                </div>
+                <h1 class="font-heading font-extrabold text-[12px] tracking-widest text-white uppercase">The Clutch Co</h1>
+            </div>
+            <button id="backBtn" class="text-white/40 hover:text-white transition-colors"><i class="ti ti-arrow-left"></i></button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar px-5 py-6 space-y-8">
+            <div>
+                <div class="inline-flex items-center gap-2 bg-[#FFD800]/10 border border-[#FFD800]/20 px-3 py-1 rounded-full mb-3">
+                    <div class="w-1.5 h-1.5 rounded-full bg-[#FFD800] animate-pulse"></div>
+                    <span class="text-[9px] font-black text-[#FFD800] uppercase tracking-widest">Instant Nodes</span>
+                </div>
+                <h1 class="font-heading text-4xl font-extrabold tracking-tight">Deposit</h1>
+                <p class="text-white/40 text-xs mt-2">Fund your high-performance portfolio via USDT.</p>
+            </div>
+
+            <section class="bg-[#1B1B1B] rounded-[40px] p-10 flex flex-col items-center border border-white/5 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFD800]/5 rounded-full blur-[40px] -mr-16 -mt-16"></div>
+                
+                <div class="qr-card mb-8">
+                    <img id="merchantQr" src="" alt="QR" class="w-40 h-40">
+                </div>
+
+                <div class="w-full space-y-4">
+                    <div class="flex justify-between items-center px-1">
+                        <label class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">USDT (TRC20) ADDRESS</label>
+                        <span class="text-[8px] font-bold text-[#80FF00] uppercase">Verified</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-black/40 border border-white/5 rounded-2xl p-4">
+                        <code id="merchantAddress" class="text-[10px] text-white/80 truncate flex-1 font-mono tracking-widest uppercase">Loading...</code>
+                        <button id="copyMerchantAddress" class="text-[#FFD800] p-2 hover:bg-[#FFD800]/10 rounded-xl transition-all">
+                            <i class="ti ti-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <div class="bg-gradient-to-br from-[#80FF00]/10 to-transparent p-6 rounded-[32px] border border-[#80FF00]/20 space-y-5">
+                <h4 class="font-heading font-bold text-sm text-[#80FF00] uppercase tracking-widest text-center">Concierge Sync</h4>
+                <p class="text-white/60 text-[11px] text-center px-4">Please contact support after sending funds for priority node activation.</p>
+                
+                <div class="flex gap-3">
+                    <button id="whatsappBtn" class="flex-1 flex flex-col items-center gap-2 bg-black/40 border border-white/5 p-4 rounded-2xl hover:border-[#80FF00]/40 transition-all">
+                        <i class="ti ti-brand-whatsapp text-[#80FF00] text-xl"></i>
+                        <span class="text-[9px] font-black uppercase tracking-tighter" id="whatsappNumber">Loading...</span>
+                    </button>
+                    <button id="telegramBtn" class="flex-1 flex flex-col items-center gap-2 bg-black/40 border border-white/5 p-4 rounded-2xl hover:border-[#80FF00]/40 transition-all">
+                        <i class="ti ti-brand-telegram text-[#80FF00] text-xl"></i>
+                        <span class="text-[9px] font-black uppercase tracking-tighter" id="telegramUsername">Loading...</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-3xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
+                <i class="ti ti-home text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
+                <i class="ti ti-rocket text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Start</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
+                <i class="ti ti-list text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Records</span>
+            </div>
+        </nav>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="deposit-container">
-        <div class="deposit-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="back-btn" id="backBtn">←</button>
-            </div>
-            <h1 class="page-title">Deposit</h1>
-        </div>
-
-        <div class="deposit-content">
-            <div class="info-card">
-                <div class="info-icon">💰</div>
-                <h3>How to Deposit</h3>
-                <p>To make a deposit, please contact our customer service team. They will provide you with the current merchant's wallet address.</p>
-            </div>
-
-            <div class="contact-section">
-                <h4>Contact Customer Service:</h4>
-                <div class="contact-buttons">
-                    <a href="#" class="contact-btn whatsapp" id="whatsappBtn">
-                        <span>📱</span>
-                        <div class="contact-details">
-                            <strong>WhatsApp</strong>
-                            <span id="whatsappNumber">Loading...</span>
-                        </div>
-                        <span class="arrow">→</span>
-                    </a>
-                    <a href="#" class="contact-btn telegram" id="telegramBtn">
-                        <span>✈️</span>
-                        <div class="contact-details">
-                            <strong>Telegram</strong>
-                            <span id="telegramUsername">Loading...</span>
-                        </div>
-                        <span class="arrow">→</span>
-                    </a>
-                </div>
-            </div>
-
-            <div class="steps-card">
-                <h4>Deposit Steps:</h4>
-                <ul>
-                    <li>1. Contact customer service via WhatsApp or Telegram</li>
-                    <li>2. Request the current merchant wallet address</li>
-                    <li>3. Send funds to the provided address</li>
-                    <li>4. Send payment confirmation to customer service</li>
-                    <li>5. Your balance will be updated after confirmation</li>
-                </ul>
-            </div>
-
-            <div class="notice-card">
-                <p>⚠️ Important Notice</p>
-                <ul>
-                    <li>Always get the wallet address directly from customer service</li>
-                    <li>The merchant address is updated regularly</li>
-                    <li>The platform supports all wallet types (USDT, BTC, ETH, etc.)</li>
-                    <li>The platform is not responsible for funds sent to wrong address</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn" data-page="starting">
-                <span>🚀</span>
-                <span>Starting</span>
-            </button>
-            <button class="nav-btn" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/deposit.js"></script>
 </body>

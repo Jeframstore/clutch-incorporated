@@ -1,81 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Incorporated - Profile</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/profile.css">
-    <!-- Firebase SDK -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        
+        body { margin: 0; background-color: #0A0A0A; color: white; font-family: 'IBM Plex Sans', sans-serif; overflow: hidden; }
+        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        .glass-header { 
+            background: rgba(10, 10, 10, 0.85); 
+            backdrop-filter: blur(20px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .profile-card {
+            background: linear-gradient(145deg, #1B1B1B 0%, #121212 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .action-list button { transition: all 0.2s ease; }
+        .action-list button:active { background-color: rgba(255, 255, 255, 0.05); transform: scale(0.99); }
+        
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="relative h-screen w-full max-w-[375px] bg-[#0A0A0A] flex flex-col border-x border-white/5">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-50 h-16 px-4 flex items-center justify-between glass-header">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-[#FFD800] flex items-center justify-center shadow-[0_0_15px_rgba(255,216,0,0.4)]">
+                    <span class="text-black font-extrabold text-xl leading-none">C</span>
+                </div>
+                <h1 class="font-heading font-extrabold text-[12px] tracking-[0.15em] text-[#FFD800] uppercase">The Clutch Co</h1>
+            </div>
+            <button id="backBtn" class="w-10 h-10 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-colors">
+                <i class="fa-solid fa-arrow-left text-sm"></i>
+            </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar px-5 py-6 space-y-6">
+            <!-- User Overview Card -->
+            <section class="profile-card rounded-[32px] p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFD800]/5 rounded-full blur-[50px] -mr-16 -mt-16"></div>
+                
+                <div class="relative flex items-start justify-between">
+                    <div>
+                        <h2 class="font-heading text-2xl font-bold text-white mb-1.5" id="profileUserName">Loading...</h2>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-[#FFD800] text-black text-[9px] font-black uppercase tracking-wider">Premium VIP</span>
+                        </div>
+                    </div>
+                    <div class="bg-black/60 backdrop-blur-md border border-[#80FF00]/30 rounded-2xl px-3 py-2 text-right shadow-[0_0_20px_rgba(128,255,0,0.1)]">
+                        <span class="block text-[8px] text-white/40 uppercase font-bold tracking-widest mb-0.5">Trust Score</span>
+                        <span class="text-xl font-bold text-[#80FF00] tracking-tight" id="creditScore">97%</span>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-5 border-t border-white/5 flex items-center justify-between">
+                    <div>
+                        <span class="block text-[9px] text-white/30 uppercase font-bold tracking-widest mb-1">Referral Code</span>
+                        <span class="font-mono text-xs font-semibold tracking-[0.2em] text-white/90 uppercase" id="inviteCode">Loading...</span>
+                    </div>
+                    <button class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-[#FFD800] active:scale-90 transition-transform">
+                        <i class="fa-regular fa-copy text-xs"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Asset Summary -->
+            <section class="grid grid-cols-2 gap-4">
+                <div class="bg-[#1B1B1B] border border-white/5 p-5 rounded-3xl">
+                    <span class="block text-[9px] text-white/30 uppercase font-bold tracking-widest mb-2">Wallet</span>
+                    <span class="text-lg font-bold text-white tabular-nums" id="profileBalance">0.00 USDT</span>
+                </div>
+                <div class="bg-[#1B1B1B] border border-white/5 p-5 rounded-3xl">
+                    <span class="block text-[9px] text-white/30 uppercase font-bold tracking-widest mb-2">Commissions</span>
+                    <span class="text-lg font-bold text-[#80FF00] tabular-nums" id="profileProfits">0.00 USDT</span>
+                </div>
+            </section>
+
+            <!-- Account Settings List -->
+            <section class="bg-[#1B1B1B] border border-white/5 rounded-[32px] overflow-hidden divide-y divide-white/5 action-list">
+                <button id="depositBtn" class="w-full px-6 py-4.5 flex items-center justify-between hover:bg-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-[#FFD800]/10 flex items-center justify-center text-[#FFD800] shadow-inner"><i class="fa-solid fa-wallet"></i></div>
+                        <div class="text-left"><span class="block text-sm font-semibold tracking-wide text-white/90">Deposit Funds</span></div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-white/10"></i>
+                </button>
+                
+                <button id="withdrawBtn" class="w-full px-6 py-4.5 flex items-center justify-between hover:bg-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-[#80FF00]/10 flex items-center justify-center text-[#80FF00] shadow-inner"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                        <div class="text-left"><span class="block text-sm font-semibold tracking-wide text-white/90">Withdraw</span></div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-white/10"></i>
+                </button>
+                
+                <button id="changePasswordBtn" class="w-full px-6 py-4.5 flex items-center justify-between hover:bg-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="text-left"><span class="block text-sm font-semibold tracking-wide text-white/90">Security</span></div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-white/10"></i>
+                </button>
+                
+                <button id="bindWalletBtn" class="w-full px-6 py-4.5 flex items-center justify-between hover:bg-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40"><i class="fa-solid fa-link"></i></div>
+                        <div class="text-left"><span class="block text-sm font-semibold tracking-wide text-white/90">Wallet Mapping</span></div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-white/10"></i>
+                </button>
+                
+                <button id="contactUsBtn" class="w-full px-6 py-4.5 flex items-center justify-between hover:bg-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40"><i class="fa-solid fa-headset"></i></div>
+                        <div class="text-left"><span class="block text-sm font-semibold tracking-wide text-white/90">Concierge</span></div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-white/10"></i>
+                </button>
+            </section>
+
+            <button id="logoutBtn" class="w-full h-14 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-500 font-black uppercase tracking-[0.3em] text-[11px] flex items-center justify-center gap-3 transition-all hover:bg-red-500/10 active:scale-95">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out Account
+            </button>
+        </main>
+
+        <!-- Fixed Navigation -->
+        <nav class="sticky bottom-0 h-24 px-12 flex items-center justify-between bg-[#0A0A0A]/95 backdrop-blur-2xl border-t border-white/10 pb-4">
+            <button class="flex flex-col items-center gap-1.5 nav-btn" data-page="home">
+                <i class="fa-solid fa-house-chimney text-lg text-white/30"></i>
+                <span class="text-[9px] font-bold text-white/30 uppercase tracking-widest">Home</span>
+            </button>
+            <button class="flex flex-col items-center gap-1.5 nav-btn" data-page="starting">
+                <i class="fa-solid fa-rocket text-lg text-white/30"></i>
+                <span class="text-[9px] font-bold text-white/30 uppercase tracking-widest">Start</span>
+            </button>
+            <button class="flex flex-col items-center gap-1.5 nav-btn" data-page="records">
+                <i class="fa-solid fa-chart-line text-lg text-white/30"></i>
+                <span class="text-[9px] font-bold text-white/30 uppercase tracking-widest">Records</span>
+            </button>
+        </nav>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="profile-container">
-        <div class="profile-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="back-btn" id="backBtn">←</button>
-            </div>
-            <h1 class="revenue-title">Revenue</h1>
-        </div>
-
-        <div class="user-info-card">
-            <h2><span id="profileUserName">Jefram</span>-VIP 1</h2>
-            <p>Invitation Code: <span id="inviteCode">A4832E73</span></p>
-            <p>Personal Account</p>
-            <div class="credit-score">
-                <span>Credit score</span>
-                <span class="score-value" id="creditScore">97%</span>
-            </div>
-        </div>
-
-        <div class="balance-info">
-            <div class="balance-row">
-                <span>Account Balance</span>
-                <span class="balance-value" id="profileBalance">0.00 USDT</span>
-            </div>
-            <div class="balance-row">
-                <span>Total Earning</span>
-                <span class="profit-value" id="profileProfits">0.00 USDT</span>
-            </div>
-        </div>
-
-        <div class="menu-list">
-            <button class="menu-list-item" id="depositBtn">💳 Deposit</button>
-            <button class="menu-list-item" id="withdrawBtn">💰 Withdraw</button>
-            <button class="menu-list-item" id="changePasswordBtn">🔐 Change passwords</button>
-            <button class="menu-list-item" id="bindWalletBtn">🔗 Bind Wallet Address</button>
-            <button class="menu-list-item" id="contactUsBtn">📞 Contact us</button>
-            <button class="menu-list-item" id="logoutBtn">🚪 Log Out</button>
-        </div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn" data-page="starting">
-                <span>🚀</span>
-                <span>Starting</span>
-            </button>
-            <button class="nav-btn" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/profile.js"></script>
 </body>

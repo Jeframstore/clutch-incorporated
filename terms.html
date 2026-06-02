@@ -1,54 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clutch Incorporated - Terms & Conditions</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/terms.css">
-    <!-- Firebase SDK -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Incorporated - Terms</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+        body { background-color: #0A0A0A; color: white; font-family: 'IBM Plex Sans', sans-serif; margin: 0; }
+        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-header { background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .terms-section { background: #1B1B1B; padding: 1.75rem; border-radius: 2rem; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 1.5rem; }
+        .terms-section h3 { color: #FFD800; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 0.95rem; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.15em; border-left: 3px solid #FFD800; padding-left: 1rem; }
+        .terms-section p { font-size: 0.85rem; color: rgba(255, 255, 255, 0.5); line-height: 1.7; margin-bottom: 0.8rem; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="relative w-full max-w-[375px] min-h-screen bg-[#0A0A0A] flex flex-col border-x border-white/5 pb-[100px]">
+        
+        <header class="sticky top-0 z-[100] h-16 glass-header px-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-[#FFD800] flex items-center justify-center shadow-[0_0_15px_rgba(255,216,0,0.3)]">
+                    <span class="text-black font-black text-lg">C</span>
+                </div>
+                <h1 class="font-heading font-extrabold text-[12px] tracking-widest text-white uppercase">The Clutch Co</h1>
+            </div>
+            <button id="backBtn" class="text-white/40 hover:text-white transition-colors"><i class="ti ti-arrow-left"></i></button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar px-5 py-6">
+            <div class="mb-10">
+                <h1 class="font-heading text-3xl font-extrabold tracking-tight uppercase">Legal <span class="text-[#FFD800]">Framework</span></h1>
+                <p class="text-white/30 text-[9px] font-black uppercase tracking-[0.3em] mt-2">Operational Protocol v4.0</p>
+            </div>
+
+            <div id="termsContent" class="space-y-4">
+                <div class="flex flex-col items-center justify-center py-20 opacity-20">
+                    <i class="ti ti-loader animate-spin text-3xl mb-4"></i>
+                    <p class="text-xs font-bold uppercase tracking-widest text-center">Syncing Legal Ledger...</p>
+                </div>
+            </div>
+        </main>
+
+        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-3xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
+                <i class="ti ti-home text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
+                <i class="ti ti-rocket text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Start</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
+                <i class="ti ti-list text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Records</span>
+            </div>
+        </nav>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="terms-container">
-        <div class="terms-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="back-btn" id="backBtn">←</button>
-            </div>
-            <h1 class="page-title">Terms & Conditions</h1>
-            <p class="subtitle">Please read through and make sure you understand</p>
-        </div>
-
-        <div class="terms-content" id="termsContent"></div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn" data-page="starting">
-                <span>🚀</span>
-                <span>Starting</span>
-            </button>
-            <button class="nav-btn" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/terms.js"></script>
 </body>

@@ -1,170 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Incorporated - Trading</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/trading.css">
-    <!-- Firebase SDK -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+        body { background-color: #0A0A0A; color: white; font-family: 'IBM Plex Sans', sans-serif; margin: 0; }
+        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(27, 27, 27, 0.8); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .trade-type-btn.active.buy { background-color: #80FF00; color: black; box-shadow: 0 0 20px rgba(128, 255, 0, 0.3); }
+        .trade-type-btn.active.sell { background-color: #FF4B4B; color: white; box-shadow: 0 0 20px rgba(255, 75, 75, 0.3); }
+        .trade-tab-btn.active { border-bottom: 2px solid #FFD800; color: #FFD800; }
+        
+        .positive { color: #80FF00; }
+        .negative { color: #FF4B4B; }
+        .sell-row { color: #FF4B4B; opacity: 0.9; }
+        .buy-row { color: #80FF00; opacity: 0.9; }
+        
+        input[type="number"] { -moz-appearance: textfield; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .coin-item { cursor: pointer; border-radius: 1rem; transition: all 0.2s; }
+        .coin-item:hover { background: rgba(255, 255, 255, 0.03); }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="relative w-full max-w-[375px] min-h-screen bg-[#0A0A0A] flex flex-col border-x border-white/5 pb-[100px]">
+        
+        <header class="sticky top-0 z-[100] h-16 glass px-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button id="backBtn" class="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-colors">
+                    <i class="ti ti-arrow-left"></i>
+                </button>
+                <div class="flex flex-col">
+                    <h1 class="font-heading font-extrabold text-[13px] tracking-widest text-white uppercase leading-none" id="selectedCoinName">BTC/USDT</h1>
+                    <span class="text-[8px] font-bold text-[#80FF00] tracking-[0.2em] uppercase mt-1">Live Execution</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-lg font-bold tabular-nums tracking-tighter" id="selectedCoinPrice">0.0000</p>
+                <p class="text-[9px] font-black uppercase tracking-widest" id="selectedCoinChange">+0.00%</p>
+            </div>
+        </header>
+
+        <main class="p-4 space-y-4 flex-1">
+            <section class="grid grid-cols-2 gap-3 h-[280px]">
+                <div class="bg-[#1B1B1B] rounded-2xl p-3 border border-white/5 flex flex-col overflow-hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Order Book</h3>
+                        <span class="text-[8px] text-white/20">USDT</span>
+                    </div>
+                    <div class="flex-1 space-y-1 no-scrollbar overflow-y-auto text-[10px] font-mono">
+                        <div id="orderBookAsks" class="space-y-1 sell-row"></div>
+                        <div id="orderBookMid" class="py-2 text-center font-bold text-lg text-[#80FF00] border-y border-white/5 my-2 backdrop-blur-sm">0.0000</div>
+                        <div id="orderBookBids" class="space-y-1 buy-row"></div>
+                    </div>
+                </div>
+                <div class="bg-[#1B1B1B] rounded-2xl p-3 border border-white/5 flex flex-col overflow-hidden">
+                    <h3 class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-3">Market History</h3>
+                    <div id="tradeHistory" class="flex-1 space-y-2.5 no-scrollbar overflow-y-auto text-[10px] font-mono"></div>
+                </div>
+            </section>
+
+            <section class="bg-[#1B1B1B] rounded-[32px] p-6 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] space-y-6 relative overflow-hidden">
+                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-[#FFD800]/5 blur-[40px] rounded-full"></div>
+                
+                <div class="flex gap-1.5 bg-black/40 p-1.5 rounded-2xl relative z-10">
+                    <button class="flex-1 py-3 text-xs font-black rounded-xl trade-type-btn active buy" data-type="buy">BUY</button>
+                    <button class="flex-1 py-3 text-xs font-black rounded-xl trade-type-btn sell" data-type="sell">SELL</button>
+                </div>
+
+                <div class="flex gap-6 border-b border-white/5 relative z-10">
+                    <button class="pb-2.5 text-[10px] font-black uppercase tracking-widest trade-tab-btn active" data-tab="limit">Limit Order</button>
+                    <button class="pb-2.5 text-[10px] font-black uppercase tracking-widest trade-tab-btn" data-tab="market">Market Price</button>
+                </div>
+
+                <div class="space-y-5 relative z-10">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Execution Price</label>
+                        <div class="relative group">
+                            <input type="number" id="tradePrice" step="0.0001" class="w-full bg-black/60 border border-white/5 group-hover:border-[#FFD800]/40 focus:border-[#FFD800] rounded-2xl px-5 py-4 text-sm font-bold font-mono transition-all outline-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 flex gap-3">
+                                <button class="control-btn down text-white/20 hover:text-white transition-colors"><i class="ti ti-minus"></i></button>
+                                <button class="control-btn up text-white/20 hover:text-white transition-colors"><i class="ti ti-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Trade Amount</label>
+                        <div class="relative group">
+                            <input type="number" id="tradeAmount" placeholder="0.00" class="w-full bg-black/60 border border-white/5 group-hover:border-[#FFD800]/40 focus:border-[#FFD800] rounded-2xl px-5 py-4 text-sm font-bold font-mono transition-all outline-none">
+                        </div>
+                    </div>
+
+                    <div class="px-1">
+                        <input type="range" id="amountSlider" min="0" max="100" value="0" class="w-full h-1.5 bg-white/5 rounded-full appearance-none accent-[#FFD800] cursor-pointer">
+                        <div class="flex justify-between mt-3 text-[8px] font-black text-white/20 uppercase tracking-widest">
+                            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Estimated Total (USDT)</label>
+                        <input type="number" id="tradeTotal" readonly class="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold font-mono text-white/30 outline-none">
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-white/5 relative z-10">
+                    <div class="flex justify-between text-[10px] font-bold mb-5 px-1">
+                        <span class="text-white/40 uppercase tracking-widest">Available Balance</span>
+                        <div class="flex gap-2">
+                            <span id="tradingBalance" class="text-white">0.00 USDT</span>
+                            <span id="usdtBalance" class="hidden">0.00</span>
+                        </div>
+                    </div>
+                    <button id="buyBtn" class="w-full py-5 bg-[#80FF00] text-black font-black rounded-[20px] shadow-[0_15px_30px_rgba(128,255,0,0.2)] uppercase tracking-[0.2em] text-sm active:scale-95 transition-all">Execute Buy BTC</button>
+                    <button id="sellBtn" class="w-full py-5 bg-[#FF4B4B] text-white font-black rounded-[20px] shadow-[0_15px_30px_rgba(255,75,75,0.2)] uppercase tracking-[0.2em] text-sm active:scale-95 transition-all" style="display: none;">Execute Sell BTC</button>
+                </div>
+            </section>
+
+            <section class="bg-[#1B1B1B] rounded-[24px] p-5 border border-white/5">
+                <input type="text" id="searchInput" placeholder="Search Asset Symbols..." class="w-full bg-black/40 border border-white/5 focus:border-[#FFD800]/40 rounded-xl py-3.5 pl-4 pr-4 text-xs font-bold tracking-wide outline-none transition-all">
+                <div id="coinsList" class="space-y-2 mt-4 max-h-[400px] overflow-y-auto no-scrollbar"></div>
+            </section>
+        </main>
+
+        <nav class="sticky bottom-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-3xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
+                <i class="ti ti-home text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
+                <i class="ti ti-rocket text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Start</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
+                <i class="ti ti-list text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Records</span>
+            </div>
+        </nav>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</head>
-<body>
-    <div class="trading-container">
-        <div class="trading-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="back-btn" id="backBtn">←</button>
-            </div>
-        </div>
-
-        <div class="trading-layout">
-            <div class="trading-main">
-                <div class="coin-info-header">
-                    <h2 id="selectedCoinName">BTC/USDT</h2>
-                    <p id="selectedCoinPrice" class="current-price">0.00</p>
-                    <div class="price-change" id="selectedCoinChange">0.00%</div>
-                </div>
-
-                <div class="order-book-section">
-                    <h3>Order Book</h3>
-                    <div class="order-book">
-                        <div class="order-book-header">
-                            <span>Price</span>
-                            <span>Amount</span>
-                            <span>Total</span>
-                        </div>
-                        <div class="order-book-asks" id="orderBookAsks">
-                            <div class="order-book-row">
-                                <span class="price">--</span>
-                                <span class="amount">--</span>
-                                <span class="total">--</span>
-                            </div>
-                        </div>
-                        <div class="order-book-mid" id="orderBookMid">--</div>
-                        <div class="order-book-bids" id="orderBookBids">
-                            <div class="order-book-row">
-                                <span class="price">--</span>
-                                <span class="amount">--</span>
-                                <span class="total">--</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="trade-history-section">
-                    <h3>Trade History</h3>
-                    <div class="trade-history" id="tradeHistory">
-                        <div class="trade-history-row">
-                            <span class="time">--</span>
-                            <span class="price">--</span>
-                            <span class="amount">--</span>
-                            <span class="type">--</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="coins-section">
-                    <div class="search-bar">
-                        <input type="text" id="searchInput" placeholder="Search coins...">
-                    </div>
-                    <div class="coins-list" id="coinsList">
-                        <div class="loading">Loading coins...</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="trading-sidebar">
-                <div class="trade-buttons">
-                    <button class="trade-type-btn active" data-type="buy">Buy</button>
-                    <button class="trade-type-btn" data-type="sell">Sell</button>
-                </div>
-
-                <div class="trade-tabs">
-                    <button class="trade-tab-btn active" data-tab="limit">Limit</button>
-                    <button class="trade-tab-btn" data-tab="market">Market</button>
-                </div>
-
-                <div class="trading-form">
-                    <div class="balance-info">
-                        <span>Available</span>
-                        <span id="tradingBalance">0.00 USDT</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Price</label>
-                        <div class="input-with-controls">
-                            <input type="number" id="tradePrice" placeholder="Price" min="0" step="0.0001">
-                            <button class="control-btn up">▲</button>
-                            <button class="control-btn down">▼</button>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Amount</label>
-                        <input type="number" id="tradeAmount" placeholder="Amount" min="0" step="0.01">
-                    </div>
-
-                    <div class="slider-section">
-                        <input type="range" id="amountSlider" min="0" max="100" value="0" class="trade-slider">
-                        <div class="slider-labels">
-                            <span>0%</span>
-                            <span>25%</span>
-                            <span>50%</span>
-                            <span>75%</span>
-                            <span>100%</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Total</label>
-                        <input type="number" id="tradeTotal" placeholder="Total" min="0" step="0.01" readonly>
-                    </div>
-
-                    <button class="trade-btn" id="buyBtn">Buy</button>
-                    <button class="trade-btn sell" id="sellBtn" style="display: none;">Sell</button>
-                </div>
-
-                <div class="assets-section">
-                    <h3>Assets</h3>
-                    <div class="assets-list" id="assetsList">
-                        <div class="asset-item">
-                            <span class="asset-name">USDT</span>
-                            <span class="asset-balance" id="usdtBalance">0.00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn" data-page="starting">
-                <span>🚀</span>
-                <span>Tasks</span>
-            </button>
-            <button class="nav-btn" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/trading.js"></script>
 </body>

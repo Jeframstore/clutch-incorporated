@@ -1,62 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Incorporated - Withdraw</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/withdraw.css">
-    <!-- Firebase SDK -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+        body { background-color: #0A0A0A; color: white; font-family: 'IBM Plex Sans', sans-serif; margin: 0; }
+        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(27, 27, 27, 0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .withdraw-form input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; padding: 1.5rem; width: 100%; color: white; outline: none; transition: border 0.3s; font-weight: 600; }
+        .withdraw-form input:focus { border-color: #FFD800; background: rgba(0,0,0,0.6); }
+        .error-message { background: rgba(255, 75, 75, 0.1); color: #FF4B4B; padding: 1rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 800; text-align: center; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.1em; }
+        .success-message { background: rgba(128, 255, 0, 0.1); color: #80FF00; padding: 1rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 800; text-align: center; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.1em; }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="relative w-full max-w-[375px] min-h-screen bg-[#0A0A0A] flex flex-col border-x border-white/5 pb-[100px]">
+        
+        <header class="sticky top-0 z-[100] h-16 glass px-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-[#FFD800] flex items-center justify-center shadow-[0_0_15px_rgba(255,216,0,0.3)]">
+                    <span class="text-black font-black text-lg">C</span>
+                </div>
+                <h1 class="font-heading font-extrabold text-[12px] tracking-widest text-white uppercase">The Clutch Co</h1>
+            </div>
+            <button id="backBtn" class="text-white/40 hover:text-white transition-colors"><i class="ti ti-arrow-left"></i></button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto px-5 py-6 space-y-8">
+            <div>
+                <div class="inline-flex items-center gap-2 bg-[#FFD800]/10 border border-[#FFD800]/20 px-3 py-1 rounded-full mb-3">
+                    <div class="w-1.5 h-1.5 rounded-full bg-[#FFD800] animate-pulse"></div>
+                    <span class="text-[9px] font-black text-[#FFD800] uppercase tracking-widest">Priority Payout</span>
+                </div>
+                <h1 class="font-heading text-4xl font-extrabold tracking-tight">Withdraw</h1>
+                <p class="text-white/40 text-xs mt-2">Request fund transfer to your external secure wallet.</p>
+            </div>
+
+            <div class="bg-[#1B1B1B] rounded-[40px] p-8 border border-white/5 relative overflow-hidden">
+                <p class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-2">Available for Withdrawal</p>
+                <h2 class="text-4xl font-bold tracking-tight text-[#80FF00]" id="withdrawBalance">0.00 USDT</h2>
+            </div>
+
+            <div class="withdraw-form space-y-6">
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] ml-3">Withdrawal Amount (USDT)</label>
+                    <input type="number" id="withdrawAmount" placeholder="Min. 10 USDT" step="0.01">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] ml-3">TRC20 Mapping Status</label>
+                    <input type="text" placeholder="Wallet Verified" readonly value="LOCKED TO REGISTERED WALLET" class="opacity-50">
+                </div>
+
+                <button id="submitWithdrawBtn" class="w-full bg-[#FFD800] text-black font-black py-5 rounded-[24px] shadow-lg uppercase tracking-[0.2em] text-[13px] active:scale-95 transition-all">
+                    Initiate Transfer
+                </button>
+            </div>
+
+            <div class="pt-6 border-t border-white/5">
+                <p class="text-[10px] text-white/20 text-center leading-relaxed font-bold uppercase tracking-widest">
+                    Standard Processing: 24 - 48 Hours<br>
+                    Operational Fee: 0.00 USDT
+                </p>
+            </div>
+        </main>
+
+        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-3xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
+                <i class="ti ti-home text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
+                <i class="ti ti-rocket text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Start</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
+                <i class="ti ti-list text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Records</span>
+            </div>
+        </nav>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="withdraw-container">
-        <div class="withdraw-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="back-btn" id="backBtn">←</button>
-            </div>
-            <h1 class="revenue-title">Revenue</h1>
-            <h2 class="page-title">Withdraw</h2>
-        </div>
-
-        <div class="balance-section">
-            <p class="balance-label">Balance:</p>
-            <p class="balance-value" id="withdrawBalance">0.00 USDT</p>
-        </div>
-
-        <div class="withdraw-form">
-            <input type="number" id="withdrawAmount" placeholder="$ Amount to withdraw" step="0.01" min="1">
-            <button class="submit-btn" id="submitWithdrawBtn">Submit Withdraw</button>
-        </div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn" data-page="starting">
-                <span>🚀</span>
-                <span>Starting</span>
-            </button>
-            <button class="nav-btn" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/withdraw.js"></script>
 </body>

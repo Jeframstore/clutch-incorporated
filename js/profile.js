@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('profileProfits').textContent = 'Loading...';
     
     // Load from Firebase only
-    await loadProfile();
+    attachProfileListener();
     
     const backBtn = document.getElementById('backBtn');
     if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'dashboard.html');
@@ -34,23 +34,24 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 });
 
-async function loadProfile() {
+function attachProfileListener() {
     try {
-        const snapshot = await database.ref('users/' + userId).once('value');
-        const user = snapshot.val();
+        database.ref('users/' + userId).on('value', function(snapshot) {
+            const user = snapshot.val();
         
         if (user) {
             // Update display with Firebase data
-            document.getElementById('profileUserName').textContent = user.username + ' - VIP 1';
+            document.getElementById('profileUserName').textContent = (user.username || 'User') + ' - ' + (user.vip || 'VIP 1');
             document.getElementById('inviteCode').textContent = user.inviteCode || 'N/A';
             document.getElementById('profileBalance').textContent = parseFloat(user.balance || 0).toFixed(2) + ' USDT';
             document.getElementById('profileProfits').textContent = parseFloat(user.commission || 0).toFixed(2) + ' USDT';
-            document.getElementById('creditScore').textContent = '97%';
+            document.getElementById('creditScore').textContent = (user.creditScore || 97) + '%';
         } else {
             console.error('User not found');
             document.getElementById('profileUserName').textContent = 'Error';
             document.getElementById('inviteCode').textContent = 'Error';
         }
+        });
     } catch (error) {
         console.error('Error loading profile:', error);
         document.getElementById('profileUserName').textContent = 'Error loading data';

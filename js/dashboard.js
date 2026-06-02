@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
     
-    await loadUserData();
+    attachUserDataListener();
     
     // Profile Menu
     const profileIcon = document.getElementById('profileIconBtn');
@@ -74,29 +74,30 @@ function logout() {
     window.location.href = 'index.html';
 }
 
-async function loadUserData() {
+function attachUserDataListener() {
     try {
         if (!userId) return;
-        
-        console.log('Loading user data for userId:', userId);
-        const snapshot = await database.ref('users/' + userId).once('value');
-        const user = snapshot.val();
-        
-        console.log('User data loaded:', user);
-        
+
+        database.ref('users/' + userId).on('value', async function(snapshot) {
+            const user = snapshot.val();
+
         if (user) {
             // Update display from Firebase
             const usernameDisplay = document.getElementById('usernameDisplay');
             if (usernameDisplay) {
                 usernameDisplay.textContent = user.username || 'User';
-                console.log('Username displayed:', user.username);
+            }
+
+            const totalBalanceDisplay = document.getElementById('totalBalanceDisplay');
+            if (totalBalanceDisplay) {
+                totalBalanceDisplay.textContent = parseFloat(user.balance || 0).toFixed(2);
             }
             
             // Process sign-in streak
             const today = new Date().toISOString().split('T')[0];
             let streak = user.signInStreak || 0;
             let lastSignIn = user.lastSignIn || '';
-            let baseSalary = user.baseSalary || 0;
+            let baseSalary = parseFloat(user.baseSalary || 0);
             
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
@@ -116,7 +117,7 @@ async function loadUserData() {
             // Check if completed 15 days - payout and reset
             if (streak >= 15 && lastSignIn !== today) {
                 // Add base salary to balance
-                const currentBalance = user.balance || 0;
+                const currentBalance = parseFloat(user.balance || 0);
                 await database.ref('users/' + userId).update({
                     balance: currentBalance + baseSalary,
                     signInStreak: 0,
@@ -169,6 +170,7 @@ async function loadUserData() {
                 }
             }
         }
+        });
     } catch (error) {
         console.error('Error loading user data:', error);
     }

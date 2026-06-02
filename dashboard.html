@@ -1,150 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Incorporated - Dashboard</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <!-- Firebase SDK -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+        
+        body { font-family: 'IBM Plex Sans', sans-serif; background-color: #0A0A0A; color: white; margin: 0; }
+        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        .glass-header { 
+            background: rgba(10, 10, 10, 0.85); 
+            backdrop-filter: blur(20px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #1B1B1B 0%, #0F0F0F 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .marquee-container { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .marquee-anim { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        
+        .nav-btn.active { color: #FFD800; }
+        .nav-indicator { box-shadow: 0 0 15px #FFD800; }
+        
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="flex flex-col min-h-screen w-full max-w-[375px] bg-[#0A0A0A] text-white relative pb-[100px] border-x border-white/5">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-[60] glass-header px-6 py-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FFD800] shadow-[0_0_20px_rgba(255,216,0,0.3)]">
+                        <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/cog.svg" class="w-7 h-7" alt="Logo">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-jakarta text-lg font-extrabold tracking-tighter leading-none">CLUTCH</span>
+                        <span class="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-0.5">Incorporated</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="relative cursor-pointer group" id="profileIconBtn">
+                        <div class="w-11 h-11 rounded-full border-2 border-[#80FF00]/40 p-0.5 group-hover:border-[#80FF00] transition-colors">
+                            <img src="https://i.pravatar.cc/100?u=clutch" alt="profile" class="w-full h-full object-cover rounded-full">
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#80FF00] border-2 border-[#0A0A0A] rounded-full shadow-[0_0_10px_#80FF00]"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="overflow-hidden marquee-container rounded-lg py-1.5 mt-2">
+                <div class="marquee-anim text-[9px] font-black text-[#80FF00]/90 uppercase tracking-widest px-4">
+                    • Market Update: BTC +2.4% • VIP 4 Rewards Active • Welcome <span id="usernameDisplay" class="text-white">User</span> •
+                </div>
+            </div>
+        </header>
+
+        <!-- Profile Menu Dropdown -->
+        <div id="profileMenu" class="absolute top-[85px] right-6 z-[100] w-52 bg-[#1B1B1B] border border-white/10 rounded-2xl shadow-[0_30px_60px_-12px_rgba(0,0,0,0.7)] p-2 backdrop-blur-xl" style="display: none;">
+            <button id="profileMenuItem" class="w-full text-left px-4 py-3.5 hover:bg-white/5 rounded-xl text-sm font-bold flex items-center gap-3 transition-colors">
+                <i class="ti ti-user text-[#FFD800]"></i> View Profile
+            </button>
+            <div class="h-px bg-white/5 my-1 mx-2"></div>
+            <button id="logoutMenuItem" class="w-full text-left px-4 py-3.5 hover:bg-red-500/5 rounded-xl text-sm font-bold text-red-400 flex items-center gap-3 transition-colors">
+                <i class="ti ti-logout"></i> Sign Out
+            </button>
+        </div>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar">
+            <!-- Balance Visualization -->
+            <section class="px-5 pt-6 mb-8">
+                <div class="balance-card rounded-[40px] p-8 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">Net Portfolio Value</p>
+                            <div class="px-2.5 py-1 bg-white/5 rounded-full border border-white/5 flex items-center gap-1.5">
+                                <div class="w-1.5 h-1.5 bg-[#80FF00] rounded-full animate-pulse shadow-[0_0_8px_#80FF00]"></div>
+                                <span class="text-[8px] font-black text-white/60 tracking-widest uppercase">Live</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="text-white/20 font-jakarta text-3xl font-bold">$</span>
+                            <h1 class="font-jakarta text-5xl font-extrabold text-white tracking-tight leading-none" id="totalBalanceDisplay">0.00</h1>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#80FF00]/10 border border-[#80FF00]/20 rounded-2xl text-[#80FF00] text-[11px] font-black uppercase tracking-wider">
+                                <i class="ti ti-trending-up text-sm"></i>
+                                <span id="baseSalary">0.00</span> USDT Profits
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Grid Menu -->
+            <section class="px-5 mb-8">
+                <div class="grid grid-cols-4 grid-rows-2 gap-4 h-[230px]">
+                    <div class="col-span-2 row-span-2 bg-[#FFD800] rounded-[32px] p-6 flex flex-col justify-between cursor-pointer active:scale-95 transition-all menu-btn hover:shadow-[0_15px_30px_rgba(255,216,0,0.2)]" data-page="deposit">
+                        <div class="w-14 h-14 rounded-2xl bg-black/10 flex items-center justify-center">
+                            <i class="ti ti-arrow-up-right text-black text-3xl font-black"></i>
+                        </div>
+                        <div>
+                            <p class="text-black/40 font-black text-[9px] uppercase tracking-widest mb-1">Secure Payouts</p>
+                            <p class="text-black font-jakarta text-2xl font-black leading-none">Deposit</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-span-2 row-span-1 bg-[#1B1B1B] rounded-[24px] px-5 flex items-center justify-between border border-white/5 cursor-pointer menu-btn active:bg-white/5" data-page="withdraw">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-[#80FF00]/10 flex items-center justify-center border border-[#80FF00]/20">
+                                <i class="ti ti-arrow-down-left text-[#80FF00] text-xl font-bold"></i>
+                            </div>
+                            <p class="font-jakarta font-black text-[12px] uppercase tracking-widest text-white/90">Withdraw</p>
+                        </div>
+                        <i class="ti ti-chevron-right text-white/10 text-xs"></i>
+                    </div>
+                    
+                    <div class="col-span-1 row-span-1 bg-[#1B1B1B] rounded-[24px] flex flex-col items-center justify-center border border-white/5 cursor-pointer menu-btn active:bg-white/5" data-page="trading">
+                        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-1.5">
+                            <i class="ti ti-refresh text-white/60 text-xl"></i>
+                        </div>
+                        <p class="text-[8px] font-black uppercase tracking-widest text-white/30">Trade</p>
+                    </div>
+                    
+                    <div class="col-span-1 row-span-1 bg-[#1B1B1B] rounded-[24px] flex flex-col items-center justify-center border border-white/5 cursor-pointer menu-btn active:bg-white/5" data-page="service">
+                        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-1.5">
+                            <i class="ti ti-check-square text-white/60 text-xl"></i>
+                        </div>
+                        <p class="text-[8px] font-black uppercase tracking-widest text-white/30">Tasks</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rewards Action -->
+            <section class="px-5 mb-8">
+                <button class="w-full bg-[#1B1B1B] border border-[#FFD800]/30 text-[#FFD800] font-extrabold py-5 rounded-[24px] uppercase tracking-[0.2em] text-[13px] signin-counter transition-all active:scale-95">
+                    CLAIM DAILY REWARD (0/15)
+                </button>
+            </section>
+
+            <!-- Info Grid -->
+            <section class="px-5 mb-10 grid grid-cols-2 gap-4">
+                <div class="bg-[#1B1B1B]/40 border border-white/5 p-4 rounded-2xl menu-btn cursor-pointer" data-page="faqs">
+                    <i class="ti ti-help text-[#FFD800] mb-2 block"></i>
+                    <p class="text-[10px] font-bold text-white/90 uppercase tracking-widest">Support</p>
+                </div>
+                <div class="bg-[#1B1B1B]/40 border border-white/5 p-4 rounded-2xl menu-btn cursor-pointer" data-page="terms">
+                    <i class="ti ti-file-description text-[#80FF00] mb-2 block"></i>
+                    <p class="text-[10px] font-bold text-white/90 uppercase tracking-widest">Terms</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Tab Bar -->
+        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-2xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn active" data-page="home">
+                <div class="w-12 h-12 rounded-2xl bg-[#FFD800]/10 flex items-center justify-center relative">
+                    <i class="ti ti-home text-[#FFD800] text-2xl"></i>
+                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#FFD800] rounded-full nav-indicator"></div>
+                </div>
+                <span class="text-[#FFD800] text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer opacity-30 hover:opacity-100 transition-opacity nav-btn" data-page="starting">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-rocket text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Start</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer opacity-30 hover:opacity-100 transition-opacity nav-btn" data-page="records">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
+                    <i class="ti ti-list text-white text-2xl"></i>
+                </div>
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Records</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Firebase SDK (Compat Version to match existing scripts) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="dashboard-container">
-        <div class="dashboard-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="profile-icon" id="profileIconBtn">👤</button>
-            </div>
-            <div class="welcome-section">
-                <h2>Hi, <span id="usernameDisplay">Collins</span></h2>
-                <p>Welcome back</p>
-                <div class="marquee-container">
-                    <div class="marquee-text" id="welcomeMarquee">
-                        Dear users, welcome to join us. The daily working hours are from 10:00 am to 23:00 pm EST
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="profile-menu" id="profileMenu" style="display: none;">
-            <button class="profile-menu-item" id="profileMenuItem">👤 Profile</button>
-            <button class="profile-menu-item" id="logoutMenuItem">🚪 Log Out</button>
-        </div>
-
-        <div class="menu-buttons-row">
-            <button class="menu-btn" data-page="service">
-                <span class="menu-icon">🔧</span>
-                <span>SERVICE</span>
-            </button>
-            <button class="menu-btn" data-page="withdraw">
-                <span class="menu-icon">💰</span>
-                <span>WITHDRAW</span>
-            </button>
-            <button class="menu-btn" data-page="deposit">
-                <span class="menu-icon">💳</span>
-                <span>DEPOSIT</span>
-            </button>
-            <button class="menu-btn" data-page="trading">
-                <span class="menu-icon">�</span>
-                <span>TRADING</span>
-            </button>
-        </div>
-
-        <div class="menu-buttons-row">
-            <button class="menu-btn" data-page="terms">
-                <span class="menu-icon">📋</span>
-                <span>T&C</span>
-            </button>
-            <button class="menu-btn" data-page="certificate">
-                <span class="menu-icon">📜</span>
-                <span>CERTIFICATE</span>
-            </button>
-            <button class="menu-btn" data-page="faqs">
-                <span class="menu-icon">❓</span>
-                <span>FAQS</span>
-            </button>
-            <button class="menu-btn" data-page="about">
-                <span class="menu-icon">ℹ️</span>
-                <span>ABOUT</span>
-            </button>
-        </div>
-
-        <div class="signin-section">
-            <div class="signin-header">
-                <h3>CONTINUOUS SIGN IN</h3>
-                <span class="signin-counter">SIGN IN NOW (0/15)</span>
-            </div>
-            <div class="reward-grid">
-                <div class="reward-item">USDT +300</div>
-                <div class="reward-item">USDT +150</div>
-                <div class="reward-item">USDT +500</div>
-                <div class="reward-item">USDT +1000</div>
-                <div class="reward-item">USDT +50</div>
-                <div class="reward-item">USDT +300</div>
-                <div class="reward-item">USDT +300</div>
-            </div>
-            <div class="base-salary">
-                Base salary: <span id="baseSalary">0.0</span> USDT
-            </div>
-        </div>
-
-        <div class="vip-section">
-            <div class="vip-header">
-                <h3>Vip Levels</h3>
-                <a href="#" class="view-more">View more</a>
-            </div>
-            <div class="vip-grid">
-                <div class="vip-card">
-                    <h4>VIP 1</h4>
-                    <p>0.5% commission.</p>
-                    <p>40 orders per round.</p>
-                </div>
-                <div class="vip-card">
-                    <h4>VIP 2</h4>
-                    <p>1% commission.</p>
-                    <p>45 orders per round.</p>
-                </div>
-                <div class="vip-card">
-                    <h4>VIP 3</h4>
-                    <p>1.5% commission.</p>
-                    <p>50 orders per round.</p>
-                </div>
-                <div class="vip-card">
-                    <h4>VIP 4</h4>
-                    <p>2% commission.</p>
-                    <p>55 orders per round.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn active" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn" data-page="starting">
-                <span>🚀</span>
-                <span>Tasks</span>
-            </button>
-            <button class="nav-btn" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/dashboard.js"></script>
 </body>

@@ -1,57 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Clutch Incorporated - Login</title>
-    <link rel="stylesheet" href="css/style.css">
-    <!-- Firebase SDK -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Incorporated - Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        
+        body { background: #0A0A0A; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; color: white; margin: 0; overflow: hidden; }
+        .glow-sphere { position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255, 216, 0, 0.08) 0%, transparent 70%); border-radius: 50%; filter: blur(80px); z-index: -1; }
+        .login-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.08); padding: 3rem 2.5rem; border-radius: 3rem; width: 100%; max-width: 360px; box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8); position: relative; }
+        input { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.25rem; padding: 1.25rem; width: 100%; color: white; margin-bottom: 1.25rem; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.9rem; font-weight: 500; }
+        input:focus { border-color: #FFD800; background: rgba(0, 0, 0, 0.6); box-shadow: 0 0 20px rgba(255, 216, 0, 0.05); }
+        .signin-btn { background: #FFD800; color: black; font-weight: 900; padding: 1.25rem; border-radius: 1.25rem; width: 100%; border: none; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.85rem; box-shadow: 0 10px 25px -5px rgba(255, 216, 0, 0.4); }
+        .signin-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(255, 216, 0, 0.5); }
+        .signin-btn:active { transform: translateY(0) scale(0.98); }
+        .error-message { color: #FF4B4B; font-size: 0.75rem; text-align: center; margin-top: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem; background: rgba(255, 75, 75, 0.05); border-radius: 0.75rem; }
+    </style>
+</head>
+<body class="flex justify-center h-screen overflow-hidden">
+    <div class="glow-sphere" style="top: -10%; right: -10%;"></div>
+    <div class="glow-sphere" style="bottom: -10%; left: -10%;"></div>
+
+    <div class="login-card">
+        <div class="flex flex-col items-center mb-12">
+            <div class="w-20 h-20 rounded-[2rem] bg-[#FFD800] flex items-center justify-center mb-5 shadow-[0_0_40px_rgba(255,216,0,0.3)] transition-transform hover:rotate-12">
+                <span class="text-black text-4xl font-black italic">C</span>
+            </div>
+            <h1 class="text-2xl font-black tracking-[0.2em] uppercase leading-none">CLUTCH</h1>
+            <p class="text-[9px] font-bold text-white/30 uppercase tracking-[0.4em] mt-2">High-Performance Ecosystem</p>
+        </div>
+
+        <form id="loginForm">
+            <input type="text" id="loginIdentifier" placeholder="Username or Email" required>
+            <input type="password" id="loginPassword" placeholder="Security Key" required>
+            <button type="submit" class="signin-btn mt-4">Authorize Entry</button>
+        </form>
+
+        <div class="mt-8 flex flex-col items-center gap-4">
+            <a href="forgot-password.html" class="text-[9px] text-[#FFD800]/60 font-black tracking-widest uppercase hover:text-[#FFD800] transition-colors">Forgot Password?</a>
+            <p class="text-[9px] text-white/30 font-bold uppercase tracking-widest">New Operator? <a href="register.html" class="text-[#FFD800] hover:underline">Register</a></p>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="logo-section">
-                <div class="big-c">C</div>
-                <div class="logo-text">
-                    <span class="clutch">Clutch</span>
-                    <span class="incorporated">Incorporated</span>
-                </div>
-            </div>
-            
-            <h2 class="login-title">Login</h2>
-            
-            <form id="loginForm">
-                <div class="input-group">
-                    <label>Username or Email</label>
-                    <input type="text" id="loginIdentifier" placeholder="Enter username or email" required>
-                </div>
-                
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                </div>
-                
-                <div style="text-align: right; margin-top: -10px; margin-bottom: 15px;">
-                    <a href="forgot-password.html" style="color: #ffd700; font-size: 12px; text-decoration: none;">Forgot Password?</a>
-                </div>
-                
-                <button type="submit" class="signin-btn">Sign in</button>
-            </form>
-            
-            <div class="signup-link">
-                New to Clutch? <a href="register.html">Sign up now.</a>
-            </div>
-            
-            <div class="footer-text">
-                © 2024 Clutch Incorporated. All rights reserved.
-            </div>
-        </div>
-    </div>
-    
     <script src="js/main.js"></script>
 </body>
 </html>

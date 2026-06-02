@@ -1,59 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Incorporated - Records</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/records.css">
-    <!-- Firebase SDK -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+        body { background-color: #0A0A0A; color: white; font-family: 'IBM Plex Sans', sans-serif; margin: 0; }
+        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-header { background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .tab-btn.active { background: #FFD800; color: #000; box-shadow: 0 10px 20px -5px rgba(255, 216, 0, 0.3); }
+        .record-item { 
+            background: linear-gradient(145deg, #1B1B1B 0%, #121212 100%); 
+            border: 1px solid rgba(255, 255, 255, 0.03); 
+            padding: 1.25rem;
+            border-radius: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .status-confirmed { background: rgba(128, 255, 0, 0.1); color: #80FF00; }
+        .status-pending { background: rgba(255, 216, 0, 0.1); color: #FFD800; }
+        .status-rejected { background: rgba(255, 75, 75, 0.1); color: #FF4B4B; }
+        
+        .positive { color: #80FF00; }
+        .negative { color: #FF4B4B; }
+        
+        .record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .record-details { display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-bottom: 0.75rem; }
+        .record-status { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem; }
+        .status-badge { font-size: 0.6rem; font-weight: 900; padding: 0.25rem 0.75rem; border-radius: 9999px; text-transform: uppercase; }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] flex justify-center">
+    <div class="min-h-screen w-full max-w-[375px] bg-[#0A0A0A] text-white flex flex-col relative overflow-hidden border-x border-white/5 pb-[100px]">
+        
+        <header class="sticky top-0 z-[100] w-full px-4 h-16 glass-header flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-[#FFD800] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(255,216,0,0.3)]">
+                    <span class="text-black font-black text-lg">C</span>
+                </div>
+                <h1 class="font-heading font-extrabold text-[12px] tracking-[0.1em] text-white uppercase">THE CLUTCH CO</h1>
+            </div>
+            <button id="backBtn" class="w-10 h-10 rounded-full flex items-center justify-center text-white/30 hover:text-white transition-colors">
+                <i class="ti ti-arrow-left"></i>
+            </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar px-5 py-6">
+            <div class="mb-8">
+                <h1 class="font-heading text-3xl font-extrabold tracking-tight">Audit <span class="text-[#FFD800]">Records</span></h1>
+            </div>
+
+            <div class="flex items-center p-1.5 bg-[#1B1B1B]/60 rounded-[20px] border border-white/5 mb-8">
+                <button class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all tab-btn active" data-tab="all">All Logs</button>
+                <button class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all tab-btn text-white/40" data-tab="deposit">Credits</button>
+                <button class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all tab-btn text-white/40" data-tab="withdraw">Debits</button>
+            </div>
+
+            <div id="recordsList" class="space-y-4"></div>
+        </main>
+
+        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-3xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
+                <i class="ti ti-home text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
+                <i class="ti ti-rocket text-white/20 text-2xl"></i>
+                <span class="text-white/20 text-[9px] font-black uppercase tracking-widest">Start</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn active" data-page="records">
+                <div class="w-12 h-12 rounded-2xl bg-[#FFD800]/10 flex items-center justify-center relative">
+                    <i class="ti ti-list text-[#FFD800] text-2xl"></i>
+                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#FFD800] rounded-full shadow-[0_0_12px_#FFD800]"></div>
+                </div>
+                <span class="text-[#FFD800] text-[9px] font-black uppercase tracking-widest">Records</span>
+            </div>
+        </nav>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-</head>
-<body>
-    <div class="records-container">
-        <div class="records-header">
-            <div class="top-bar">
-                <div class="logo-section">
-                    <div class="big-c">C</div>
-                    <div class="logo-text">
-                        <span class="clutch">Clutch</span>
-                        <span class="incorporated">Incorporated</span>
-                    </div>
-                </div>
-                <button class="back-btn" id="backBtn">←</button>
-            </div>
-            <h1 class="page-title">Transaction Records</h1>
-        </div>
-
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="all">All</button>
-            <button class="tab-btn" data-tab="deposit">Deposit</button>
-            <button class="tab-btn" data-tab="withdraw">Withdraw</button>
-        </div>
-
-        <div class="records-list" id="recordsList"></div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" data-page="home">
-                <span>🏠</span>
-                <span>Home</span>
-            </button>
-            <button class="nav-btn" data-page="starting">
-                <span>🚀</span>
-                <span>Starting</span>
-            </button>
-            <button class="nav-btn active" data-page="records">
-                <span>📊</span>
-                <span>Records</span>
-            </button>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
     <script src="js/records.js"></script>
 </body>

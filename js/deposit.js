@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    loadMerchantWallet();
     loadContactNumbers();
     
     const backBtn = document.getElementById('backBtn');
@@ -47,6 +48,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+async function loadMerchantWallet() {
+    try {
+        const snap = await database.ref('settings/merchantWallet').once('value');
+        const walletAddress = snap.val() || '';
+        const addressElement = document.getElementById('merchantAddress');
+        const qrElement = document.getElementById('merchantQr');
+        const copyButton = document.getElementById('copyMerchantAddress');
+
+        if (addressElement) {
+            addressElement.textContent = walletAddress || 'Wallet address not configured';
+        }
+
+        if (qrElement) {
+            qrElement.src = walletAddress
+                ? 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(walletAddress) + '&margin=0&bgcolor=ffffff&color=0a0a0a'
+                : '';
+            qrElement.alt = walletAddress ? 'Merchant wallet QR' : 'Wallet address not configured';
+        }
+
+        if (copyButton) {
+            copyButton.addEventListener('click', async function() {
+                if (!walletAddress) return;
+                await navigator.clipboard.writeText(walletAddress);
+            });
+        }
+    } catch (e) {
+        console.error('Error loading merchant wallet:', e);
+    }
+}
 
 async function loadContactNumbers() {
     try {
