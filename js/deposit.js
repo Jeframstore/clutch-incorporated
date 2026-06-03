@@ -80,8 +80,14 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadContactNumbers() {
     try {
         const userId = sessionStorage.getItem('userId');
+        console.log('Loading contacts for userId:', userId);
+        
         const userSnap = await database.ref('users/' + userId).once('value');
         const user = userSnap.val();
+        
+        console.log('User data:', user);
+        console.log('assignedWhatsapp:', user?.assignedWhatsapp);
+        console.log('assignedTelegram:', user?.assignedTelegram);
         
         let whatsappNumber, telegramUsername;
         
@@ -89,6 +95,7 @@ async function loadContactNumbers() {
         if (user && user.assignedWhatsapp && user.assignedTelegram) {
             whatsappNumber = user.assignedWhatsapp;
             telegramUsername = user.assignedTelegram;
+            console.log('Using assigned contacts:', whatsappNumber, telegramUsername);
         }
         
         // Fall back to default service contacts if no assigned contacts
@@ -97,6 +104,7 @@ async function loadContactNumbers() {
             const contacts = snap.val() || { whatsapp: '+1 234 567 8900', telegram: '@ClutchSupport' };
             whatsappNumber = whatsappNumber || contacts.whatsapp;
             telegramUsername = telegramUsername || contacts.telegram;
+            console.log('Using default contacts:', whatsappNumber, telegramUsername);
         }
         
         const whatsappElement = document.getElementById('whatsappNumber');
