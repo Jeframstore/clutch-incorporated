@@ -804,7 +804,8 @@ window.confirmTrade = async function(tradeId) {
         
         if (profitAmount !== null && !isNaN(profitAmount)) {
             const profit = parseFloat(profitAmount);
-            const totalReturn = (parseFloat(trade.amount) + profit).toFixed(2);
+            const totalReturnNum = parseFloat(trade.amount) + profit;
+            const totalReturn = totalReturnNum.toFixed(2);
             
             // Fetch fresh user balance after admin enters profit amount
             const freshUserSnap = await database.ref('users/' + trade.userId).once('value');
@@ -812,7 +813,7 @@ window.confirmTrade = async function(tradeId) {
             
             // Add funds to user balance
             const currentBalance = parseFloat(freshUser.balance || 0);
-            const newBalance = (currentBalance + totalReturn).toFixed(2);
+            const newBalance = (currentBalance + totalReturnNum).toFixed(2);
             
             await database.ref('users/' + trade.userId).update({ balance: newBalance });
             
