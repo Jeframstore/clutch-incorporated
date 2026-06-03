@@ -791,7 +791,7 @@ window.confirmTrade = async function(tradeId) {
             <p><strong>Order Price:</strong> ${trade.price.toFixed(2)} USD</p>
             <p><strong>Order Amount:</strong> ${trade.amount} USDT</p>
             <p><strong>Duration:</strong> ${trade.duration} min</p>
-            <p><strong>Status:</strong> Closed</p>
+            <p><strong>Status:</strong> Ready</p>
         </div>`,
         input: 'number',
         inputLabel: 'Enter profit amount to add (USDT)',

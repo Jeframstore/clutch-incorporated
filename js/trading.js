@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     await loadBalance();
+    watchBalance();
     fetchLivePrices();
     loadOpenOrders();
     loadOrderHistory();
@@ -136,6 +137,20 @@ async function loadBalance() {
     } catch (error) {
         console.error('Error loading balance:', error);
     }
+}
+
+// Add real-time balance listener
+function watchBalance() {
+    database.ref('users/' + userId + '/balance').on('value', snapshot => {
+        const balance = snapshot.val();
+        if (balance !== null) {
+            currentBalance = parseFloat(balance);
+            const balanceEl = document.getElementById('tradingBalance');
+            if (balanceEl) {
+                balanceEl.textContent = '$' + currentBalance.toFixed(2);
+            }
+        }
+    });
 }
 
 async function fetchLivePrices() {
@@ -415,7 +430,7 @@ async function loadOpenOrders() {
                         <span>Amount: $${order.amount}</span>
                     </div>
                     <div class="flex justify-between items-center mt-2">
-                        <span class="text-[9px] ${isReady ? 'text-[#00ff00]' : 'text-[#FFD800]'}">${isReady ? '⏳ Waiting for admin' : `⏱️ ${minutesLeft}m ${secondsLeft}s remaining`}</span>
+                        <span class="text-[9px] ${isReady ? 'text-[#00ff00]' : 'text-[#FFD800]'}">${isReady ? '⏳ Waiting' : `⏱️ ${minutesLeft}m ${secondsLeft}s remaining`}</span>
                     </div>
                 </div>
             `;
