@@ -341,6 +341,11 @@ async function placeOrder() {
         messageDiv.className = 'text-white';
         messageDiv.innerText = `Order placed successfully.`;
         
+        // Clear message after 3 seconds
+        setTimeout(() => {
+            messageDiv.innerText = '';
+        }, 3000);
+        
         document.getElementById('tradeAmount').value = '';
         loadBalance();
         loadOpenOrders();
@@ -379,6 +384,8 @@ async function loadOpenOrders() {
         
         if (userOrders.length === 0) {
             container.innerHTML = '<p class="text-[10px] text-white/30 text-center">No pending orders</p>';
+            // Auto-refresh every 5 seconds
+            setTimeout(loadOpenOrders, 5000);
             return;
         }
         
@@ -410,6 +417,9 @@ async function loadOpenOrders() {
                 </div>
             `;
         }).join('');
+        
+        // Auto-refresh every 5 seconds for live countdown
+        setTimeout(loadOpenOrders, 5000);
     } catch (error) {
         console.error('Error loading open orders:', error);
     }
