@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    loadMerchantWallet();
     loadContactNumbers();
     
     const backBtn = document.getElementById('backBtn');
@@ -24,9 +23,27 @@ document.addEventListener('DOMContentLoaded', function() {
         whatsappBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             try {
-                const snap = await database.ref('settings/serviceContacts').once('value');
-                const contacts = snap.val() || { whatsapp: '+1 234 567 8900' };
-                const whatsappNumber = contacts.whatsapp;
+                const userId = sessionStorage.getItem('userId');
+                const userSnap = await database.ref('users/' + userId).once('value');
+                const user = userSnap.val();
+                
+                let whatsappNumber;
+                // Check if user has assigned agent
+                if (user && user.agentId) {
+                    const agentSnap = await database.ref('agents/' + user.agentId).once('value');
+                    const agent = agentSnap.val();
+                    if (agent) {
+                        whatsappNumber = agent.whatsapp;
+                    }
+                }
+                
+                // Fall back to default service contacts
+                if (!whatsappNumber) {
+                    const snap = await database.ref('settings/serviceContacts').once('value');
+                    const contacts = snap.val() || { whatsapp: '+1 234 567 8900' };
+                    whatsappNumber = contacts.whatsapp;
+                }
+                
                 window.open('https://wa.me/' + whatsappNumber.replace(/[^0-9]/g, ''), '_blank');
             } catch (err) {
                 console.error('Error loading whatsapp:', err);
@@ -38,9 +55,27 @@ document.addEventListener('DOMContentLoaded', function() {
         telegramBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             try {
-                const snap = await database.ref('settings/serviceContacts').once('value');
-                const contacts = snap.val() || { telegram: '@ClutchSupport' };
-                const telegramUser = contacts.telegram;
+                const userId = sessionStorage.getItem('userId');
+                const userSnap = await database.ref('users/' + userId).once('value');
+                const user = userSnap.val();
+                
+                let telegramUser;
+                // Check if user has assigned agent
+                if (user && user.agentId) {
+                    const agentSnap = await database.ref('agents/' + user.agentId).once('value');
+                    const agent = agentSnap.val();
+                    if (agent) {
+                        telegramUser = agent.telegram;
+                    }
+                }
+                
+                // Fall back to default service contacts
+                if (!telegramUser) {
+                    const snap = await database.ref('settings/serviceContacts').once('value');
+                    const contacts = snap.val() || { telegram: '@ClutchSupport' };
+                    telegramUser = contacts.telegram;
+                }
+                
                 window.open('https://t.me/' + telegramUser.replace('@', ''), '_blank');
             } catch (err) {
                 console.error('Error loading telegram:', err);
@@ -49,42 +84,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-async function loadMerchantWallet() {
-    try {
-        const snap = await database.ref('settings/merchantWallet').once('value');
-        const walletAddress = snap.val() || '';
-        const addressElement = document.getElementById('merchantAddress');
-        const qrElement = document.getElementById('merchantQr');
-        const copyButton = document.getElementById('copyMerchantAddress');
-
-        if (addressElement) {
-            addressElement.textContent = walletAddress || 'Wallet address not configured';
-        }
-
-        if (qrElement) {
-            qrElement.src = walletAddress
-                ? 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(walletAddress) + '&margin=0&bgcolor=ffffff&color=0a0a0a'
-                : '';
-            qrElement.alt = walletAddress ? 'Merchant wallet QR' : 'Wallet address not configured';
-        }
-
-        if (copyButton) {
-            copyButton.addEventListener('click', async function() {
-                if (!walletAddress) return;
-                await navigator.clipboard.writeText(walletAddress);
-            });
-        }
-    } catch (e) {
-        console.error('Error loading merchant wallet:', e);
-    }
-}
 
 async function loadContactNumbers() {
     try {
-        const snap = await database.ref('settings/serviceContacts').once('value');
-        const contacts = snap.val() || { whatsapp: '+1 234 567 8900', telegram: '@ClutchSupport' };
-        const whatsappNumber = contacts.whatsapp;
-        const telegramUsername = contacts.telegram;
+        const userId = sessionStorage.getItem('userId');
+        const userSnap = await database.ref('users/' + userId).once('value');
+        const user = userSnap.val();
+        
+        let whatsappNumber, telegramUsername;
+        
+        // Check if user has assigned agent
+        if (user && user.agentId) {
+            const agentSnap = await database.ref('agents/' + user.agentId).once('value');
+            const agent = agentSnap.val();
+            if (agent) {
+                whatsappNumber = agent.whatsapp;
+                telegramUsername = agent.telegram;
+            }
+        }
+        
+        // Fall back to default service contacts if no agent or agent has no contacts
+        if (!whatsappNumber || !telegramUsername) {
+            const snap = await database.ref('settings/serviceContacts').once('value');
+            const contacts = snap.val() || { whatsapp: '+1 234 567 8900', telegram: '@ClutchSupport' };
+            whatsappNumber = whatsappNumber || contacts.whatsapp;
+            telegramUsername = telegramUsername || contacts.telegram;
+        }
         
         const whatsappElement = document.getElementById('whatsappNumber');
         const telegramElement = document.getElementById('telegramUsername');
