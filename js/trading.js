@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     buyBtn.addEventListener('click', function() {
         tradeType = 'buy';
+        // Keep buy button green, sell button red
         this.classList.add('bg-[#80FF00]', 'text-black');
         this.classList.remove('bg-[#FF4B4B]', 'text-white');
         sellBtn.classList.remove('bg-[#80FF00]', 'text-black');
@@ -52,10 +53,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     sellBtn.addEventListener('click', function() {
         tradeType = 'sell';
+        // Keep sell button red, buy button green
         this.classList.add('bg-[#FF4B4B]', 'text-white');
         this.classList.remove('bg-[#80FF00]', 'text-black');
-        buyBtn.classList.remove('bg-[#80FF00]', 'text-black');
-        buyBtn.classList.add('bg-[#FF4B4B]', 'text-white');
+        buyBtn.classList.remove('bg-[#FF4B4B]', 'text-white');
+        buyBtn.classList.add('bg-[#80FF00]', 'text-black');
         document.getElementById('placeOrderBtn').textContent = 'Place Sell Order';
     });
     
