@@ -773,55 +773,64 @@ async function loadOpenTradesTable() {
 }
 
 window.confirmTrade = async function(tradeId) {
-    const snap = await database.ref('tradingOrders/' + tradeId).once('value');
-    const trade = snap.val();
-    if (!trade) return;
-    
-    // Get user info
-    const userSnap = await database.ref('users/' + trade.userId).once('value');
-    const user = userSnap.val();
-    const username = user ? user.username : 'Unknown';
-    
-    const { value: profitAmount } = await Swal.fire({
-        title: 'Add Funds',
-        html: `<div style="text-align:left;">
-            <p><strong>User:</strong> ${username}</p>
-            <p><strong>Coin:</strong> ${trade.symbol}/USD</p>
-            <p><strong>Type:</strong> ${trade.side.toUpperCase()}</p>
-            <p><strong>Order Price:</strong> ${trade.price.toFixed(2)} USD</p>
-            <p><strong>Order Amount:</strong> ${trade.amount} USDT</p>
-            <p><strong>Duration:</strong> ${trade.duration} min</p>
-            <p><strong>Status:</strong> Ready</p>
-        </div>`,
-        input: 'number',
-        inputLabel: 'Enter profit amount to add (USDT)',
-        inputPlaceholder: '0.00',
-        showCancelButton: true,
-        confirmButtonColor: '#00ff00',
-        confirmButtonText: 'Add Funds'
-    });
-    
-    if (profitAmount !== null && !isNaN(profitAmount)) {
-        const profit = parseFloat(profitAmount);
-        const totalReturn = (parseFloat(trade.amount) + profit).toFixed(2);
+    try {
+        const snap = await database.ref('tradingOrders/' + tradeId).once('value');
+        const trade = snap.val();
+        if (!trade) return;
         
-        // Add funds to user balance
-        const currentBalance = parseFloat(user.balance || 0);
-        const newBalance = (currentBalance + totalReturn).toFixed(2);
+        // Get user info
+        const userSnap = await database.ref('users/' + trade.userId).once('value');
+        const user = userSnap.val();
+        const username = user ? user.username : 'Unknown';
         
-        await database.ref('users/' + trade.userId).update({ balance: newBalance });
-        
-        // Update trade status to closed with profit info
-        await database.ref('tradingOrders/' + tradeId).update({
-            status: 'closed',
-            profit: profit,
-            totalReturn: totalReturn,
-            closedAt: new Date().toISOString()
+        const { value: profitAmount } = await Swal.fire({
+            title: 'Add Funds',
+            html: `<div style="text-align:left;">
+                <p><strong>User:</strong> ${username}</p>
+                <p><strong>Coin:</strong> ${trade.symbol}/USD</p>
+                <p><strong>Type:</strong> ${trade.side.toUpperCase()}</p>
+                <p><strong>Order Price:</strong> ${trade.price.toFixed(2)} USD</p>
+                <p><strong>Order Amount:</strong> ${trade.amount} USDT</p>
+                <p><strong>Duration:</strong> ${trade.duration} min</p>
+                <p><strong>Status:</strong> Ready</p>
+            </div>`,
+            input: 'number',
+            inputLabel: 'Enter profit amount to add (USDT)',
+            inputPlaceholder: '0.00',
+            showCancelButton: true,
+            confirmButtonColor: '#00ff00',
+            confirmButtonText: 'Add Funds'
         });
         
-        Swal.fire('Success', `Added ${totalReturn} USDT to ${username}'s balance. Order marked as closed.`, 'success');
-        loadOpenTradesTable();
-        loadDashboardStats();
+        if (profitAmount !== null && !isNaN(profitAmount)) {
+            const profit = parseFloat(profitAmount);
+            const totalReturn = (parseFloat(trade.amount) + profit).toFixed(2);
+            
+            // Fetch fresh user balance after admin enters profit amount
+            const freshUserSnap = await database.ref('users/' + trade.userId).once('value');
+            const freshUser = freshUserSnap.val();
+            
+            // Add funds to user balance
+            const currentBalance = parseFloat(freshUser.balance || 0);
+            const newBalance = (currentBalance + totalReturn).toFixed(2);
+            
+            await database.ref('users/' + trade.userId).update({ balance: newBalance });
+            
+            // Update trade status to closed with profit info
+            await database.ref('tradingOrders/' + tradeId).update({
+                status: 'closed',
+                profit: profit,
+                totalReturn: totalReturn,
+                closedAt: new Date().toISOString()
+            });
+            
+            Swal.fire('Success', `Added ${totalReturn} USDT to ${username}'s balance. Order marked as closed.`, 'success');
+            loadOpenTradesTable();
+            loadDashboardStats();
+        }
+    } catch (error) {
+        console.error('Error confirming trade:', error);
+        Swal.fire('Error', 'Failed to add funds. Please try again.', 'error');
     }
 };
 
