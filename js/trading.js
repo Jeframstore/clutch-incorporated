@@ -449,6 +449,7 @@ async function loadOrderHistory() {
         const orders = snapshot.val() || {};
         
         console.log('All orders:', orders);
+        console.log('Current userId:', userId);
         
         const container = document.getElementById('orderHistory');
         const userOrders = Object.values(orders).filter(order => order.userId === userId && (order.status === 'closed' || order.status === 'rejected'));
