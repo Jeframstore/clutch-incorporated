@@ -456,7 +456,7 @@ async function loadOrderHistory() {
                         <span>Price: $${order.price.toFixed(2)}</span>
                     </div>
                     <div class="flex justify-between text-[9px] text-white/60 mt-1">
-                        <span class="text-[#80FF00]">Admin Added: $${order.profit ? order.profit.toFixed(2) : '0.00'}</span>
+                        <span class="text-[#80FF00]">Order Returns: $${order.profit ? order.profit.toFixed(2) : '0.00'}</span>
                         <span class="text-[#80FF00]">Total Return: $${order.totalReturn ? order.totalReturn.toFixed(2) : order.amount}</span>
                     </div>
                     <div class="flex justify-between items-center mt-2">
