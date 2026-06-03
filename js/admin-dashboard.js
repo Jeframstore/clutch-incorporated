@@ -728,7 +728,7 @@ async function loadOpenTradesTable() {
         
         for (let id in openTrades) {
             const trade = openTrades[id];
-            if (trade.status !== 'open' && trade.status !== 'ready_for_admin') continue;
+            if (trade.status !== 'open' && trade.status !== 'ready_for_admin' && trade.status !== 'closed') continue;
             
             // Get user info
             const userSnap = await database.ref('users/' + trade.userId).once('value');
@@ -743,6 +743,7 @@ async function loadOpenTradesTable() {
             
             const typeColor = trade.side === 'buy' ? '#00ff00' : '#ff6666';
             const isReady = trade.status === 'ready_for_admin';
+            const isClosed = trade.status === 'closed';
             
             html += `<tr>
                 <td>${id.substring(0, 10)}...<\/td>
@@ -753,10 +754,10 @@ async function loadOpenTradesTable() {
                 <td>${trade.price.toFixed(2)}<\/td>
                 <td>${trade.amount} USDT<\/td>
                 <td>${trade.duration} min<\/td>
-                <td style="color:${isReady ? '#00ff00' : '#ffd700'}; font-weight:bold;">${isReady ? 'Ready' : `${minutesLeft}m ${secondsLeft}s`}<\/td>
+                <td style="color:${isClosed ? '#00ff00' : isReady ? '#00ff00' : '#ffd700'}; font-weight:bold;">${isClosed ? 'Closed' : isReady ? 'Ready' : `${minutesLeft}m ${secondsLeft}s`}<\/td>
                 <td>${trade.price.toFixed(2)}<\/td>
                 <td>
-                    ${isReady ? `<button class="approve-btn" onclick="confirmTrade('${id}')">Add Funds</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>` : '<span style="color:#888;">Waiting...</span>'}
+                    ${isClosed ? `<span style="color:#00ff00;">Completed</span>` : isReady ? `<button class="approve-btn" onclick="confirmTrade('${id}')">Add Funds</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>` : '<span style="color:#888;">Waiting...</span>'}
                 <\/td>
             <\/tr>`;
         }
@@ -804,16 +805,14 @@ window.confirmTrade = async function(tradeId) {
         
         if (profitAmount !== null && !isNaN(profitAmount)) {
             const profit = parseFloat(profitAmount);
-            const totalReturnNum = parseFloat(trade.amount) + profit;
-            const totalReturn = totalReturnNum.toFixed(2);
             
             // Fetch fresh user balance after admin enters profit amount
             const freshUserSnap = await database.ref('users/' + trade.userId).once('value');
             const freshUser = freshUserSnap.val();
             
-            // Add funds to user balance
+            // Add only the profit amount to user balance (not order amount)
             const currentBalance = parseFloat(freshUser.balance || 0);
-            const newBalance = (currentBalance + totalReturnNum).toFixed(2);
+            const newBalance = (currentBalance + profit).toFixed(2);
             
             await database.ref('users/' + trade.userId).update({ balance: newBalance });
             
@@ -821,11 +820,11 @@ window.confirmTrade = async function(tradeId) {
             await database.ref('tradingOrders/' + tradeId).update({
                 status: 'closed',
                 profit: profit,
-                totalReturn: totalReturn,
+                totalReturn: profit,
                 closedAt: new Date().toISOString()
             });
             
-            Swal.fire('Success', `Added ${totalReturn} USDT to ${username}'s balance. Order marked as closed.`, 'success');
+            Swal.fire('Success', `Added ${profit.toFixed(2)} USDT to ${username}'s balance. Order marked as closed.`, 'success');
             loadOpenTradesTable();
             loadDashboardStats();
         }
