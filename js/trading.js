@@ -380,7 +380,7 @@ async function loadOpenOrders() {
         const orders = snapshot.val() || {};
         
         const container = document.getElementById('openOrdersList');
-        const userOrders = Object.values(orders).filter(order => order.userId === userId && order.status === 'open');
+        const userOrders = Object.values(orders).filter(order => order.userId === userId && (order.status === 'open' || order.status === 'ready_for_admin'));
         
         if (userOrders.length === 0) {
             container.innerHTML = '<p class="text-[10px] text-white/30 text-center">No pending orders</p>';
@@ -397,6 +397,7 @@ async function loadOpenOrders() {
             const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
             
             const typeClass = order.side === 'buy' ? 'text-[#80FF00]' : 'text-[#FF4B4B]';
+            const isReady = order.status === 'ready_for_admin';
             
             return `
                 <div class="bg-black/40 border border-white/5 rounded-xl p-3 mb-2">
@@ -412,7 +413,7 @@ async function loadOpenOrders() {
                         <span>Amount: $${order.amount}</span>
                     </div>
                     <div class="flex justify-between items-center mt-2">
-                        <span class="text-[9px] text-[#FFD800]">⏱️ ${minutesLeft}m ${secondsLeft}s remaining</span>
+                        <span class="text-[9px] ${isReady ? 'text-[#00ff00]' : 'text-[#FFD800]'}">${isReady ? '⏳ Waiting for admin' : `⏱️ ${minutesLeft}m ${secondsLeft}s remaining`}</span>
                     </div>
                 </div>
             `;
