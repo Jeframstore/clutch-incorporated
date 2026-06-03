@@ -28,13 +28,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const user = userSnap.val();
                 
                 let whatsappNumber;
-                // Check if user has assigned agent
-                if (user && user.agentId) {
-                    const agentSnap = await database.ref('agents/' + user.agentId).once('value');
-                    const agent = agentSnap.val();
-                    if (agent) {
-                        whatsappNumber = agent.whatsapp;
-                    }
+                // Check if user has assigned customer service contacts
+                if (user && user.assignedWhatsapp) {
+                    whatsappNumber = user.assignedWhatsapp;
                 }
                 
                 // Fall back to default service contacts
@@ -60,13 +56,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const user = userSnap.val();
                 
                 let telegramUser;
-                // Check if user has assigned agent
-                if (user && user.agentId) {
-                    const agentSnap = await database.ref('agents/' + user.agentId).once('value');
-                    const agent = agentSnap.val();
-                    if (agent) {
-                        telegramUser = agent.telegram;
-                    }
+                // Check if user has assigned customer service contacts
+                if (user && user.assignedTelegram) {
+                    telegramUser = user.assignedTelegram;
                 }
                 
                 // Fall back to default service contacts
@@ -93,17 +85,13 @@ async function loadContactNumbers() {
         
         let whatsappNumber, telegramUsername;
         
-        // Check if user has assigned agent
-        if (user && user.agentId) {
-            const agentSnap = await database.ref('agents/' + user.agentId).once('value');
-            const agent = agentSnap.val();
-            if (agent) {
-                whatsappNumber = agent.whatsapp;
-                telegramUsername = agent.telegram;
-            }
+        // Check if user has assigned customer service contacts
+        if (user && user.assignedWhatsapp && user.assignedTelegram) {
+            whatsappNumber = user.assignedWhatsapp;
+            telegramUsername = user.assignedTelegram;
         }
         
-        // Fall back to default service contacts if no agent or agent has no contacts
+        // Fall back to default service contacts if no assigned contacts
         if (!whatsappNumber || !telegramUsername) {
             const snap = await database.ref('settings/serviceContacts').once('value');
             const contacts = snap.val() || { whatsapp: '+1 234 567 8900', telegram: '@ClutchSupport' };
