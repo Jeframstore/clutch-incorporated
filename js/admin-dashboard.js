@@ -139,12 +139,12 @@ function watchOpenTrades() {
             
             // Check if order has expired and is still open
             if (trade.status === 'open' && endTime <= now) {
-                // Auto-update status to closed
-                database.ref('tradingOrders/' + id).update({ status: 'closed' });
+                // Auto-update status to ready_for_admin
+                database.ref('tradingOrders/' + id).update({ status: 'ready_for_admin' });
             }
             
-            // Count open orders for badge
-            if (trade.status === 'open') pending++;
+            // Count open orders and ready_for_admin orders for badge
+            if (trade.status === 'open' || trade.status === 'ready_for_admin') pending++;
         }
 
         const badge = document.getElementById('openTradesBadge');
@@ -728,7 +728,7 @@ async function loadOpenTradesTable() {
         
         for (let id in openTrades) {
             const trade = openTrades[id];
-            if (trade.status !== 'open' && trade.status !== 'closed') continue;
+            if (trade.status !== 'open' && trade.status !== 'ready_for_admin') continue;
             
             // Get user info
             const userSnap = await database.ref('users/' + trade.userId).once('value');
@@ -742,7 +742,7 @@ async function loadOpenTradesTable() {
             const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
             
             const typeColor = trade.side === 'buy' ? '#00ff00' : '#ff6666';
-            const isClosed = trade.status === 'closed';
+            const isReady = trade.status === 'ready_for_admin';
             
             html += `<tr>
                 <td>${id.substring(0, 10)}...<\/td>
@@ -753,10 +753,10 @@ async function loadOpenTradesTable() {
                 <td>${trade.price.toFixed(2)}<\/td>
                 <td>${trade.amount} USDT<\/td>
                 <td>${trade.duration} min<\/td>
-                <td style="color:${isClosed ? '#00ff00' : '#ffd700'}; font-weight:bold;">${isClosed ? 'Closed' : `${minutesLeft}m ${secondsLeft}s`}<\/td>
+                <td style="color:${isReady ? '#00ff00' : '#ffd700'}; font-weight:bold;">${isReady ? 'Ready' : `${minutesLeft}m ${secondsLeft}s`}<\/td>
                 <td>${trade.price.toFixed(2)}<\/td>
                 <td>
-                    ${isClosed ? `<button class="approve-btn" onclick="confirmTrade('${id}')">Add Funds</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>` : '<span style="color:#888;">Waiting...</span>'}
+                    ${isReady ? `<button class="approve-btn" onclick="confirmTrade('${id}')">Add Funds</button><button class="reject-btn" onclick="rejectTrade('${id}')">Reject</button>` : '<span style="color:#888;">Waiting...</span>'}
                 <\/td>
             <\/tr>`;
         }
@@ -789,7 +789,7 @@ window.confirmTrade = async function(tradeId) {
             <p><strong>Coin:</strong> ${trade.symbol}/USD</p>
             <p><strong>Type:</strong> ${trade.side.toUpperCase()}</p>
             <p><strong>Order Price:</strong> ${trade.price.toFixed(2)} USD</p>
-            <p><strong>Amount:</strong> ${trade.amount} USDT</p>
+            <p><strong>Order Amount:</strong> ${trade.amount} USDT</p>
             <p><strong>Duration:</strong> ${trade.duration} min</p>
             <p><strong>Status:</strong> Closed</p>
         </div>`,
@@ -811,15 +811,15 @@ window.confirmTrade = async function(tradeId) {
         
         await database.ref('users/' + trade.userId).update({ balance: newBalance });
         
-        // Update trade status to executed
+        // Update trade status to closed with profit info
         await database.ref('tradingOrders/' + tradeId).update({
-            status: 'executed',
+            status: 'closed',
             profit: profit,
             totalReturn: totalReturn,
-            executedAt: new Date().toISOString()
+            closedAt: new Date().toISOString()
         });
         
-        Swal.fire('Success', `Added ${totalReturn} USDT to ${username}'s balance.`, 'success');
+        Swal.fire('Success', `Added ${totalReturn} USDT to ${username}'s balance. Order marked as closed.`, 'success');
         loadOpenTradesTable();
         loadDashboardStats();
     }

@@ -431,7 +431,7 @@ async function loadOrderHistory() {
         const orders = snapshot.val() || {};
         
         const container = document.getElementById('orderHistory');
-        const userOrders = Object.values(orders).filter(order => order.userId === userId && (order.status === 'executed' || order.status === 'rejected'));
+        const userOrders = Object.values(orders).filter(order => order.userId === userId && (order.status === 'closed' || order.status === 'rejected'));
         
         if (userOrders.length === 0) {
             container.innerHTML = '<p class="text-[10px] text-white/30 text-center">No orders yet</p>';
@@ -440,7 +440,7 @@ async function loadOrderHistory() {
         
         container.innerHTML = userOrders.map(order => {
             const typeClass = order.side === 'buy' ? 'text-[#80FF00]' : 'text-[#FF4B4B]';
-            const statusColor = order.status === 'executed' ? 'text-[#80FF00]' : 'text-[#FF4B4B]';
+            const statusColor = order.status === 'closed' ? 'text-[#80FF00]' : 'text-[#FF4B4B]';
             
             return `
                 <div class="bg-black/40 border border-white/5 rounded-xl p-3 mb-2">
@@ -452,12 +452,15 @@ async function loadOrderHistory() {
                         <span class="text-[9px] text-white/40">${new Date(order.createdAt).toLocaleString()}</span>
                     </div>
                     <div class="flex justify-between text-[9px] text-white/60">
-                        <span>Limit: $${order.price}</span>
-                        <span>Amount: $${order.amount}</span>
+                        <span>Order Amount: $${order.amount}</span>
+                        <span>Price: $${order.price.toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between text-[9px] text-white/60 mt-1">
+                        <span class="text-[#80FF00]">Admin Added: $${order.profit ? order.profit.toFixed(2) : '0.00'}</span>
+                        <span class="text-[#80FF00]">Total Return: $${order.totalReturn ? order.totalReturn.toFixed(2) : order.amount}</span>
                     </div>
                     <div class="flex justify-between items-center mt-2">
                         <span class="text-[9px] ${statusColor} font-bold">${order.status.toUpperCase()}</span>
-                        ${order.profit ? `<span class="text-[9px] text-[#80FF00]">Profit: $${order.profit.toFixed(2)}</span>` : ''}
                     </div>
                 </div>
             `;
