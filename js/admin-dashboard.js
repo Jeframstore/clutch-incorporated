@@ -806,13 +806,19 @@ window.confirmTrade = async function(tradeId) {
         if (profitAmount !== null && !isNaN(profitAmount)) {
             const profit = parseFloat(profitAmount);
             
+            console.log('Adding profit:', profit);
+            console.log('Trade amount:', trade.amount);
+            
             // Fetch fresh user balance after admin enters profit amount
             const freshUserSnap = await database.ref('users/' + trade.userId).once('value');
             const freshUser = freshUserSnap.val();
             
-            // Add only the profit amount to user balance (not order amount)
             const currentBalance = parseFloat(freshUser.balance || 0);
+            console.log('Current balance:', currentBalance);
+            
+            // Add only the profit amount to user balance (not order amount)
             const newBalance = (currentBalance + profit).toFixed(2);
+            console.log('New balance:', newBalance);
             
             await database.ref('users/' + trade.userId).update({ balance: newBalance });
             
@@ -823,6 +829,8 @@ window.confirmTrade = async function(tradeId) {
                 totalReturn: profit,
                 closedAt: new Date().toISOString()
             });
+            
+            console.log('Order status updated to closed');
             
             Swal.fire('Success', `Added ${profit.toFixed(2)} USDT to ${username}'s balance. Order marked as closed.`, 'success');
             loadOpenTradesTable();

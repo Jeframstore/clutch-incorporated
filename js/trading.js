@@ -448,8 +448,12 @@ async function loadOrderHistory() {
         const snapshot = await database.ref('tradingOrders').once('value');
         const orders = snapshot.val() || {};
         
+        console.log('All orders:', orders);
+        
         const container = document.getElementById('orderHistory');
         const userOrders = Object.values(orders).filter(order => order.userId === userId && (order.status === 'closed' || order.status === 'rejected'));
+        
+        console.log('User orders for history:', userOrders);
         
         if (userOrders.length === 0) {
             container.innerHTML = '<p class="text-[10px] text-white/30 text-center">No orders yet</p>';
