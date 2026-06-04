@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = sessionStorage.getItem('isLoggedIn');
     userId = sessionStorage.getItem('userId');
 
+    console.log('Records page loaded');
+    console.log('Is logged in:', isLoggedIn);
+    console.log('User ID:', userId);
+
     if (!isLoggedIn || isLoggedIn !== 'true' || !userId) {
         window.location.href = 'index.html';
         return;
@@ -72,9 +76,11 @@ function attachRealtimeListeners() {
 }
 
 function syncDepositRecords(deposits) {
+    console.log('Syncing deposit records:', deposits);
     const records = [];
     for (let id in deposits) {
         const deposit = deposits[id];
+        console.log('Processing deposit:', deposit, 'userId:', userId);
         if (!deposit || deposit.userId !== userId) continue;
 
         records.push({
@@ -87,13 +93,16 @@ function syncDepositRecords(deposits) {
         });
     }
 
+    console.log('Deposit records for user:', records);
     updateRecords(records, 'deposit');
 }
 
 function syncWithdrawalRecords(withdrawals) {
+    console.log('Syncing withdrawal records:', withdrawals);
     const records = [];
     for (let id in withdrawals) {
         const withdrawal = withdrawals[id];
+        console.log('Processing withdrawal:', withdrawal, 'userId:', userId);
         if (!withdrawal || withdrawal.userId !== userId) continue;
 
         records.push({
@@ -106,6 +115,7 @@ function syncWithdrawalRecords(withdrawals) {
         });
     }
 
+    console.log('Withdrawal records for user:', records);
     updateRecords(records, 'withdraw');
 }
 
@@ -122,10 +132,15 @@ function updateRecords(records, type) {
 }
 
 function displayRecords(records) {
+    console.log('Displaying records:', records);
     const recordsList = document.getElementById('recordsList');
-    if (!recordsList) return;
+    if (!recordsList) {
+        console.log('recordsList element not found');
+        return;
+    }
 
     if (!records || records.length === 0) {
+        console.log('No records to display');
         recordsList.innerHTML = '<div class="empty-state">No transaction records found</div>';
         return;
     }
