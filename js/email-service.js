@@ -2,9 +2,9 @@
 
 // You need to configure these values from your EmailJS account
 // Get them from: https://www.emailjs.com/
-const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID = 'service_315tb27';
+const EMAILJS_TEMPLATE_ID = 'template_gn7wrzc';
+const EMAILJS_PUBLIC_KEY = 'uk97dhVnVv4JSZOXL';
 
 // Initialize EmailJS
 import emailjs from '@emailjs/browser';
