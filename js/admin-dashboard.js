@@ -641,6 +641,7 @@ async function loadWithdrawalRequests() {
                     <td>${w.id}<\/td>
                     <td>${w.username}<\/td>
                     <td>${w.amount} USDT<\/td>
+                    <td>${w.walletAddress || 'Not set'}<\/td>
                     <td>${new Date(w.requestDate).toLocaleString()}<\/td>
                     <td><button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve<\/button><button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject<\/button><\/td>
                 <\/tr>`;
@@ -649,6 +650,7 @@ async function loadWithdrawalRequests() {
                     <td>${w.id}<\/td>
                     <td>${w.username}<\/td>
                     <td>${w.amount} USDT<\/td>
+                    <td>${w.walletAddress || 'Not set'}<\/td>
                     <td>${w.status}<\/td>
                     <td>${new Date(w.requestDate).toLocaleString()}<\/td>
                 <\/tr>`;
@@ -656,11 +658,11 @@ async function loadWithdrawalRequests() {
         }
         
         content.innerHTML = `<h3 style="color:#ffd700;">💰 Pending Withdrawals</h3>
-        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody>${pending || '<td><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Wallet Address</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody>${pending || '<td><td colspan="6">None<\/td><\/tr>'}<\/tbody><\/table><\/div>
         <h3 style="color:#ffd700; margin-top:30px;">📜 Withdrawal History</h3>
-        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody>${history || '<td><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Wallet Address</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>${history || '<td><td colspan="6">None<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
     } catch(e) { console.error(e); }
 }
 

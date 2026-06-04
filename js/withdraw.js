@@ -56,7 +56,8 @@ async function submitWithdraw() {
             username: user.username,
             amount: parseFloat(amount),
             status: 'pending',
-            requestDate: new Date().toISOString()
+            requestDate: new Date().toISOString(),
+            walletAddress: user.walletAddress || ''
         };
         
         await database.ref('withdrawals/' + withdrawId).set(withdrawData);
