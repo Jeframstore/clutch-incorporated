@@ -75,7 +75,21 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             
             await database.ref('users/' + userId).set(newUser);
-            
+
+            // Send welcome email
+            try {
+                const emailTemplateSnap = await database.ref('settings/emailTemplates/welcome').once('value');
+                const emailTemplate = emailTemplateSnap.val();
+                const customMessage = emailTemplate ? emailTemplate.body : 'Welcome to Clutch Incorporated! Your account has been successfully created.';
+
+                // Import email service dynamically
+                const { sendWelcomeEmail } = await import('./email-service.js');
+                await sendWelcomeEmail(email, username, inviteCode, userId, customMessage);
+            } catch (emailError) {
+                console.error('Error sending welcome email:', emailError);
+                // Continue with registration even if email fails
+            }
+
             showSuccess('Registration successful! Please login.');
             setTimeout(() => { window.location.href = 'index.html'; }, 2000);
             

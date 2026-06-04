@@ -25,5 +25,8 @@
     "postcss": "^8.5.15",
     "postcss-cli": "^11.0.1",
     "tailwindcss": "^4.3.0"
+  },
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1"
   }
 }

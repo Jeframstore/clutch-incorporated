@@ -48,6 +48,7 @@ function loadSidebar() {
         <button class="nav-item" data-page="deposits">💳 Deposit Records</button>
         <button class="nav-item" data-page="opentrades">📈 Open Trades <span id="openTradesBadge" class="sidebar-badge"></span></button>
         <button class="nav-item" data-page="content">📝 Content Management</button>
+        <button class="nav-item" data-page="email">📧 Email Management</button>
         <button class="nav-item" data-page="vip">⭐ VIP Settings</button>
         <button class="nav-item" data-page="service">📞 Service Settings</button>
         <button class="nav-item" data-page="wallet">🏦 Wallet Settings</button>
@@ -76,6 +77,7 @@ function loadSidebar() {
             else if (page === 'deposits') loadDepositRecords();
             else if (page === 'opentrades') loadOpenTrades();
             else if (page === 'content') loadContentManagement();
+            else if (page === 'email') loadEmailManagement();
             else if (page === 'vip') loadVIPSettings();
             else if (page === 'service') loadServiceSettings();
             else if (page === 'wallet') loadWalletSettings();
@@ -975,6 +977,144 @@ async function loadContentManagement() {
     
     const faqsBtn = document.getElementById('saveFaqsBtn');
     if (faqsBtn) faqsBtn.addEventListener('click', async () => { await database.ref('settings/faqsPDF').set(document.getElementById('faqsPDF').value); Swal.fire('Saved', 'FAQS saved!', 'success'); });
+}
+
+async function loadEmailManagement() {
+    const content = document.getElementById('adminContent');
+    if (!content) return;
+
+    const emailTemplateSnap = await database.ref('settings/emailTemplates/welcome').once('value');
+    const emailTemplate = emailTemplateSnap.val() || { body: 'Welcome to Clutch Incorporated! Your account has been successfully created.' };
+
+    content.innerHTML = `
+        <h3 style="color:#ffd700; margin-bottom:20px;">📧 Email Management</h3>
+        
+        <div class="form-group" style="margin-bottom:30px;">
+            <label>📝 Welcome Email Template</label>
+            <p style="color:#888; font-size:12px; margin-bottom:10px;">Use {name}, {invitationCode}, and {userId} as placeholders</p>
+            <textarea id="welcomeEmailTemplate" rows="5" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px;">${emailTemplate.body}</textarea>
+            <button class="save-btn" id="saveWelcomeTemplateBtn" style="margin-top:10px;">Save Template</button>
+        </div>
+
+        <div class="form-group" style="margin-bottom:30px;">
+            <label>📤 Send Individual Email</label>
+            <select id="emailUserSelect" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px; margin-bottom:10px;">
+                <option value="">Select User</option>
+            </select>
+            <input type="text" id="emailSubject" placeholder="Subject" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px; margin-bottom:10px;">
+            <textarea id="emailMessage" rows="4" placeholder="Message" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px; margin-bottom:10px;"></textarea>
+            <button class="save-btn" id="sendIndividualEmailBtn">Send Email</button>
+        </div>
+
+        <div class="form-group">
+            <label>📢 Send Bulk Email to All Users</label>
+            <input type="text" id="bulkEmailSubject" placeholder="Subject" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px; margin-bottom:10px;">
+            <textarea id="bulkEmailMessage" rows="4" placeholder="Message" style="width:100%; background:#333; color:white; padding:10px; border-radius:8px; margin-bottom:10px;"></textarea>
+            <button class="save-btn" id="sendBulkEmailBtn">Send to All Users</button>
+        </div>
+    `;
+
+    // Load users for individual email
+    const usersSnap = await database.ref('users').once('value');
+    const users = usersSnap.val() || {};
+    const userSelect = document.getElementById('emailUserSelect');
+    if (userSelect) {
+        for (let id in users) {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = `${users[id].username} (${users[id].email})`;
+            userSelect.appendChild(option);
+        }
+    }
+
+    // Save welcome template
+    const saveTemplateBtn = document.getElementById('saveWelcomeTemplateBtn');
+    if (saveTemplateBtn) {
+        saveTemplateBtn.addEventListener('click', async () => {
+            const body = document.getElementById('welcomeEmailTemplate').value;
+            await database.ref('settings/emailTemplates/welcome').set({ body });
+            Swal.fire('Saved', 'Welcome email template saved!', 'success');
+        });
+    }
+
+    // Send individual email
+    const sendIndividualBtn = document.getElementById('sendIndividualEmailBtn');
+    if (sendIndividualBtn) {
+        sendIndividualBtn.addEventListener('click', async () => {
+            const userId = document.getElementById('emailUserSelect').value;
+            const subject = document.getElementById('emailSubject').value;
+            const message = document.getElementById('emailMessage').value;
+
+            if (!userId || !subject || !message) {
+                Swal.fire('Error', 'Please fill all fields', 'error');
+                return;
+            }
+
+            const user = users[userId];
+            if (!user || !user.email) {
+                Swal.fire('Error', 'User not found or no email', 'error');
+                return;
+            }
+
+            try {
+                const { sendCustomEmail } = await import('./email-service.js');
+                const result = await sendCustomEmail(user.email, user.username, subject, message);
+                if (result) {
+                    Swal.fire('Success', 'Email sent successfully!', 'success');
+                    document.getElementById('emailSubject').value = '';
+                    document.getElementById('emailMessage').value = '';
+                } else {
+                    Swal.fire('Error', 'Failed to send email. Check console for details.', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending email:', error);
+                Swal.fire('Error', 'Failed to send email: ' + error.message, 'error');
+            }
+        });
+    }
+
+    // Send bulk email
+    const sendBulkBtn = document.getElementById('sendBulkEmailBtn');
+    if (sendBulkBtn) {
+        sendBulkBtn.addEventListener('click', async () => {
+            const subject = document.getElementById('bulkEmailSubject').value;
+            const message = document.getElementById('bulkEmailMessage').value;
+
+            if (!subject || !message) {
+                Swal.fire('Error', 'Please fill subject and message', 'error');
+                return;
+            }
+
+            const result = await Swal.fire({
+                title: 'Send Bulk Email?',
+                text: `This will send an email to ${Object.keys(users).length} users. Continue?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Send',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const { sendBulkEmail } = await import('./email-service.js');
+                const usersArray = Object.values(users).filter(u => u.email);
+                const result = await sendBulkEmail(usersArray, subject, message);
+                
+                Swal.fire(
+                    'Bulk Email Sent',
+                    `Success: ${result.successCount}, Failed: ${result.failureCount}, Total: ${result.total}`,
+                    result.failureCount === 0 ? 'success' : 'warning'
+                );
+                
+                document.getElementById('bulkEmailSubject').value = '';
+                document.getElementById('bulkEmailMessage').value = '';
+            } catch (error) {
+                console.error('Error sending bulk email:', error);
+                Swal.fire('Error', 'Failed to send bulk email: ' + error.message, 'error');
+            }
+        });
+    }
 }
 
 function loadVIPSettings() {
