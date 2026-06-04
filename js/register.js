@@ -82,8 +82,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const emailTemplate = emailTemplateSnap.val();
                 const customMessage = emailTemplate ? emailTemplate.body : 'Welcome to Clutch Incorporated! Your account has been successfully created.';
 
-                // Import email service dynamically
-                const { sendWelcomeEmail } = await import('./email-service.js');
                 await sendWelcomeEmail(email, username, inviteCode, userId, customMessage);
             } catch (emailError) {
                 console.error('Error sending welcome email:', emailError);

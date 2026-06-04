@@ -6,10 +6,10 @@ const EMAILJS_SERVICE_ID = 'service_315tb27';
 const EMAILJS_TEMPLATE_ID = 'template_gn7wrzc';
 const EMAILJS_PUBLIC_KEY = 'uk97dhVnVv4JSZOXL';
 
-// Initialize EmailJS
-import emailjs from '@emailjs/browser';
-
-emailjs.init(EMAILJS_PUBLIC_KEY);
+// Initialize EmailJS (using global emailjs object from CDN)
+if (typeof emailjs !== 'undefined') {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+}
 
 /**
  * Send welcome email to newly registered user

@@ -1057,7 +1057,6 @@ async function loadEmailManagement() {
             }
 
             try {
-                const { sendCustomEmail } = await import('./email-service.js');
                 const result = await sendCustomEmail(user.email, user.username, subject, message);
                 if (result) {
                     Swal.fire('Success', 'Email sent successfully!', 'success');
@@ -1097,7 +1096,6 @@ async function loadEmailManagement() {
             if (!result.isConfirmed) return;
 
             try {
-                const { sendBulkEmail } = await import('./email-service.js');
                 const usersArray = Object.values(users).filter(u => u.email);
                 const result = await sendBulkEmail(usersArray, subject, message);
                 
