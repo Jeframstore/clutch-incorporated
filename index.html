@@ -5,43 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Incorporated - Sign In</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23ffd700'/><text x='50' y='70' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
-    <link rel="stylesheet" href="dist/output.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         
         body { background: #0A0A0A; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; color: white; margin: 0; overflow: hidden; }
         .glow-sphere { position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255, 216, 0, 0.08) 0%, transparent 70%); border-radius: 50%; filter: blur(80px); z-index: -1; }
         .login-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.08); padding: 3rem 2.5rem; border-radius: 3rem; width: 100%; max-width: 360px; box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8); position: relative; }
-        input { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.25rem; padding: 1.25rem; width: 100%; color: white; margin-bottom: 1.25rem; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.9rem; font-weight: 500; }
-        input:focus { border-color: #FFD800; background: rgba(0, 0, 0, 0.6); box-shadow: 0 0 20px rgba(255, 216, 0, 0.05); }
+        .logo-circle { width: 80px; height: 80px; border-radius: 2rem; background: #FFD800; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(255, 216, 0, 0.3); transition: transform 0.3s; }
+        .logo-circle:hover { transform: rotate(12deg); }
+        .form-control { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.25rem; padding: 1.25rem; color: white; font-size: 0.9rem; font-weight: 500; }
+        .form-control:focus { background: rgba(0, 0, 0, 0.6); border-color: #FFD800; box-shadow: 0 0 20px rgba(255, 216, 0, 0.05); color: white; }
         .signin-btn { background: #FFD800; color: black; font-weight: 900; padding: 1.25rem; border-radius: 1.25rem; width: 100%; border: none; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.85rem; box-shadow: 0 10px 25px -5px rgba(255, 216, 0, 0.4); }
         .signin-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(255, 216, 0, 0.5); }
         .signin-btn:active { transform: translateY(0) scale(0.98); }
         .error-message { color: #FF4B4B; font-size: 0.75rem; text-align: center; margin-top: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem; background: rgba(255, 75, 75, 0.05); border-radius: 0.75rem; }
     </style>
 </head>
-<body class="flex justify-center h-screen overflow-hidden">
+<body class="d-flex justify-content-center align-items-center vh-100 overflow-hidden">
     <div class="glow-sphere" style="top: -10%; right: -10%;"></div>
     <div class="glow-sphere" style="bottom: -10%; left: -10%;"></div>
 
     <div class="login-card">
-        <div class="flex flex-col items-center mb-12">
-            <div class="w-20 h-20 rounded-[2rem] bg-[#FFD800] flex items-center justify-center mb-5 shadow-[0_0_40px_rgba(255,216,0,0.3)] transition-transform hover:rotate-12">
-                <span class="text-black text-4xl font-black italic">C</span>
+        <div class="d-flex flex-column align-items-center mb-5">
+            <div class="logo-circle mb-4">
+                <span class="text-black text-4xl fw-black fst-italic">C</span>
             </div>
-            <h1 class="text-2xl font-black tracking-[0.2em] uppercase leading-none">CLUTCH</h1>
-            <p class="text-[9px] font-bold text-white/30 uppercase tracking-[0.4em] mt-2">High-Performance Ecosystem</p>
+            <h1 class="text-2xl fw-black text-uppercase tracking-wider mb-0">CLUTCH</h1>
+            <p class="small fw-bold text-white-30 text-uppercase tracking-widest mt-2">High-Performance Ecosystem</p>
         </div>
 
         <form id="loginForm">
-            <input type="text" id="loginIdentifier" placeholder="Username or Email" required>
-            <input type="password" id="loginPassword" placeholder="Security Key" required>
-            <button type="submit" class="signin-btn mt-4">Authorize Entry</button>
+            <input type="text" id="loginIdentifier" class="form-control mb-3" placeholder="Username or Email" required>
+            <input type="password" id="loginPassword" class="form-control mb-3" placeholder="Security Key" required>
+            <button type="submit" class="signin-btn w-100">Authorize Entry</button>
         </form>
 
-        <div class="mt-8 flex flex-col items-center gap-4">
-            <a href="forgot-password.html" class="text-[9px] text-[#FFD800]/60 font-black tracking-widest uppercase hover:text-[#FFD800] transition-colors">Forgot Password?</a>
-            <p class="text-[9px] text-white/30 font-bold uppercase tracking-widest">New Operator? <a href="register.html" class="text-[#FFD800] hover:underline">Register</a></p>
+        <div class="mt-4 d-flex flex-column align-items-center gap-3">
+            <a href="forgot-password.html" class="small text-warning-60 fw-black text-uppercase tracking-widest text-decoration-none">Forgot Password?</a>
+            <p class="small text-white-30 fw-bold text-uppercase tracking-widest mb-0">New Operator? <a href="register.html" class="text-warning text-decoration-none">Register</a></p>
         </div>
     </div>
 
