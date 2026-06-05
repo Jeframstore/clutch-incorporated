@@ -1,4 +1,5 @@
 // Admin Login - Original Working Version
+import { database } from './firebase-config.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('adminLoginForm');

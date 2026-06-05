@@ -1,4 +1,4 @@
-// Starting Page - Simplified Working Version
+// Starting Page\nimport { database } from './firebase-config.js'; - Simplified Working Version
 
 let currentImageIndex = 0;
 let currentImages = [];

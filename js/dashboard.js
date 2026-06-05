@@ -1,4 +1,4 @@
-// Dashboard - Complete with Fixed Sign-In
+// Dashboard - Complete with Fixed Sign-In\nimport { database } from './firebase-config.js';
 
 let userId = null;
 

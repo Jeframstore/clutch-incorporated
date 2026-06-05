@@ -1,4 +1,4 @@
-// Trading Page - New Order System with Firebase
+// Trading Page\nimport { database } from './firebase-config.js'; - New Order System with Firebase
 
 let userId = null;
 let currentSymbol = 'BTC';

@@ -13,4 +13,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+// Export database for module imports
+export { database };
+
 console.log("✅ Firebase connected successfully!");

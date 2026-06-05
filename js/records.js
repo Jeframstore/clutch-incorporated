@@ -1,4 +1,4 @@
-﻿// Records Page - Firebase realtime version
+// Records Page\nimport { database } from './firebase-config.js'; - Firebase realtime version
 
 let allRecords = [];
 let activeTab = 'all';

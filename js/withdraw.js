@@ -1,4 +1,4 @@
-// Withdraw Page - Firebase Version
+// Withdraw Page\nimport { database } from './firebase-config.js'; - Firebase Version
 
 let userId = null;
 

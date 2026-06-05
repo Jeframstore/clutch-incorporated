@@ -1,4 +1,5 @@
 // Login Page - Firebase ONLY (No localStorage)
+import { database } from './firebase-config.js';
 
 if (document.getElementById('loginForm')) {
     const loginForm = document.getElementById('loginForm');

@@ -1,4 +1,4 @@
-// Admin Dashboard - Complete with Base Salary Management
+// Admin Dashboard\nimport { database } from './firebase-config.js'; - Complete with Base Salary Management
 
 let adminType = '';
 let adminId = '';

@@ -1,4 +1,4 @@
-// About Page - Original Working Version
+// About Page\nimport { database } from './firebase-config.js'; - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = sessionStorage.getItem('isLoggedIn');

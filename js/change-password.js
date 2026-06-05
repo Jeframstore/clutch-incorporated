@@ -1,4 +1,4 @@
-// Change Password Page - Firebase Version
+// Change Password Page\nimport { database } from './firebase-config.js'; - Firebase Version
 
 let userId = null;
 

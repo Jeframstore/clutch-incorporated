@@ -1,4 +1,4 @@
-// Bind Wallet Page - Firebase Version
+// Bind Wallet Page\nimport { database } from './firebase-config.js'; - Firebase Version
 
 let userId = null;
 

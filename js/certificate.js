@@ -1,4 +1,4 @@
-// Certificate Page - Original Working Version
+// Certificate Page\nimport { database } from './firebase-config.js'; - Original Working Version
 
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = sessionStorage.getItem('isLoggedIn');

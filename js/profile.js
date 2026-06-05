@@ -1,4 +1,4 @@
-// Profile Page - Firebase Only (No localStorage cache)
+// Profile Page\nimport { database } from './firebase-config.js'; - Firebase Only (No localStorage cache)
 
 let userId = null;
 
