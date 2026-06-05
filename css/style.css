@@ -1,0 +1,89 @@
+/* High-Octane Theme - Global Styles */
+
+:root {
+    --bg-page: #0A0A0A;
+    --bg-surface: #1B1B1B;
+    --primary-gold: #FFD800;
+    --accent-green: #80FF00;
+    --text-main: #FFFFFF;
+    --text-muted: rgba(255, 255, 255, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.05);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    margin: 0;
+    min-height: 100vh;
+}
+
+.font-jakarta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Glassmorphism Primitives */
+.glass-surface {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+}
+
+.glass-header {
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Responsive Container */
+.app-container {
+    width: 100%;
+    max-width: 375px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background-color: var(--bg-page);
+    position: relative;
+    border-left: 1px solid var(--glass-border);
+    border-right: 1px solid var(--glass-border);
+}
+
+/* Typography Utility */
+.text-gold { color: var(--primary-gold); }
+.text-green { color: var(--accent-green); }
+.text-muted { color: var(--text-muted); }
+
+/* Common Components */
+.card-octane {
+    background: linear-gradient(135deg, #1B1B1B 0%, #0F0F0F 100%);
+    border: 1px solid var(--glass-border);
+    border-radius: 2rem;
+    padding: 1.5rem;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.btn-gold {
+    background-color: var(--primary-gold);
+    color: #000;
+    font-weight: 800;
+    border: none;
+    border-radius: 1.25rem;
+    padding: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s;
+    box-shadow: 0 10px 25px -5px rgba(255, 216, 0, 0.4);
+}
+
+.btn-gold:active {
+    transform: scale(0.98);
+}
+
+/* Hide Scrollbar */
+::-webkit-scrollbar {
+    display: none;
+}

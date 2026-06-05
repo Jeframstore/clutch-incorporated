@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Database - Clutch Incorporated</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #FFD800;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #FFC000;
+        }
+        button.danger {
+            background: #FF4B4B;
+            color: white;
+        }
+        button.danger:hover {
+            background: #FF0000;
+        }
+        #log {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #80FF00; }
+        .error { color: #FF4B4B; }
+        .warning { color: #FFD800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Clear Database</h1>
+        <p><strong>WARNING: This will delete ALL data from the database except the Master Admin account.</strong></p>
+        <p>This action cannot be undone. Please proceed with caution.</p>
+        
+        <button onclick="previewDatabase()">📋 Preview Database</button>
+        <button onclick="clearDatabase()" class="danger">🗑️ Clear Database (Keep Master Admin)</button>
+        
+        <div id="log"></div>
+    </div>
+
+    <script>
+        const logDiv = document.getElementById('log');
+
+        function log(message, type = '') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type ? ` class="${type}"` : '';
+            logDiv.innerHTML += `<div${className}>[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function previewDatabase() {
+            log('📋 Previewing database structure...', 'warning');
+            
+            try {
+                const snapshot = await database.ref('/').once('value');
+                const data = snapshot.val();
+                
+                log('Database structure:', 'warning');
+                log(JSON.stringify(data, null, 2), 'warning');
+            } catch (error) {
+                log('Error previewing database: ' + error.message, 'error');
+            }
+        }
+
+        async function clearDatabase() {
+            if (!confirm('⚠️ WARNING: This will delete ALL data except the Master Admin. Are you sure you want to continue?')) {
+                log('❌ Operation cancelled by user', 'error');
+                return;
+            }
+
+            if (!confirm('🚨 FINAL WARNING: This action is IRREVERSIBLE. All users, tasks, codes, and records will be deleted. Only the Master Admin will remain. Continue?')) {
+                log('❌ Operation cancelled by user', 'error');
+                return;
+            }
+
+            log('🚀 Starting database cleanup...', 'warning');
+
+            try {
+                // Step 1: Get Master Admin data
+                log('📥 Retrieving Master Admin data...', 'warning');
+                const adminsSnapshot = await database.ref('admins').once('value');
+                const admins = adminsSnapshot.val() || {};
+                
+                let masterAdmin = null;
+                let masterAdminId = null;
+                
+                for (let id in admins) {
+                    if (admins[id].type === 'master') {
+                        masterAdmin = admins[id];
+                        masterAdminId = id;
+                        break;
+                    }
+                }
+
+                if (!masterAdmin) {
+                    log('❌ No Master Admin found! Aborting.', 'error');
+                    return;
+                }
+
+                log(`✅ Found Master Admin: ${masterAdmin.username} (${masterAdminId})`, 'success');
+
+                // Step 2: Delete all data except admins
+                log('🗑️ Deleting all data from database...', 'warning');
+                
+                const pathsToDelete = [
+                    'users',
+                    'tasks',
+                    'invitationCodes',
+                    'withdrawalRequests',
+                    'depositRecords',
+                    'openTrades',
+                    'settings'
+                ];
+
+                for (const path of pathsToDelete) {
+                    log(`📁 Deleting ${path}...`, 'warning');
+                    await database.ref(path).remove();
+                    log(`✅ Deleted ${path}`, 'success');
+                }
+
+                // Step 3: Delete all admins except Master Admin
+                log('👥 Deleting all admins except Master Admin...', 'warning');
+                for (let id in admins) {
+                    if (id !== masterAdminId) {
+                        log(`🗑️ Deleting admin: ${admins[id].username} (${id})`, 'warning');
+                        await database.ref(`admins/${id}`).remove();
+                        log(`✅ Deleted admin: ${admins[id].username}`, 'success');
+                    }
+                }
+
+                // Step 4: Verify Master Admin still exists
+                log('🔍 Verifying Master Admin still exists...', 'warning');
+                const masterAdminCheck = await database.ref(`admins/${masterAdminId}`).once('value');
+                if (masterAdminCheck.exists()) {
+                    log(`✅ Master Admin verified: ${masterAdminCheck.val().username}`, 'success');
+                } else {
+                    log('❌ ERROR: Master Admin was deleted!', 'error');
+                }
+
+                // Step 5: Verify all other data is deleted
+                log('🔍 Verifying cleanup...', 'warning');
+                const finalSnapshot = await database.ref('/').once('value');
+                const finalData = finalSnapshot.val();
+                
+                log('📋 Final database structure:', 'warning');
+                log(JSON.stringify(finalData, null, 2), 'warning');
+
+                log('✅ Database cleanup completed successfully!', 'success');
+                log('🎉 Only the Master Admin remains in the database.', 'success');
+
+            } catch (error) {
+                log('❌ Error during database cleanup: ' + error.message, 'error');
+                log('Stack trace: ' + error.stack, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
