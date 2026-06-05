@@ -54,11 +54,14 @@ async function sendCustomEmail(toEmail, toName, subject, message) {
             message: message
         };
 
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+        console.log('Sending email with params:', templateParams);
+        const response = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+        console.log('EmailJS response:', response);
         console.log('Custom email sent successfully to:', toEmail);
         return true;
     } catch (error) {
         console.error('Error sending custom email:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         return false;
     }
 }
