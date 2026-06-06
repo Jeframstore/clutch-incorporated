@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Register - Clutch Revenue</title>
+    <title>Register - Clutch Incorporated</title>
     <style>
         * {
             margin: 0;
@@ -110,13 +110,14 @@
             text-decoration: none;
         }
     </style>
+    <!-- Firebase SDK - loaded once -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="register-card">
         <div class="logo-area">
-            <img src="assets/images/logo.svg" alt="Logo" style="width: 80px; height: 80px; margin-bottom: 10px;">
+            <div class="big-c">C</div>
             <h2>Create Account</h2>
         </div>
         
@@ -156,11 +157,10 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Firebase config - loaded once -->
     <script src="js/firebase-config.js"></script>
     <script>
-        const database = firebase.database();
+        // database is already defined in firebase-config.js - DO NOT redeclare
         
         const registerForm = document.getElementById('registerForm');
         const messageDiv = document.getElementById('message');
@@ -254,6 +254,7 @@
                 }, 2000);
                 
             } catch (error) {
+                console.error('Registration error:', error);
                 messageDiv.innerHTML = '<div class="error-message">Database error. Please try again.</div>';
             }
         });
