@@ -156,18 +156,10 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBwf-rkEWsNJRkh_TJeMSoNDc1iwO1c6tI",
-            authDomain: "clutch-incorporated.firebaseapp.com",
-            projectId: "clutch-incorporated",
-            storageBucket: "clutch-incorporated.firebasestorage.app",
-            messagingSenderId: "515595231583",
-            appId: "1:515595231583:web:73ff8c3cdc123dcbce16ea",
-            databaseURL: "https://clutch-incorporated-default-rtdb.firebaseio.com"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         
         const registerForm = document.getElementById('registerForm');
