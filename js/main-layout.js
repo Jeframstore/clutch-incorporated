@@ -32,17 +32,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     await loadUserProfile();
+    await loadLogo();           // ← ADDED: Load logo from Firebase
     await loadLivePrices();
     
     startPriceUpdates();
     
-    // Setup mobile menu toggle
     setupMobileMenu();
-    
-    // Setup coin dropdown
     setupCoinDropdown();
-    
-    // Set active navigation
     setActiveNav();
 });
 
@@ -52,13 +48,11 @@ async function loadUserProfile() {
         const user = snapshot.val();
         
         if (user) {
-            // Update username
             const usernameElements = document.querySelectorAll('.username');
             usernameElements.forEach(el => {
                 el.textContent = user.username;
             });
             
-            // Update account details
             const joinedDate = user.joinedDate || '2024-01-01';
             const inviteCode = user.inviteCode || 'N/A';
             const balance = parseFloat(user.balance || 0).toFixed(2);
@@ -72,7 +66,6 @@ async function loadUserProfile() {
             const balanceEl = document.getElementById('profileBalance');
             if (balanceEl) balanceEl.textContent = balance + ' USDT';
             
-            // Update local storage
             localStorage.setItem('username', user.username);
             localStorage.setItem('userInviteCode', inviteCode);
             localStorage.setItem('walletBalance', balance);
@@ -80,6 +73,24 @@ async function loadUserProfile() {
         }
     } catch (error) {
         console.error('Error loading user profile:', error);
+    }
+}
+
+// Load logo from Firebase (admin uploaded)
+async function loadLogo() {
+    try {
+        const snapshot = await database.ref('settings/logoURL').once('value');
+        const logoDataURL = snapshot.val();
+        const logoImg = document.getElementById('siteLogo');
+        
+        if (logoImg && logoDataURL) {
+            logoImg.src = logoDataURL;
+            logoImg.style.display = 'block';
+        } else if (logoImg) {
+            logoImg.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading logo:', error);
     }
 }
 
@@ -154,7 +165,6 @@ function displayProfileCoins(priceData) {
         coinsListContainer.appendChild(coinItem);
     }
     
-    // Store all coin data for dropdown
     allCoins = [];
     for (const symbol of COINS.slice(5)) {
         const data = priceData[symbol];
@@ -199,11 +209,10 @@ function setupCoinDropdown() {
 
 function startPriceUpdates() {
     loadLivePrices();
-    priceUpdateInterval = setInterval(loadLivePrices, 30000); // Update every 30 seconds
+    priceUpdateInterval = setInterval(loadLivePrices, 30000);
 }
 
 function setupMobileMenu() {
-    // Check if mobile menu button exists, if not create it
     if (!document.querySelector('.mobile-menu-btn')) {
         const btn = document.createElement('button');
         btn.className = 'mobile-menu-btn';
@@ -214,7 +223,6 @@ function setupMobileMenu() {
         document.body.appendChild(btn);
     }
     
-    // Close sidebar when clicking outside on mobile
     document.addEventListener('click', function(e) {
         const sidebar = document.querySelector('.sidebar');
         const menuBtn = document.querySelector('.mobile-menu-btn');
