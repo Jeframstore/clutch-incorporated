@@ -1,17 +1,17 @@
-// Dashboard - Complete with Fixed Sign-In\nimport { database } from './firebase-config.js';
+// Dashboard - Complete with Fixed Sign-In
 
 let userId = null;
 
 document.addEventListener('DOMContentLoaded', async function() {
-    userId = sessionStorage.getItem('userId');
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+    userId = localStorage.getItem('userId');
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
     
     if (!isLoggedIn || isLoggedIn !== 'true' || !userId) {
         window.location.href = 'index.html';
         return;
     }
     
-    attachUserDataListener();
+    await loadUserData();
     loadMarketPrices();
     
     // Profile Menu
@@ -71,27 +71,22 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function logout() {
-    sessionStorage.clear();
+    localStorage.clear();
     window.location.href = 'index.html';
 }
 
-function attachUserDataListener() {
+async function loadUserData() {
     try {
         if (!userId) return;
-
-        database.ref('users/' + userId).on('value', async function(snapshot) {
-            const user = snapshot.val();
-
+        
+        const snapshot = await database.ref('users/' + userId).once('value');
+        const user = snapshot.val();
+        
         if (user) {
             // Update display from Firebase
             const usernameDisplay = document.getElementById('usernameDisplay');
             if (usernameDisplay) {
                 usernameDisplay.textContent = user.username || 'User';
-            }
-
-            const totalBalanceDisplay = document.getElementById('totalBalanceDisplay');
-            if (totalBalanceDisplay) {
-                totalBalanceDisplay.textContent = parseFloat(user.balance || 0).toFixed(2);
             }
             
             // Process sign-in streak
@@ -117,7 +112,6 @@ function attachUserDataListener() {
             
             // Check if completed 15 days - payout and reset
             if (streak >= 15 && lastSignIn !== today) {
-                // Add base salary to balance
                 const currentBalance = parseFloat(user.balance || 0);
                 await database.ref('users/' + userId).update({
                     balance: currentBalance + baseSalary,
@@ -132,7 +126,6 @@ function attachUserDataListener() {
             // Check if signed in today
             if (lastSignIn !== today) {
                 streak++;
-                // Reward formula: +150 day 1, +50 each day for 15 days
                 const todayReward = streak <= 15 ? (streak === 1 ? 150 : 50) : 0;
                 baseSalary += todayReward;
                 
@@ -159,7 +152,6 @@ function attachUserDataListener() {
                     }, 500);
                 }
             } else {
-                // Update display with existing values
                 const baseSalaryElement = document.getElementById('baseSalary');
                 if (baseSalaryElement) {
                     baseSalaryElement.textContent = baseSalary.toFixed(2);
@@ -171,7 +163,6 @@ function attachUserDataListener() {
                 }
             }
         }
-        });
     } catch (error) {
         console.error('Error loading user data:', error);
     }
@@ -182,101 +173,74 @@ async function loadMarketPrices() {
         const coinsGrid = document.getElementById('coinsGrid');
         if (!coinsGrid) return;
 
-        // Show 6 coins: BTC, ETH, BNB, SOL, USDT, USDC
-        const displayCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'USDT', 'USDC'];
+        // Show coins: BTC, ETH, BNB, SOL, XRP, USDT
+        const displayCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'USDT'];
         
-        // Fetch prices from Binance
-        const response = await fetch('https://api.binance.com/api/v3/ticker/price');
+        // CoinGecko IDs
+        const coinIds = {
+            'BTC': 'bitcoin',
+            'ETH': 'ethereum',
+            'BNB': 'binancecoin',
+            'SOL': 'solana',
+            'XRP': 'ripple',
+            'USDT': 'tether'
+        };
+        
+        // Fetch prices from CoinGecko
+        const ids = Object.values(coinIds).join(',');
+        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
         const data = await response.json();
         
-        const prices = {};
-        data.forEach(ticker => {
-            const symbol = ticker.symbol.replace('USDT', '');
-            if (displayCoins.includes(symbol)) {
-                prices[symbol] = parseFloat(ticker.price);
-            }
-        });
-
-        // Calculate profit (mock calculation - in real app this would come from database)
-        const profits = {
-            'BTC': 2.5,
-            'ETH': 1.8,
-            'BNB': 3.2,
-            'SOL': 4.1,
-            'USDT': 0.01,
-            'USDC': 0.01
-        };
-
         let html = '';
-        displayCoins.forEach(coin => {
-            const price = prices[coin] || 0;
-            const profit = profits[coin] || 0;
-            const graphColor = profit > 0 ? '#00ff88' : '#ff4444';
-            const arrow = profit > 0 ? '↑' : '↓';
+        for (const coin of displayCoins) {
+            const coinId = coinIds[coin];
+            const priceData = data[coinId];
             
-            html += `
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <span class="coin-name">${coin}</span>
-                        <span class="coin-price">$${price.toFixed(2)}</span>
+            if (priceData) {
+                const price = priceData.usd;
+                const change24h = priceData.usd_24h_change || 0;
+                const changeColor = change24h >= 0 ? '#00ff88' : '#ff4444';
+                const changeSymbol = change24h >= 0 ? '↑' : '↓';
+                
+                html += `
+                    <div class="coin-card">
+                        <div class="coin-header">
+                            <span class="coin-name">${coin}</span>
+                            <span class="coin-price">$${price.toFixed(2)}</span>
+                        </div>
+                        <div class="coin-profit" style="color: ${changeColor}">
+                            ${changeSymbol} ${Math.abs(change24h).toFixed(2)}%
+                        </div>
                     </div>
-                    <div class="coin-profit" style="color: ${graphColor}">
-                        ${arrow} ${profit > 0 ? '+' : ''}${profit}%
+                `;
+            } else {
+                html += `
+                    <div class="coin-card">
+                        <div class="coin-header">
+                            <span class="coin-name">${coin}</span>
+                            <span class="coin-price">$0.00</span>
+                        </div>
+                        <div class="coin-profit">Loading...</div>
                     </div>
-                    <div class="coin-graph">
-                        <svg width="100%" height="60" viewBox="0 0 200 60">
-                            <defs>
-                                <linearGradient id="grad-${coin}" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" style="stop-color:${graphColor};stop-opacity:0.3" />
-                                    <stop offset="100%" style="stop-color:${graphColor};stop-opacity:0" />
-                                </linearGradient>
-                            </defs>
-                            <polygon
-                                fill="url(#grad-${coin})"
-                                points="10,60 ${generateGraphPoints(profit)} 190,60"
-                                style="opacity: 0.5"
-                            />
-                            <polyline
-                                fill="none"
-                                stroke="${graphColor}"
-                                stroke-width="3"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                points="${generateGraphPoints(profit)}"
-                                style="filter: drop-shadow(0 0 4px ${graphColor})"
-                            />
-                        </svg>
-                    </div>
-                </div>
-            `;
-        });
+                `;
+            }
+        }
         
         coinsGrid.innerHTML = html;
+        
     } catch (error) {
         console.error('Error loading market prices:', error);
+        // Show fallback prices
+        const coinsGrid = document.getElementById('coinsGrid');
+        if (coinsGrid) {
+            coinsGrid.innerHTML = `
+                <div class="coin-card"><div class="coin-header"><span class="coin-name">BTC</span><span class="coin-price">$60,619</span></div><div class="coin-profit" style="color: #00ff88">↑ 2.5%</div></div>
+                <div class="coin-card"><div class="coin-header"><span class="coin-name">ETH</span><span class="coin-price">$1,553</span></div><div class="coin-profit" style="color: #00ff88">↑ 1.8%</div></div>
+                <div class="coin-card"><div class="coin-header"><span class="coin-name">BNB</span><span class="coin-price">$577</span></div><div class="coin-profit" style="color: #ff4444">↓ 0.5%</div></div>
+                <div class="coin-card"><div class="coin-header"><span class="coin-name">SOL</span><span class="coin-price">$64.76</span></div><div class="coin-profit" style="color: #00ff88">↑ 3.2%</div></div>
+                <div class="coin-card"><div class="coin-header"><span class="coin-name">XRP</span><span class="coin-price">$1.11</span></div><div class="coin-profit" style="color: #ff4444">↓ 1.2%</div></div>
+                <div class="coin-card"><div class="coin-header"><span class="coin-name">USDT</span><span class="coin-price">$1.00</span></div><div class="coin-profit" style="color: #00ff88">↑ 0.01%</div></div>
+            `;
+        }
     }
-}
-
-function generateGraphPoints(profit) {
-    // Generate realistic-looking graph points based on profit
-    const points = [];
-    const baseY = 40;
-    const amplitude = Math.min(Math.abs(profit) * 3, 20); // Cap amplitude
-    const trend = profit > 0 ? -1 : 1; // Upward for profit, downward for loss
-    
-    // Generate 12 points for smoother curve
-    for (let i = 0; i <= 12; i++) {
-        const x = (i / 12) * 180 + 10; // Spread across width with padding
-        const progress = i / 12;
-        
-        // Combine trend with some randomness for realistic look
-        const noise = Math.sin(progress * 3) * 3 + Math.cos(progress * 5) * 2;
-        const y = baseY + (trend * amplitude * progress) + noise;
-        
-        // Clamp y to stay within bounds
-        const clampedY = Math.max(5, Math.min(55, y));
-        points.push(`${x},${clampedY}`);
-    }
-    
-    return points.join(' ');
 }
