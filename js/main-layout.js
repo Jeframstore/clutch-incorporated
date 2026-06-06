@@ -35,10 +35,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadLivePrices();
     
     startPriceUpdates();
+    
+    // Setup mobile menu toggle
     setupMobileMenu();
+    
+    // Setup coin dropdown
     setupCoinDropdown();
+    
+    // Set active navigation
     setActiveNav();
-    setupLogout();
 });
 
 async function loadUserProfile() {
@@ -47,12 +52,14 @@ async function loadUserProfile() {
         const user = snapshot.val();
         
         if (user) {
+            // Update username
             const usernameElements = document.querySelectorAll('.username');
             usernameElements.forEach(el => {
                 el.textContent = user.username;
             });
             
-            const joinedDate = user.joinedDate || new Date().toISOString().split('T')[0];
+            // Update account details
+            const joinedDate = user.joinedDate || '2024-01-01';
             const inviteCode = user.inviteCode || 'N/A';
             const balance = parseFloat(user.balance || 0).toFixed(2);
             
@@ -65,6 +72,7 @@ async function loadUserProfile() {
             const balanceEl = document.getElementById('profileBalance');
             if (balanceEl) balanceEl.textContent = balance + ' USDT';
             
+            // Update local storage
             localStorage.setItem('username', user.username);
             localStorage.setItem('userInviteCode', inviteCode);
             localStorage.setItem('walletBalance', balance);
@@ -146,6 +154,7 @@ function displayProfileCoins(priceData) {
         coinsListContainer.appendChild(coinItem);
     }
     
+    // Store all coin data for dropdown
     allCoins = [];
     for (const symbol of COINS.slice(5)) {
         const data = priceData[symbol];
@@ -190,10 +199,11 @@ function setupCoinDropdown() {
 
 function startPriceUpdates() {
     loadLivePrices();
-    priceUpdateInterval = setInterval(loadLivePrices, 30000);
+    priceUpdateInterval = setInterval(loadLivePrices, 30000); // Update every 30 seconds
 }
 
 function setupMobileMenu() {
+    // Check if mobile menu button exists, if not create it
     if (!document.querySelector('.mobile-menu-btn')) {
         const btn = document.createElement('button');
         btn.className = 'mobile-menu-btn';
@@ -204,6 +214,7 @@ function setupMobileMenu() {
         document.body.appendChild(btn);
     }
     
+    // Close sidebar when clicking outside on mobile
     document.addEventListener('click', function(e) {
         const sidebar = document.querySelector('.sidebar');
         const menuBtn = document.querySelector('.mobile-menu-btn');
@@ -227,14 +238,4 @@ function setActiveNav() {
             link.classList.remove('active');
         }
     });
-}
-
-function setupLogout() {
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        });
-    }
 }

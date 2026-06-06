@@ -73,9 +73,6 @@ body {
     border-radius: 12px;
     transition: all 0.2s ease;
     font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
 }
 
 .sidebar-nav a:hover {
@@ -237,7 +234,6 @@ body {
     padding: 8px;
     text-align: center;
     font-size: 12px;
-    margin-top: 8px;
 }
 
 .dropdown-coins {
@@ -383,8 +379,7 @@ body {
     font-size: 14px;
 }
 
-.form-group input:focus,
-.form-group textarea:focus {
+.form-group input:focus {
     outline: none;
     border-color: #ffd700;
 }
@@ -399,22 +394,6 @@ body {
     color: #0a0a0a;
     cursor: pointer;
     width: 100%;
-}
-
-/* Page Specific Content */
-.page-header {
-    margin-bottom: 24px;
-}
-
-.page-header h1 {
-    font-size: 24px;
-    color: #ffd700;
-}
-
-.page-description {
-    color: #888;
-    font-size: 14px;
-    margin-top: 8px;
 }
 
 /* ======================================== */
@@ -436,7 +415,6 @@ body {
         position: fixed;
         z-index: 1000;
         transition: transform 0.3s ease;
-        width: 260px;
     }
     
     .sidebar.open {
@@ -457,17 +435,10 @@ body {
         background: #ffd700;
         border: none;
         border-radius: 50%;
-        width: 45px;
-        height: 45px;
-        font-size: 22px;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
         cursor: pointer;
-        color: #0a0a0a;
-        font-weight: bold;
-    }
-    
-    .coins-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
     }
 }
 
