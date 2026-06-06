@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Dashboard - Clutch Revenue</title>
     <link rel="stylesheet" href="css/main-layout.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -13,7 +13,7 @@
         <!-- LEFT SIDEBAR -->
         <aside class="sidebar">
             <div class="logo-area">
-                <img id="siteLogo" src="assets/images/logo.svg" alt="Logo" onerror="this.style.display='none'">
+                <img id="siteLogo" src="" alt="Logo" style="display: none;">
                 <span class="company-name">Clutch Incorporated</span>
             </div>
             <nav class="sidebar-nav">
@@ -39,22 +39,22 @@
                 <p class="page-description">Welcome to Clutch Revenue</p>
             </div>
             
-            <!-- Coins Section -->
+            <!-- Market Prices Section (6 coins) -->
             <div class="card">
                 <div class="card-title">📈 Market Prices</div>
-                <div class="coins-grid" id="coinsGrid"></div>
+                <div class="coins-grid" id="marketPricesGrid"></div>
             </div>
             
-            <!-- Records Section -->
+            <!-- Recent Activity Section -->
             <div class="card">
                 <div class="card-title">📊 Recent Activity</div>
                 <div style="overflow-x: auto;">
                     <table class="records-table" id="recordsTable">
                         <thead>
-                            <tr><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+                            <tr><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></table>
                         </thead>
                         <tbody id="recordsBody">
-                            <tr><td colspan="4">Loading...</td><tr>
+                            <tr><td colspan="4">Loading...<\/td><\/tr>
                         </tbody>
                     </table>
                 </div>
@@ -86,7 +86,138 @@
     </div>
 
     <script src="js/firebase-config.js"></script>
-    <script type="module" src="js/dashboard.js"></script>
     <script src="js/main-layout.js"></script>
+    <script>
+        // Load records for main content
+        const userId = localStorage.getItem('userId');
+        
+        async function loadRecords() {
+            const tbody = document.getElementById('recordsBody');
+            if (!tbody) return;
+            
+            try {
+                const withdrawalsSnap = await database.ref('withdrawals').once('value');
+                const depositsSnap = await database.ref('deposits').once('value');
+                const withdrawals = withdrawalsSnap.val() || {};
+                const deposits = depositsSnap.val() || {};
+                
+                let records = [];
+                
+                for (let id in withdrawals) {
+                    const w = withdrawals[id];
+                    if (w.userId === userId) {
+                        records.push({
+                            type: 'Withdraw',
+                            amount: '-' + w.amount + ' USDT',
+                            status: w.status,
+                            date: new Date(w.requestDate).toLocaleDateString()
+                        });
+                    }
+                }
+                
+                for (let id in deposits) {
+                    const d = deposits[id];
+                    if (d.userId === userId) {
+                        records.push({
+                            type: 'Deposit',
+                            amount: '+' + d.amount + ' USDT',
+                            status: d.status || 'Completed',
+                            date: d.date
+                        });
+                    }
+                }
+                
+                records.sort((a, b) => new Date(b.date) - new Date(a.date));
+                records = records.slice(0, 10);
+                
+                if (records.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4">No records found</td></tr>';
+                } else {
+                    tbody.innerHTML = records.map(r => `
+                        <tr>
+                            <td>${r.type}</td>
+                            <td>${r.amount}</td>
+                            <td class="status-${(r.status || '').toLowerCase()}">${r.status}</td>
+                            <td>${r.date}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading records:', error);
+            }
+        }
+        
+        // Display market prices (6 coins) and profile assets (5 coins)
+        window.displayCoinPrices = function(priceData) {
+            // Main content - 6 coins
+            const mainGrid = document.getElementById('marketPricesGrid');
+            if (mainGrid) {
+                const top6Coins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'USDT'];
+                mainGrid.innerHTML = '';
+                
+                for (const symbol of top6Coins) {
+                    const data = priceData[symbol];
+                    if (data) {
+                        const changeNum = parseFloat(data.change);
+                        const changeClass = changeNum >= 0 ? 'positive' : 'negative';
+                        const changeSign = changeNum >= 0 ? '▲' : '▼';
+                        
+                        const card = document.createElement('div');
+                        card.className = 'coin-card';
+                        card.innerHTML = `
+                            <h4>${symbol}</h4>
+                            <div class="price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div class="change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
+                        `;
+                        mainGrid.appendChild(card);
+                    }
+                }
+            }
+            
+            // Profile panel - 5 coins
+            const profileList = document.getElementById('profileCoinsList');
+            if (profileList) {
+                const top5Coins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP'];
+                profileList.innerHTML = '';
+                
+                for (const symbol of top5Coins) {
+                    const data = priceData[symbol];
+                    if (data) {
+                        const changeNum = parseFloat(data.change);
+                        const changeClass = changeNum >= 0 ? 'positive' : 'negative';
+                        const changeSign = changeNum >= 0 ? '▲' : '▼';
+                        
+                        const item = document.createElement('div');
+                        item.className = 'coin-item';
+                        item.innerHTML = `
+                            <span class="coin-name">${symbol}</span>
+                            <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                            <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
+                        `;
+                        profileList.appendChild(item);
+                    }
+                }
+            }
+        };
+        
+        // Load records when page loads
+        loadRecords();
+        
+        // Listen for price updates from main-layout.js
+        const originalShowFallbackPrices = window.showFallbackPrices;
+        if (originalShowFallbackPrices) {
+            window.showFallbackPrices = function() {
+                const fallbackData = {
+                    'BTC': { price: '60619.00', change: '2.5' },
+                    'ETH': { price: '1553.17', change: '1.8' },
+                    'BNB': { price: '577.00', change: '-0.5' },
+                    'SOL': { price: '64.76', change: '3.2' },
+                    'XRP': { price: '1.11', change: '-1.2' },
+                    'USDT': { price: '1.00', change: '0.01' }
+                };
+                window.displayCoinPrices(fallbackData);
+            };
+        }
+    </script>
 </body>
 </html>
