@@ -528,11 +528,19 @@ body {
 }
 
 /* ======================================== */
-/* MOBILE RESPONSIVE */
+/* MOBILE RESPONSIVE - FIXED */
 /* ======================================== */
 @media (max-width: 1024px) {
+    /* On tablets, profile panel becomes full width and moves below */
     .profile-panel {
-        display: none;
+        position: relative;
+        width: 100%;
+        right: auto;
+        top: auto;
+        height: auto;
+        border-left: none;
+        border-top: 1px solid #ECEAF7;
+        margin-top: 20px;
     }
     
     .main-content {
@@ -547,6 +555,7 @@ body {
         z-index: 1000;
         transition: transform 0.3s ease;
         width: 260px;
+        height: 100vh;
     }
     
     .sidebar.open {
@@ -556,6 +565,18 @@ body {
     .main-content {
         margin-left: 0;
         padding: 16px;
+        width: 100%;
+    }
+    
+    /* Profile panel visible below main content */
+    .profile-panel {
+        display: block;
+        position: relative;
+        width: 100%;
+        margin-top: 20px;
+        border-left: none;
+        border-top: 1px solid #ECEAF7;
+        height: auto;
     }
     
     .mobile-menu-btn {
@@ -596,10 +617,41 @@ body {
     .reward-day-amount {
         font-size: 10px;
     }
+    
+    /* Adjust coin cards for mobile */
+    .coin-card {
+        padding: 12px;
+    }
+    
+    .coin-name {
+        font-size: 16px;
+    }
+    
+    .coin-price {
+        font-size: 14px;
+    }
+    
+    .coin-profit {
+        font-size: 12px;
+    }
 }
 
 @media (min-width: 769px) {
     .mobile-menu-btn {
         display: none;
+    }
+}
+
+/* For large tablets and small desktops */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .profile-panel {
+        position: relative;
+        width: 100%;
+        margin-top: 20px;
+        border-left: none;
+    }
+    
+    .main-content {
+        margin-right: 0;
     }
 }
