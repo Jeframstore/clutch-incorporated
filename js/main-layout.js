@@ -52,7 +52,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     await loadUserProfile();
     await loadLogo();
-    await loadLivePrices();
+    
+    // First populate fallback prices
+    showFallbackPrices();
     
     startPriceUpdates();
     
@@ -124,110 +126,152 @@ function showFallbackPrices() {
         'BNB': { price: '577.00', change: '-0.5' },
         'SOL': { price: '64.76', change: '3.2' },
         'XRP': { price: '1.11', change: '-1.2' },
-        'USDT': { price: '1.00', change: '0.01' }
+        'USDT': { price: '1.00', change: '0.01' },
+        'ADA': { price: '0.45', change: '1.2' },
+        'DOGE': { price: '0.12', change: '-0.8' },
+        'MATIC': { price: '0.89', change: '2.1' },
+        'DOT': { price: '6.50', change: '-1.0' },
+        'AVAX': { price: '35.20', change: '4.5' },
+        'LINK': { price: '14.30', change: '1.5' },
+        'LTC': { price: '82.40', change: '-0.3' },
+        'UNI': { price: '7.80', change: '2.0' }
     };
     
-    // Call the display function from dashboard.html if available
-    if (typeof window.displayCoinPrices === 'function') {
-        window.displayCoinPrices(fallbackData);
-    } else {
-        displayCoinPrices(fallbackData);
-        displayProfileCoins(fallbackData);
-    }
-    console.log('Using fallback price data');
+    // Display prices in main content and profile
+    displayCoinPrices(fallbackData);
+    displayProfileCoins(fallbackData);
+    
+    console.log('Fallback prices displayed');
 }
 
 function displayCoinPrices(priceData) {
-    const containers = document.querySelectorAll('.coins-grid');
-    if (containers.length === 0) return;
-    
-    containers.forEach(container => {
-        container.innerHTML = '';
+    // Main content market prices grid (6 coins)
+    const mainGrid = document.getElementById('marketPricesGrid');
+    if (mainGrid) {
+        mainGrid.innerHTML = '';
         
         const topCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'USDT'];
         for (const symbol of topCoins) {
             const data = priceData[symbol];
-            if (!data) continue;
-            
-            const changeNum = parseFloat(data.change);
-            const changeClass = changeNum >= 0 ? 'positive' : 'negative';
-            const changeSign = changeNum >= 0 ? '▲' : '▼';
-            
-            const card = document.createElement('div');
-            card.className = 'coin-card';
-            card.innerHTML = `
-                <h4>${symbol}</h4>
-                <div class="price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                <div class="change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
-            `;
-            container.appendChild(card);
+            if (data) {
+                const changeNum = parseFloat(data.change);
+                const changeClass = changeNum >= 0 ? 'positive' : 'negative';
+                const changeSign = changeNum >= 0 ? '▲' : '▼';
+                
+                const card = document.createElement('div');
+                card.className = 'coin-card';
+                card.innerHTML = `
+                    <h4>${symbol}</h4>
+                    <div class="price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div class="change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
+                `;
+                mainGrid.appendChild(card);
+            }
         }
-    });
+    }
+    
+    // Also handle any .coins-grid elements (fallback)
+    const containers = document.querySelectorAll('.coins-grid');
+    if (containers.length > 0 && !mainGrid) {
+        containers.forEach(container => {
+            container.innerHTML = '';
+            const topCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'USDT'];
+            for (const symbol of topCoins) {
+                const data = priceData[symbol];
+                if (!data) continue;
+                
+                const changeNum = parseFloat(data.change);
+                const changeClass = changeNum >= 0 ? 'positive' : 'negative';
+                const changeSign = changeNum >= 0 ? '▲' : '▼';
+                
+                const card = document.createElement('div');
+                card.className = 'coin-card';
+                card.innerHTML = `
+                    <h4>${symbol}</h4>
+                    <div class="price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div class="change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
+                `;
+                container.appendChild(card);
+            }
+        });
+    }
 }
 
 function displayProfileCoins(priceData) {
     const coinsListContainer = document.getElementById('profileCoinsList');
-    if (!coinsListContainer) return;
+    if (!coinsListContainer) {
+        console.log('profileCoinsList not found');
+        return;
+    }
     
     coinsListContainer.innerHTML = '';
     
     const topCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP'];
     for (const symbol of topCoins) {
         const data = priceData[symbol];
-        if (!data) continue;
-        
-        const changeNum = parseFloat(data.change);
-        const changeClass = changeNum >= 0 ? 'positive' : 'negative';
-        const changeSign = changeNum >= 0 ? '▲' : '▼';
-        
-        const coinItem = document.createElement('div');
-        coinItem.className = 'coin-item';
-        coinItem.innerHTML = `
-            <span class="coin-name">${symbol}</span>
-            <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-            <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
-        `;
-        coinsListContainer.appendChild(coinItem);
-    }
-    
-    // Store all coins for dropdown
-    allCoins = [];
-    const moreCoins = ['ADA', 'DOGE', 'MATIC', 'DOT', 'AVAX', 'LINK', 'LTC', 'UNI'];
-    for (const symbol of moreCoins) {
-        const data = priceData[symbol];
         if (data) {
-            allCoins.push({
-                name: symbol,
-                price: data.price,
-                change: data.change
-            });
-        } else {
-            allCoins.push({
-                name: symbol,
-                price: '0.00',
-                change: '0'
-            });
+            const changeNum = parseFloat(data.change);
+            const changeClass = changeNum >= 0 ? 'positive' : 'negative';
+            const changeSign = changeNum >= 0 ? '▲' : '▼';
+            
+            const coinItem = document.createElement('div');
+            coinItem.className = 'coin-item';
+            coinItem.innerHTML = `
+                <span class="coin-name">${symbol}</span>
+                <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
+            `;
+            coinsListContainer.appendChild(coinItem);
         }
     }
+    
+    // Store all coins for dropdown - ALWAYS populate regardless of priceData
+    allCoins = [];
+    const moreCoinsList = [
+        { name: 'ADA', price: '0.45', change: '1.2' },
+        { name: 'DOGE', price: '0.12', change: '-0.8' },
+        { name: 'MATIC', price: '0.89', change: '2.1' },
+        { name: 'DOT', price: '6.50', change: '-1.0' },
+        { name: 'AVAX', price: '35.20', change: '4.5' },
+        { name: 'LINK', price: '14.30', change: '1.5' },
+        { name: 'LTC', price: '82.40', change: '-0.3' },
+        { name: 'UNI', price: '7.80', change: '2.0' }
+    ];
+    
+    for (const coin of moreCoinsList) {
+        allCoins.push({
+            name: coin.name,
+            price: coin.price,
+            change: coin.change
+        });
+    }
+    
+    console.log('Profile coins displayed, allCoins count:', allCoins.length);
 }
 
 function setupCoinDropdown() {
     const dropdownTrigger = document.getElementById('dropdownTrigger');
     const dropdownCoins = document.getElementById('dropdownCoins');
     
+    console.log('Dropdown trigger found:', !!dropdownTrigger);
+    console.log('Dropdown coins found:', !!dropdownCoins);
+    
     if (!dropdownTrigger || !dropdownCoins) return;
     
-    // Remove existing event listeners by cloning
+    // Remove existing event listeners
     const newTrigger = dropdownTrigger.cloneNode(true);
     dropdownTrigger.parentNode.replaceChild(newTrigger, dropdownTrigger);
     
     newTrigger.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        
+        console.log('Dropdown clicked, allCoins length:', allCoins.length);
         dropdownCoins.classList.toggle('show');
         
         // Populate dropdown if empty
         if (dropdownCoins.innerHTML === '' && allCoins.length > 0) {
+            console.log('Populating dropdown with', allCoins.length, 'coins');
             dropdownCoins.innerHTML = '';
             allCoins.forEach(coin => {
                 const changeNum = parseFloat(coin.change);
@@ -243,6 +287,8 @@ function setupCoinDropdown() {
                 `;
                 dropdownCoins.appendChild(coinItem);
             });
+        } else if (dropdownCoins.innerHTML === '') {
+            console.log('allCoins is empty, cannot populate dropdown');
         }
     });
     
@@ -256,7 +302,6 @@ function setupCoinDropdown() {
 
 function startPriceUpdates() {
     // No API updates needed - using static prices
-    // priceUpdateInterval = setInterval(loadLivePrices, 60000);
 }
 
 function setupMobileMenu() {
