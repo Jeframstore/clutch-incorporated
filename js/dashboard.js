@@ -182,8 +182,8 @@ async function loadMarketPrices() {
         const coinsGrid = document.getElementById('coinsGrid');
         if (!coinsGrid) return;
 
-        // Show only 4 coins: BTC, ETH, BNB, SOL
-        const displayCoins = ['BTC', 'ETH', 'BNB', 'SOL'];
+        // Show 6 coins: BTC, ETH, BNB, SOL, USDT, USDC
+        const displayCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'USDT', 'USDC'];
         
         // Fetch prices from Binance
         const response = await fetch('https://api.binance.com/api/v3/ticker/price');
@@ -202,7 +202,9 @@ async function loadMarketPrices() {
             'BTC': 2.5,
             'ETH': 1.8,
             'BNB': 3.2,
-            'SOL': 4.1
+            'SOL': 4.1,
+            'USDT': 0.01,
+            'USDC': 0.01
         };
 
         let html = '';
@@ -210,6 +212,7 @@ async function loadMarketPrices() {
             const price = prices[coin] || 0;
             const profit = profits[coin] || 0;
             const graphColor = profit > 0 ? '#00ff88' : '#ff4444';
+            const arrow = profit > 0 ? '↑' : '↓';
             
             html += `
                 <div class="coin-card">
@@ -218,7 +221,7 @@ async function loadMarketPrices() {
                         <span class="coin-price">$${price.toFixed(2)}</span>
                     </div>
                     <div class="coin-profit" style="color: ${graphColor}">
-                        ${profit > 0 ? '+' : ''}${profit}%
+                        ${arrow} ${profit > 0 ? '+' : ''}${profit}%
                     </div>
                     <div class="coin-graph">
                         <svg width="100%" height="60" viewBox="0 0 200 60">

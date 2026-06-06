@@ -86,73 +86,7 @@
     </div>
 
     <script src="js/firebase-config.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
     <script src="js/main-layout.js"></script>
-    <script>
-        // Load records
-        async function loadRecords() {
-            const userId = localStorage.getItem('userId');
-            const tbody = document.getElementById('recordsBody');
-            
-            try {
-                const withdrawalsSnap = await database.ref('withdrawals').once('value');
-                const depositsSnap = await database.ref('deposits').once('value');
-                const withdrawals = withdrawalsSnap.val() || {};
-                const deposits = depositsSnap.val() || {};
-                
-                let records = [];
-                
-                for (let id in withdrawals) {
-                    const w = withdrawals[id];
-                    if (w.userId === userId) {
-                        records.push({
-                            type: 'Withdraw',
-                            amount: '-' + w.amount + ' USDT',
-                            status: w.status,
-                            date: new Date(w.requestDate).toLocaleDateString()
-                        });
-                    }
-                }
-                
-                for (let id in deposits) {
-                    const d = deposits[id];
-                    if (d.userId === userId) {
-                        records.push({
-                            type: 'Deposit',
-                            amount: '+' + d.amount + ' USDT',
-                            status: d.status || 'Completed',
-                            date: d.date
-                        });
-                    }
-                }
-                
-                records.sort((a, b) => new Date(b.date) - new Date(a.date));
-                records = records.slice(0, 10);
-                
-                if (records.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4">No records found</td></tr>';
-                } else {
-                    tbody.innerHTML = records.map(r => `
-                        <tr>
-                            <td>${r.type}</td>
-                            <td>${r.amount}</td>
-                            <td class="status-${r.status.toLowerCase()}">${r.status}</td>
-                            <td>${r.date}</td>
-                        </tr>
-                    `).join('');
-                }
-            } catch (error) {
-                console.error('Error loading records:', error);
-            }
-        }
-        
-        // Override loadLivePrices to use our coins grid
-        const originalLoadLivePrices = loadLivePrices;
-        window.loadLivePrices = async function() {
-            await originalLoadLivePrices();
-            await loadRecords();
-        };
-        
-        loadRecords();
-    </script>
 </body>
 </html>

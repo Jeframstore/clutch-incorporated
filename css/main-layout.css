@@ -306,7 +306,7 @@ body {
 /* Coin Cards Grid */
 .coins-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
 }
 
@@ -335,8 +335,8 @@ body {
 .coin-price {
     font-size: 18px;
     font-weight: bold;
-    color: #ffffff;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    color: #87CEEB;
+    text-shadow: 0 0 5px rgba(135, 206, 235, 0.5);
 }
 
 .coin-profit {
