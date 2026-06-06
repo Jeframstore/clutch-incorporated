@@ -83,7 +83,6 @@ function displaySignInRewards(completedDays) {
     const container = document.getElementById('signinRewardsContainer');
     if (!container) return;
     
-    // Calculate rewards: Day 1 = 50, Day 2 = 100, Day 3 = 150, ... Day 15 = 750
     const rewards = [];
     let amount = 50;
     for (let i = 1; i <= 15; i++) {
@@ -107,18 +106,6 @@ function displaySignInRewards(completedDays) {
         `;
         container.appendChild(card);
     }
-}
-
-// Calculate frozen sign-in bonus (accumulated but locked until day 15)
-function calculateFrozenBonus(streak) {
-    if (streak <= 0) return 0;
-    let total = 0;
-    let amount = 50;
-    for (let i = 1; i <= streak; i++) {
-        total += amount;
-        amount += 50;
-    }
-    return total;
 }
 
 async function loadUserData() {
@@ -169,7 +156,19 @@ async function loadUserData() {
                 frozenBonus = 0;
             }
             
-            // Process today's sign-in
+            // Update sign-in bonus display (always show current frozen bonus)
+            const signinBonusEl = document.getElementById('signinBonus');
+            if (signinBonusEl) {
+                signinBonusEl.textContent = frozenBonus.toFixed(2) + ' USDT';
+            }
+            
+            // Update counter display
+            const counterElement = document.querySelector('.signin-counter');
+            if (counterElement) {
+                counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
+            }
+            
+            // Process today's sign-in (only if not signed in today)
             if (lastSignIn !== today) {
                 streak++;
                 
@@ -183,13 +182,10 @@ async function loadUserData() {
                     lastSignIn: today
                 });
                 
-                // Update display
-                const signinBonusEl = document.getElementById('signinBonus');
+                // Update display after adding reward
                 if (signinBonusEl) {
                     signinBonusEl.textContent = frozenBonus.toFixed(2) + ' USDT';
                 }
-                
-                const counterElement = document.querySelector('.signin-counter');
                 if (counterElement) {
                     counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
                 }
@@ -198,17 +194,6 @@ async function loadUserData() {
                     setTimeout(() => {
                         alert(`🎉 Daily sign-in reward: +${todayReward} USDT added to frozen bonus!\nStreak: ${streak} days\nFrozen Bonus: ${frozenBonus.toFixed(2)} USDT\n(Will be paid out after 15 days)`);
                     }, 500);
-                }
-            } else {
-                // Update display with existing values
-                const signinBonusEl = document.getElementById('signinBonus');
-                if (signinBonusEl) {
-                    signinBonusEl.textContent = frozenBonus.toFixed(2) + ' USDT';
-                }
-                
-                const counterElement = document.querySelector('.signin-counter');
-                if (counterElement) {
-                    counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
                 }
             }
             
@@ -256,7 +241,6 @@ async function loadRecords() {
             }
         }
         
-        // Show only 6 most recent activities
         records.sort((a, b) => new Date(b.date) - new Date(a.date));
         records = records.slice(0, 6);
         
@@ -269,7 +253,7 @@ async function loadRecords() {
                     <td>${r.amount}<\/td>
                     <td class="status-${(r.status || '').toLowerCase()}">${r.status}<\/td>
                     <td>${r.date}<\/td>
-                </tr>
+                <tr>
             `).join('');
         }
     } catch (error) {
