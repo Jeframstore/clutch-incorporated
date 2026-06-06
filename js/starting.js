@@ -153,7 +153,7 @@ function loadImages(task) {
     });
     
     if (currentImages.length === 0) {
-        currentImages = ['https://placehold.co/400x300/1a1a2e/ffd700?text=Task+Image'];
+        currentImages = ['https://placehold.co/400x300/1a1a2e/9b59b6?text=Task+Image'];
     }
     
     currentImageIndex = 0;

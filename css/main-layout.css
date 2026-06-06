@@ -314,7 +314,7 @@ body {
     background: linear-gradient(135deg, #1a1a2e, #16213e);
     border-radius: 16px;
     padding: 20px;
-    border: 1px solid rgba(255, 215, 0, 0.3);
+    border: 1px solid rgba(155, 89, 182, 0.3);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -328,8 +328,8 @@ body {
 .coin-name {
     font-size: 20px;
     font-weight: bold;
-    color: #ffd700;
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    color: #9b59b6;
+    text-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
 }
 
 .coin-price {

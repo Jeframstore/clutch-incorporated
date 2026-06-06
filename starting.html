@@ -46,7 +46,7 @@
                     <span id="taskCount">0/40</span>
                 </div>
                 <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
-                    <div id="progressFill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ffaa00); border-radius: 10px;"></div>
+                    <div id="progressFill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #9b59b6, #8e44ad); border-radius: 10px;"></div>
                 </div>
             </div>
             
@@ -143,7 +143,7 @@
             document.getElementById('taskContent').innerHTML = `
                 ${imageHtml}
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <h3 style="color: #ffd700;">${activeTask.productName || 'Task'}</h3>
+                    <h3 style="color: #9b59b6;">${activeTask.productName || 'Task'}</h3>
                     ${premiumBadge}
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
@@ -154,7 +154,7 @@
                     <span>Assigned: ${activeTask.assignedTime || 'N/A'}</span>
                     <span>Next: ${activeTask.nextScheduledTime || 'N/A'}</span>
                 </div>
-                <button id="completeTaskBtn" style="width: 100%; background: linear-gradient(135deg, #ffd700, #ffaa00); border: none; border-radius: 30px; padding: 14px; font-weight: bold; cursor: pointer;">Complete Task</button>
+                <button id="completeTaskBtn" style="width: 100%; background: linear-gradient(135deg, #9b59b6, #8e44ad); border: none; border-radius: 30px; padding: 14px; font-weight: bold; cursor: pointer;">Complete Task</button>
             `;
             
             document.getElementById('completeTaskBtn').addEventListener('click', completeTask);

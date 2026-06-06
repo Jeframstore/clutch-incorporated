@@ -135,8 +135,8 @@ async function loadUsersTable() {
                 <td>${id.substring(0, 15)}...</td>
                 <td><strong>${user.username}</strong></td>
                 <td>${user.email || 'N/A'}</td>
-                <td style="color:#ffd700;">${user.balance || '0'} USDT</td>
-                <td style="color:#ffd700;">${user.inviteCode || 'N/A'}</td>
+                <td style="color:#9b59b6;">${user.balance || '0'} USDT</td>
+                <td style="color:#9b59b6;">${user.inviteCode || 'N/A'}</td>
                 <td>${user.status || 'active'}</td>
                 <td>
                     <button class="edit-btn" onclick="editUserBalance('${id}')">Edit Balance</button>
@@ -512,7 +512,7 @@ async function loadInvitationCodes() {
     let historyHtml = '';
     for (let id in codes) {
         if (codes[id].date === today && codes[id].active) todaysCode = codes[id];
-        historyHtml += `<tr><td>${codes[id].date}</td><td style="color:#ffd700;">${codes[id].code}</td><td>${codes[id].adminName}</td><td>${codes[id].active ? 'Active' : 'Expired'}</td>
+        historyHtml += `<tr><td>${codes[id].date}</td><td style="color:#9b59b6;">${codes[id].code}</td><td>${codes[id].adminName}</td><td>${codes[id].active ? 'Active' : 'Expired'}</td>
         <td><button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate</button></td></tr>`;
     }
     
