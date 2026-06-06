@@ -13,7 +13,7 @@
     <div class="app-container">
         <aside class="sidebar">
             <div class="logo-area">
-                <img id="siteLogo" src="assets/images/logo.png" alt="Logo" onerror="this.style.display='none'">
+                <img id="siteLogo" src="" alt="Logo" style="display: none;">
                 <span class="company-name">Clutch Incorporated</span>
             </div>
             <nav class="sidebar-nav">
@@ -109,7 +109,7 @@
     <script src="js/main-layout.js"></script>
     <script>
         const userId = localStorage.getItem('userId');
-        let priceUpdateInterval = null;
+        // priceUpdateInterval is already declared in main-layout.js - DO NOT REDECLARE
         let countdownIntervals = {};
         
         async function loadTradingPrices() {
@@ -166,7 +166,6 @@
             
             container.innerHTML = html || '<div style="text-align: center; padding: 20px; color: #888;">No open trades</div>';
             
-            // Start countdowns
             document.querySelectorAll('.trade-countdown').forEach(el => {
                 const endTime = parseInt(el.dataset.end);
                 startCountdown(el, endTime);
@@ -243,7 +242,11 @@
         
         loadTradingPrices();
         loadOpenTrades();
-        priceUpdateInterval = setInterval(loadTradingPrices, 30000);
+        // Use the existing priceUpdateInterval from main-layout.js
+        if (typeof priceUpdateInterval !== 'undefined') {
+            clearInterval(priceUpdateInterval);
+        }
+        window.priceUpdateInterval = setInterval(loadTradingPrices, 30000);
     </script>
 </body>
 </html>
