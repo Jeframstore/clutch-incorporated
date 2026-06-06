@@ -8,12 +8,63 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .wallet-display {
+            background: rgba(255,215,0,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .wallet-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .wallet-label {
+            color: #888;
+            font-size: 12px;
+        }
+        .wallet-value {
+            color: #ffd700;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .change-wallet-btn {
+            background: rgba(255,215,0,0.15);
+            border: 1px solid rgba(255,215,0,0.3);
+            padding: 8px 20px;
+            border-radius: 30px;
+            color: #ffd700;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .change-wallet-btn:hover {
+            background: rgba(255,215,0,0.25);
+        }
+        .bind-form {
+            display: none;
+        }
+        .bind-form.show {
+            display: block;
+        }
+        .section-title {
+            font-size: 16px;
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
             <div class="logo-area">
-                <img id="siteLogo" src="assets/images/logo.svg" alt="Logo" onerror="this.style.display='none'">
+                <img id="siteLogo" src="" alt="Logo" style="display: none;">
                 <span class="company-name">Clutch Incorporated</span>
             </div>
             <nav class="sidebar-nav">
@@ -39,22 +90,66 @@
             </div>
             
             <div class="card">
-                <div class="form-group">
-                    <label>Phone Number (with country code)</label>
-                    <input type="tel" id="phoneNumber" placeholder="+1 234 567 8900">
+                <!-- Display Section (shows current wallet) -->
+                <div id="walletDisplay" class="wallet-display">
+                    <div class="wallet-info">
+                        <span class="wallet-label">📱 Phone Number:</span>
+                        <span class="wallet-value" id="displayPhone">Not set</span>
+                    </div>
+                    <div class="wallet-info">
+                        <span class="wallet-label">🔗 Wallet Address:</span>
+                        <span class="wallet-value" id="displayWallet">Not set</span>
+                    </div>
+                    <button class="change-wallet-btn" id="changeWalletBtn">✏️ Change Wallet</button>
                 </div>
-                
-                <div class="form-group">
-                    <label>USDT Wallet Address</label>
-                    <input type="text" id="walletAddress" placeholder="Enter your USDT wallet address">
+
+                <!-- Bind Form (hidden initially, shows when changing wallet) -->
+                <div id="bindForm" class="bind-form">
+                    <div class="section-title">✏️ Update Wallet Information</div>
+                    
+                    <div class="form-group">
+                        <label>Current Phone Number</label>
+                        <input type="tel" id="currentPhone" placeholder="Enter current phone number">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Current Wallet Address</label>
+                        <input type="text" id="currentWallet" placeholder="Enter current wallet address">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>New Phone Number</label>
+                        <input type="tel" id="newPhone" placeholder="Enter new phone number">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>New Wallet Address</label>
+                        <input type="text" id="newWallet" placeholder="Enter new USDT wallet address">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Confirm New Wallet Address</label>
+                        <input type="text" id="confirmWallet" placeholder="Confirm new wallet address">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Withdraw Password</label>
+                        <input type="password" id="withdrawPassword" placeholder="Enter your withdraw password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>New Withdraw Password (optional)</label>
+                        <input type="password" id="newWithdrawPassword" placeholder="Enter new withdraw password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Confirm New Withdraw Password</label>
+                        <input type="password" id="confirmWithdrawPassword" placeholder="Confirm new withdraw password">
+                    </div>
+                    
+                    <button class="submit-btn" id="updateWalletBtn">Save Changes</button>
+                    <button class="submit-btn" id="cancelBtn" style="background: #333; margin-top: 10px;">Cancel</button>
                 </div>
-                
-                <div class="form-group">
-                    <label>Withdraw Password</label>
-                    <input type="password" id="withdrawPassword" placeholder="Set your withdraw password">
-                </div>
-                
-                <button class="submit-btn" id="submitBtn">Save Wallet</button>
             </div>
         </main>
 
@@ -84,44 +179,138 @@
     <script>
         const userId = localStorage.getItem('userId');
         
-        // Load existing data
-        async function loadExisting() {
+        // Load existing wallet data and display
+        async function loadWalletData() {
             const snap = await database.ref('users/' + userId).once('value');
             const user = snap.val();
+            
             if (user) {
-                if (user.phone) document.getElementById('phoneNumber').value = user.phone;
-                if (user.walletAddress) document.getElementById('walletAddress').value = user.walletAddress;
+                const phone = user.phone || 'Not set';
+                const wallet = user.walletAddress || 'Not set';
+                
+                document.getElementById('displayPhone').textContent = phone;
+                document.getElementById('displayWallet').textContent = wallet;
+                
+                // Pre-fill current fields for verification
+                document.getElementById('currentPhone').value = user.phone || '';
+                document.getElementById('currentWallet').value = user.walletAddress || '';
             }
         }
-        loadExisting();
         
-        document.getElementById('submitBtn').addEventListener('click', async () => {
-            const phone = document.getElementById('phoneNumber').value.trim();
-            const wallet = document.getElementById('walletAddress').value.trim();
-            const password = document.getElementById('withdrawPassword').value;
-            
-            if (!phone) {
-                Swal.fire('Error', 'Phone number required', 'error');
-                return;
-            }
-            if (!wallet || wallet.length < 20) {
-                Swal.fire('Error', 'Valid wallet address required', 'error');
-                return;
-            }
-            if (!password || password.length < 4) {
-                Swal.fire('Error', 'Withdraw password (min 4 characters)', 'error');
-                return;
-            }
-            
-            await database.ref('users/' + userId).update({
-                phone: phone,
-                walletAddress: wallet,
-                withdrawPassword: password
-            });
-            
-            Swal.fire('Success', 'Wallet information saved!', 'success');
-            document.getElementById('withdrawPassword').value = '';
+        // Show change wallet form
+        document.getElementById('changeWalletBtn').addEventListener('click', () => {
+            document.getElementById('walletDisplay').style.display = 'none';
+            document.getElementById('bindForm').classList.add('show');
         });
+        
+        // Cancel button - hide form, show display
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            document.getElementById('bindForm').classList.remove('show');
+            document.getElementById('walletDisplay').style.display = 'block';
+            // Clear form fields
+            document.getElementById('newPhone').value = '';
+            document.getElementById('newWallet').value = '';
+            document.getElementById('confirmWallet').value = '';
+            document.getElementById('withdrawPassword').value = '';
+            document.getElementById('newWithdrawPassword').value = '';
+            document.getElementById('confirmWithdrawPassword').value = '';
+        });
+        
+        // Update wallet
+        document.getElementById('updateWalletBtn').addEventListener('click', async () => {
+            const currentPhone = document.getElementById('currentPhone').value;
+            const currentWallet = document.getElementById('currentWallet').value;
+            const newPhone = document.getElementById('newPhone').value;
+            const newWallet = document.getElementById('newWallet').value;
+            const confirmWallet = document.getElementById('confirmWallet').value;
+            const withdrawPassword = document.getElementById('withdrawPassword').value;
+            const newWithdrawPassword = document.getElementById('newWithdrawPassword').value;
+            const confirmWithdrawPassword = document.getElementById('confirmWithdrawPassword').value;
+            
+            // Validation
+            if (!currentPhone && !currentWallet) {
+                Swal.fire('Error', 'Please enter your current phone and wallet address', 'error');
+                return;
+            }
+            
+            // Verify current wallet
+            const userSnap = await database.ref('users/' + userId).once('value');
+            const user = userSnap.val();
+            
+            if (user.phone !== currentPhone) {
+                Swal.fire('Error', 'Current phone number is incorrect', 'error');
+                return;
+            }
+            
+            if (user.walletAddress !== currentWallet) {
+                Swal.fire('Error', 'Current wallet address is incorrect', 'error');
+                return;
+            }
+            
+            if (!withdrawPassword || withdrawPassword !== user.withdrawPassword) {
+                Swal.fire('Error', 'Withdraw password is incorrect', 'error');
+                return;
+            }
+            
+            // Prepare updates
+            const updates = {};
+            
+            if (newPhone) {
+                updates.phone = newPhone;
+            }
+            
+            if (newWallet && confirmWallet) {
+                if (newWallet !== confirmWallet) {
+                    Swal.fire('Error', 'New wallet addresses do not match', 'error');
+                    return;
+                }
+                if (newWallet.length < 20) {
+                    Swal.fire('Error', 'Please enter a valid USDT wallet address', 'error');
+                    return;
+                }
+                updates.walletAddress = newWallet;
+            }
+            
+            if (newWithdrawPassword) {
+                if (newWithdrawPassword !== confirmWithdrawPassword) {
+                    Swal.fire('Error', 'New withdraw passwords do not match', 'error');
+                    return;
+                }
+                if (newWithdrawPassword.length < 4) {
+                    Swal.fire('Error', 'Withdraw password must be at least 4 characters', 'error');
+                    return;
+                }
+                updates.withdrawPassword = newWithdrawPassword;
+            }
+            
+            if (Object.keys(updates).length === 0) {
+                Swal.fire('Info', 'No changes to save', 'info');
+                return;
+            }
+            
+            await database.ref('users/' + userId).update(updates);
+            
+            Swal.fire('Success', 'Wallet information updated!', 'success');
+            
+            // Reset form and show display
+            document.getElementById('bindForm').classList.remove('show');
+            document.getElementById('walletDisplay').style.display = 'block';
+            
+            // Reload display
+            await loadWalletData();
+            
+            // Clear form fields
+            document.getElementById('newPhone').value = '';
+            document.getElementById('newWallet').value = '';
+            document.getElementById('confirmWallet').value = '';
+            document.getElementById('withdrawPassword').value = '';
+            document.getElementById('newWithdrawPassword').value = '';
+            document.getElementById('confirmWithdrawPassword').value = '';
+        });
+        
+        // Load data
+        loadWalletData();
+        loadUserProfile();
     </script>
 </body>
 </html>
