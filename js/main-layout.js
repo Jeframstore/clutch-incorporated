@@ -6,35 +6,33 @@ let allCoins = [];
 
 // CoinGecko IDs mapping
 const COINGECKO_IDS = {
-    'BTCUSDT': 'bitcoin',
-    'ETHUSDT': 'ethereum',
-    'BNBUSDT': 'binancecoin',
-    'SOLUSDT': 'solana',
-    'XRPUSDT': 'ripple',
-    'ADAUSDT': 'cardano',
-    'DOGEUSDT': 'dogecoin',
+    'BTC': 'bitcoin',
+    'ETH': 'ethereum',
+    'BNB': 'binancecoin',
+    'SOL': 'solana',
+    'XRP': 'ripple',
+    'ADA': 'cardano',
+    'DOGE': 'dogecoin',
     'USDT': 'tether',
     'USDC': 'usd-coin',
-    'MATICUSDT': 'matic-network',
-    'DOTUSDT': 'polkadot',
-    'AVAXUSDT': 'avalanche-2',
-    'LINKUSDT': 'chainlink',
-    'LTCUSDT': 'litecoin',
-    'UNIUSDT': 'uniswap',
-    'ATOMUSDT': 'cosmos',
-    'ALGOUSDT': 'algorand'
+    'MATIC': 'matic-network',
+    'DOT': 'polkadot',
+    'AVAX': 'avalanche-2',
+    'LINK': 'chainlink',
+    'LTC': 'litecoin',
+    'UNI': 'uniswap'
 };
 
 const COINS = [
-    'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT',
-    'ADAUSDT', 'DOGEUSDT', 'USDT', 'USDC', 'MATICUSDT',
-    'DOTUSDT', 'AVAXUSDT', 'LINKUSDT', 'LTCUSDT', 'UNIUSDT'
+    'BTC', 'ETH', 'BNB', 'SOL', 'XRP',
+    'ADA', 'DOGE', 'USDT', 'USDC', 'MATIC',
+    'DOT', 'AVAX', 'LINK', 'LTC', 'UNI'
 ];
 
 const COIN_NAMES = {
-    'BTCUSDT': 'BTC', 'ETHUSDT': 'ETH', 'BNBUSDT': 'BNB', 'SOLUSDT': 'SOL', 'XRPUSDT': 'XRP',
-    'ADAUSDT': 'ADA', 'DOGEUSDT': 'DOGE', 'USDT': 'USDT', 'USDC': 'USDC', 'MATICUSDT': 'MATIC',
-    'DOTUSDT': 'DOT', 'AVAXUSDT': 'AVAX', 'LINKUSDT': 'LINK', 'LTCUSDT': 'LTC', 'UNIUSDT': 'UNI'
+    'BTC': 'BTC', 'ETH': 'ETH', 'BNB': 'BNB', 'SOL': 'SOL', 'XRP': 'XRP',
+    'ADA': 'ADA', 'DOGE': 'DOGE', 'USDT': 'USDT', 'USDC': 'USDC', 'MATIC': 'MATIC',
+    'DOT': 'DOT', 'AVAX': 'AVAX', 'LINK': 'LINK', 'LTC': 'LTC', 'UNI': 'UNI'
 };
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -74,7 +72,7 @@ async function loadUserProfile() {
                 el.textContent = user.username;
             });
             
-            const joinedDate = user.joinedDate || '2024-01-01';
+            const joinedDate = user.joinedDate || new Date().toISOString().split('T')[0];
             const inviteCode = user.inviteCode || 'N/A';
             const balance = parseFloat(user.balance || 0).toFixed(2);
             
@@ -116,27 +114,25 @@ async function loadLogo() {
 
 async function loadLivePrices() {
     try {
-        // Build query string for all coins
         const allIds = Object.values(COINGECKO_IDS);
         const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${allIds.join(',')}&vs_currencies=usd&include_24hr_change=true`);
         const data = await response.json();
         
-        // Build full price data for all coins
-        const fullPriceData = {};
+        const priceData = {};
         for (const symbol of COINS) {
             const coinId = COINGECKO_IDS[symbol];
             if (data[coinId]) {
-                fullPriceData[symbol] = {
+                priceData[symbol] = {
                     price: data[coinId].usd.toFixed(2),
                     change: data[coinId].usd_24h_change.toFixed(2)
                 };
             } else {
-                fullPriceData[symbol] = { price: '0.00', change: '0.00' };
+                priceData[symbol] = { price: '0.00', change: '0.00' };
             }
         }
         
-        displayCoinPrices(fullPriceData);
-        displayProfileCoins(fullPriceData);
+        displayCoinPrices(priceData);
+        displayProfileCoins(priceData);
         
     } catch (error) {
         console.error('Error fetching prices:', error);
@@ -146,21 +142,21 @@ async function loadLivePrices() {
 
 function showFallbackPrices() {
     const fallbackData = {
-        'BTCUSDT': { price: '61333.99', change: '2.5' },
-        'ETHUSDT': { price: '1594.94', change: '1.8' },
-        'BNBUSDT': { price: '577.00', change: '-0.5' },
-        'SOLUSDT': { price: '64.76', change: '3.2' },
-        'XRPUSDT': { price: '1.11', change: '-1.2' },
-        'ADAUSDT': { price: '0.45', change: '1.2' },
-        'DOGEUSDT': { price: '0.12', change: '-0.8' },
+        'BTC': { price: '60619.00', change: '2.5' },
+        'ETH': { price: '1553.17', change: '1.8' },
+        'BNB': { price: '577.00', change: '-0.5' },
+        'SOL': { price: '64.76', change: '3.2' },
+        'XRP': { price: '1.11', change: '-1.2' },
+        'ADA': { price: '0.45', change: '1.2' },
+        'DOGE': { price: '0.12', change: '-0.8' },
         'USDT': { price: '1.00', change: '0.01' },
         'USDC': { price: '1.00', change: '0.01' },
-        'MATICUSDT': { price: '0.89', change: '2.1' },
-        'DOTUSDT': { price: '6.50', change: '-1.0' },
-        'AVAXUSDT': { price: '35.20', change: '4.5' },
-        'LINKUSDT': { price: '14.30', change: '1.5' },
-        'LTCUSDT': { price: '82.40', change: '-0.3' },
-        'UNIUSDT': { price: '7.80', change: '2.0' }
+        'MATIC': { price: '0.89', change: '2.1' },
+        'DOT': { price: '6.50', change: '-1.0' },
+        'AVAX': { price: '35.20', change: '4.5' },
+        'LINK': { price: '14.30', change: '1.5' },
+        'LTC': { price: '82.40', change: '-0.3' },
+        'UNI': { price: '7.80', change: '2.0' }
     };
     
     displayCoinPrices(fallbackData);
@@ -266,7 +262,7 @@ function setupCoinDropdown() {
 
 function startPriceUpdates() {
     loadLivePrices();
-    priceUpdateInterval = setInterval(loadLivePrices, 60000); // Update every 60 seconds
+    priceUpdateInterval = setInterval(loadLivePrices, 60000);
 }
 
 function setupMobileMenu() {
