@@ -406,6 +406,72 @@ body {
     color: #FF6B6B;
 }
 
+/* ======================================== */
+/* 15-DAY SIGN-IN REWARDS SECTION */
+/* ======================================== */
+.signin-rewards-section {
+    margin-top: 20px;
+}
+
+.signin-rewards-title {
+    color: #7D67FF;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 16px;
+}
+
+.rewards-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+.reward-day-card {
+    background: #F0EDFF;
+    border-radius: 16px;
+    padding: 12px 8px;
+    text-align: center;
+    position: relative;
+    border: 1px solid #E0D9FF;
+    transition: all 0.2s ease;
+}
+
+.reward-day-card.completed {
+    background: #E6DFFF;
+    border-color: #FFA500;
+    box-shadow: 0 0 0 1px #FFA500;
+}
+
+.reward-day-number {
+    color: #34315D;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.reward-day-amount {
+    color: #2E7D32;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.reward-tick {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #FFA500;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
 /* Form Styles */
 .form-group {
     margin-bottom: 20px;
@@ -512,6 +578,23 @@ body {
     .coins-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
+    }
+    
+    .rewards-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .reward-day-card {
+        padding: 10px 5px;
+    }
+    
+    .reward-day-number {
+        font-size: 14px;
+    }
+    
+    .reward-day-amount {
+        font-size: 10px;
     }
 }
 

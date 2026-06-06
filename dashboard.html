@@ -54,9 +54,18 @@
                             <tr><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr>
                         </thead>
                         <tbody id="recordsBody">
-                            <tr><td colspan="4">Loading...<\/td><\/tr>
+                            <tr><td colspan="4">Loading...</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+            
+            <!-- 15-Day Sign-in Rewards Section -->
+            <div class="card signin-rewards-section">
+                <div class="signin-rewards-title">🎁 15-Day Sign-in Rewards</div>
+                <div class="rewards-grid" id="signinRewardsContainer">
+                    <!-- 15 day cards will be populated by JavaScript -->
+                    <div style="text-align:center; width:100%; color:#888;">Loading rewards...</div>
                 </div>
             </div>
         </main>
@@ -72,6 +81,7 @@
                     <p><span class="label">Joined:</span><span class="value" id="profileJoined">-</span></p>
                     <p><span class="label">Invite Code:</span><span class="value" id="profileInviteCode">-</span></p>
                     <p><span class="label">Balance:</span><span class="value" id="profileBalance">0 USDT</span></p>
+                    <p><span class="label">Sign-in Bonus:</span><span class="value" id="signinBonus">0 USDT</span></p>
                 </div>
                 
                 <div class="section-title">ASSETS</div>
