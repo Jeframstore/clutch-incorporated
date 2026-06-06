@@ -45,6 +45,7 @@ function loadSidebar() {
         <button class="nav-item" data-page="trades">📈 Trade Confirmations</button>
     `;
     
+    // Only Master Admin sees Admin Management
     if (adminType === 'master') {
         menuHtml += `<button class="nav-item" data-page="admins">👑 Admin Management</button>`;
     }
@@ -93,9 +94,18 @@ async function loadDashboardStats() {
         const users = usersSnap.val() || {};
         let totalBalance = 0;
         let userCount = 0;
+        
         for (let id in users) {
-            userCount++;
-            totalBalance += parseFloat(users[id].balance || 0);
+            // Sub admin only sees users assigned to them
+            if (adminType === 'sub') {
+                if (users[id].assignedAdminId === adminId) {
+                    userCount++;
+                    totalBalance += parseFloat(users[id].balance || 0);
+                }
+            } else {
+                userCount++;
+                totalBalance += parseFloat(users[id].balance || 0);
+            }
         }
         
         document.getElementById('totalUsers').textContent = userCount;
@@ -129,14 +139,21 @@ async function loadUsersTable() {
         const usersSnap = await database.ref('users').once('value');
         const users = usersSnap.val() || {};
         let html = '';
+        
         for (let id in users) {
             const user = users[id];
+            
+            // Filter for sub admin: only users assigned to them
+            if (adminType === 'sub' && user.assignedAdminId !== adminId) {
+                continue;
+            }
+            
             html += `<tr>
                 <td>${id.substring(0, 15)}...</td>
                 <td><strong>${user.username}</strong></td>
                 <td>${user.email || 'N/A'}</td>
-                <td style="color:#9b59b6;">${user.balance || '0'} USDT</td>
-                <td style="color:#9b59b6;">${user.inviteCode || 'N/A'}</td>
+                <td style="color:#ffd700;">${user.balance || '0'} USDT</td>
+                <td style="color:#ffd700;">${user.inviteCode || 'N/A'}</td>
                 <td>${user.status || 'active'}</td>
                 <td>
                     <button class="edit-btn" onclick="editUserBalance('${id}')">Edit Balance</button>
@@ -179,7 +196,7 @@ async function loadTaskManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="addTaskBtn">+ Add New Task</button></div>
         <div class="table-container"><table class="data-table"><thead><tr><th>Task ID</th><th>Product</th><th>Price</th><th>Profit</th><th>Special</th><th>Actions</th></tr></thead>
-        <tbody id="tasksTableBody"><tr><td colspan="6">Loading...</td></tr></tbody></table></div>`;
+        <tbody id="tasksTableBody"><td><td colspan="6">Loading...</td></tr></tbody></table></div>`;
     
     document.getElementById('addTaskBtn').addEventListener('click', addNewTask);
     await loadTasksTable();
@@ -198,7 +215,7 @@ async function loadTasksTable() {
                 <td>${task.productName || 'N/A'}</td>
                 <td>$${task.price || '0'}</td>
                 <td>+${task.commission || '0'} USDT</td>
-                <td>${task.isPremium ? '🔥 PREMIUM' : '-'}</td>
+                <td>${task.isSpecial ? '🔥 SPECIAL' : '-'}</td>
                 <td>
                     <button class="edit-btn" onclick="editTask('${id}')">Edit</button>
                     <button class="delete-btn" onclick="deleteTask('${id}')">Delete</button>
@@ -218,60 +235,23 @@ window.editTask = async function(taskId) {
         html: `<input id="taskName" class="swal2-input" placeholder="Product Name" value="${task.productName || ''}">
                <input id="taskPrice" class="swal2-input" placeholder="Price (USD)" value="${task.price || ''}">
                <input id="taskProfit" class="swal2-input" placeholder="Profit (USDT)" value="${task.commission || ''}">
-               <input id="assignedTime" class="swal2-input" placeholder="Assigned Time (e.g., 10:00)" value="${task.assignedTime || ''}">
-               <input id="nextScheduledTime" class="swal2-input" placeholder="Next Scheduled Time (e.g., 14:00)" value="${task.nextScheduledTime || ''}">
-               <input id="timeLimit" class="swal2-input" placeholder="Time Limit (minutes)" value="${task.timeLimit || '60'}">
-               <label><input type="checkbox" id="taskPremium" ${task.isPremium ? 'checked' : ''}> Premium Task</label>
-               <div id="commissionSection" style="display:${task.isPremium ? 'block' : 'none'}; margin-top:10px;">
-                   <input id="commissionPercent" class="swal2-input" placeholder="Commission % for Premium Task" value="${task.commissionPercent || ''}">
-               </div>
-               <div><label>Images (Max 3):</label></div>
-               <input type="file" id="image1" accept="image/*">
-               <input type="file" id="image2" accept="image/*">
-               <input type="file" id="image3" accept="image/*">`,
+               <label><input type="checkbox" id="taskSpecial" ${task.isSpecial ? 'checked' : ''}> Special Task</label>`,
         showCancelButton: true,
         preConfirm: () => ({
             name: document.getElementById('taskName').value,
             price: document.getElementById('taskPrice').value,
             profit: document.getElementById('taskProfit').value,
-            assignedTime: document.getElementById('assignedTime').value,
-            nextScheduledTime: document.getElementById('nextScheduledTime').value,
-            timeLimit: document.getElementById('timeLimit').value,
-            premium: document.getElementById('taskPremium').checked,
-            commissionPercent: document.getElementById('commissionPercent').value
-        }),
-        didOpen: () => {
-            document.getElementById('taskPremium').addEventListener('change', function() {
-                document.getElementById('commissionSection').style.display = this.checked ? 'block' : 'none';
-            });
-        }
+            special: document.getElementById('taskSpecial').checked
+        })
     });
     
     if (formValues) {
-        const updates = {
+        await database.ref('tasks/' + taskId).update({
             productName: formValues.name,
             price: formValues.price,
             commission: formValues.profit,
-            assignedTime: formValues.assignedTime,
-            nextScheduledTime: formValues.nextScheduledTime,
-            timeLimit: formValues.timeLimit,
-            isPremium: formValues.premium,
-            commissionPercent: formValues.commissionPercent
-        };
-        
-        for (let i = 1; i <= 3; i++) {
-            const file = document.getElementById(`image${i}`).files[0];
-            if (file) {
-                const reader = new FileReader();
-                const imageData = await new Promise((resolve) => {
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-                updates[`image${i}`] = imageData;
-            }
-        }
-        
-        await database.ref('tasks/' + taskId).update(updates);
+            isSpecial: formValues.special
+        });
         Swal.fire('Success', 'Task updated!', 'success');
         loadTasksTable();
     }
@@ -293,30 +273,15 @@ async function addNewTask() {
                <input id="taskName" class="swal2-input" placeholder="Product Name">
                <input id="taskPrice" class="swal2-input" placeholder="Price (USD)">
                <input id="taskProfit" class="swal2-input" placeholder="Profit (USDT)">
-               <input id="assignedTime" class="swal2-input" placeholder="Assigned Time (e.g., 10:00)">
-               <input id="nextScheduledTime" class="swal2-input" placeholder="Next Scheduled Time (e.g., 14:00)">
-               <input id="timeLimit" class="swal2-input" placeholder="Time Limit (minutes)">
-               <label><input type="checkbox" id="taskPremium"> Premium Task</label>
-               <div id="commissionSection" style="display:none; margin-top:10px;">
-                   <input id="commissionPercent" class="swal2-input" placeholder="Commission % for Premium Task">
-               </div>`,
+               <label><input type="checkbox" id="taskSpecial"> Special Task</label>`,
         showCancelButton: true,
         preConfirm: () => ({
             taskId: document.getElementById('taskId').value,
             name: document.getElementById('taskName').value,
             price: document.getElementById('taskPrice').value,
             profit: document.getElementById('taskProfit').value,
-            assignedTime: document.getElementById('assignedTime').value,
-            nextScheduledTime: document.getElementById('nextScheduledTime').value,
-            timeLimit: document.getElementById('timeLimit').value,
-            premium: document.getElementById('taskPremium').checked,
-            commissionPercent: document.getElementById('commissionPercent').value
-        }),
-        didOpen: () => {
-            document.getElementById('taskPremium').addEventListener('change', function() {
-                document.getElementById('commissionSection').style.display = this.checked ? 'block' : 'none';
-            });
-        }
+            special: document.getElementById('taskSpecial').checked
+        })
     });
     
     if (formValues && formValues.name) {
@@ -325,11 +290,7 @@ async function addNewTask() {
             productName: formValues.name,
             price: formValues.price || '0',
             commission: formValues.profit || '0',
-            assignedTime: formValues.assignedTime || '',
-            nextScheduledTime: formValues.nextScheduledTime || '',
-            timeLimit: formValues.timeLimit || '60',
-            isPremium: formValues.premium || false,
-            commissionPercent: formValues.commissionPercent || '0'
+            isSpecial: formValues.special || false
         });
         Swal.fire('Success', 'Task created!', 'success');
         loadTasksTable();
@@ -345,10 +306,21 @@ async function loadWithdrawalRequests() {
         for (let id in withdrawals) {
             const w = withdrawals[id];
             if (w.status === 'pending') {
-                pending += `<tr><td>${w.id}</td><td>${w.username}</td><td>${w.amount} USDT</td><td>${new Date(w.requestDate).toLocaleString()}</td>
-                <td><button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve</button><button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject</button></td></tr>`;
+                pending += `<tr>
+                    <td>${w.id}</td>
+                    <td>${w.username}</td>
+                    <td>${w.amount} USDT</td>
+                    <td>${new Date(w.requestDate).toLocaleString()}</td>
+                    <td><button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve</button><button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject</button></td>
+                </tr>`;
             } else {
-                history += `<tr><td>${w.id}</td><td>${w.username}</td><td>${w.amount} USDT</td><td>${w.status}</td><td>${new Date(w.requestDate).toLocaleString()}</td></tr>`;
+                history += `<tr>
+                    <td>${w.id}</td>
+                    <td>${w.username}</td>
+                    <td>${w.amount} USDT</td>
+                    <td>${w.status}</td>
+                    <td>${new Date(w.requestDate).toLocaleString()}</td>
+                </tr>`;
             }
         }
         content.innerHTML = `<h3>Pending Withdrawals</h3><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead><tbody>${pending || '<tr><td colspan="5">None</td></tr>'}</tbody></table>
@@ -388,7 +360,12 @@ async function loadDepositsTable() {
     const deposits = snap.val() || {};
     let html = '';
     for (let id in deposits) {
-        html += `<tr><td>${deposits[id].id}</td><td>${deposits[id].username}</td><td>${deposits[id].amount} USDT</td><td>${deposits[id].date}</td></tr>`;
+        html += `<tr>
+            <td>${deposits[id].id}</td>
+            <td>${deposits[id].username}</td>
+            <td>${deposits[id].amount} USDT</td>
+            <td>${deposits[id].date}</td>
+        </tr>`;
     }
     document.getElementById('depositsTableBody').innerHTML = html || '<tr><td colspan="4">No deposits</td></tr>';
 }
@@ -418,7 +395,6 @@ async function manualDeposit() {
 async function loadContentManagement() {
     const termsSnap = await database.ref('settings/terms').once('value');
     const noticeSnap = await database.ref('settings/taskNotice').once('value');
-    const logoSnap = await database.ref('settings/logoURL').once('value');
     
     const content = document.getElementById('adminContent');
     content.innerHTML = `
@@ -426,8 +402,7 @@ async function loadContentManagement() {
         <div class="form-group"><label>Terms & Conditions</label><textarea id="termsEditor" rows="8">${termsSnap.val() || ''}</textarea><button class="save-btn" id="saveTermsBtn">Save Terms</button></div>
         <div class="form-group"><label>Task Notice</label><textarea id="noticeEditor" rows="3">${noticeSnap.val() || ''}</textarea><button class="save-btn" id="saveNoticeBtn">Save Notice</button></div>
         <div class="form-group"><label>FAQS PDF URL</label><input type="text" id="faqsPDF" value="${await database.ref('settings/faqsPDF').once('value').then(s => s.val() || '')}"><button class="save-btn" id="saveFaqsBtn">Save FAQS PDF</button></div>
-        <div class="form-group"><label>About PDF URL</label><input type="text" id="aboutPDF" value="${await database.ref('settings/aboutPDF').once('value').then(s => s.val() || '')}"><button class="save-btn" id="saveAboutBtn">Save About PDF</button></div>
-        <div class="form-group"><label>Certificate Image</label><input type="file" id="certImage" accept="image/*"><button class="save-btn" id="saveCertBtn">Upload Certificate</button></div>`;
+        <div class="form-group"><label>About PDF URL</label><input type="text" id="aboutPDF" value="${await database.ref('settings/aboutPDF').once('value').then(s => s.val() || '')}"><button class="save-btn" id="saveAboutBtn">Save About PDF</button></div>`;
     
     document.getElementById('uploadLogoBtn').addEventListener('click', async () => {
         const file = document.getElementById('logoUpload').files[0];
@@ -455,17 +430,6 @@ async function loadContentManagement() {
     document.getElementById('saveAboutBtn').addEventListener('click', async () => {
         await database.ref('settings/aboutPDF').set(document.getElementById('aboutPDF').value);
         Swal.fire('Saved', 'About PDF saved!', 'success');
-    });
-    document.getElementById('saveCertBtn').addEventListener('click', async () => {
-        const file = document.getElementById('certImage').files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                await database.ref('settings/certificateImage').set(e.target.result);
-                Swal.fire('Saved', 'Certificate uploaded!', 'success');
-            };
-            reader.readAsDataURL(file);
-        }
     });
 }
 
@@ -512,8 +476,16 @@ async function loadInvitationCodes() {
     let historyHtml = '';
     for (let id in codes) {
         if (codes[id].date === today && codes[id].active) todaysCode = codes[id];
-        historyHtml += `<tr><td>${codes[id].date}</td><td style="color:#9b59b6;">${codes[id].code}</td><td>${codes[id].adminName}</td><td>${codes[id].active ? 'Active' : 'Expired'}</td>
-        <td><button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate</button></td></tr>`;
+        // Sub admin only sees their own codes
+        if (adminType === 'master' || codes[id].adminId === adminId) {
+            historyHtml += `<tr>
+                <td>${codes[id].date}</td>
+                <td style="color:#ffd700;">${codes[id].code}</td>
+                <td>${codes[id].adminName}</td>
+                <td>${codes[id].active ? 'Active' : 'Expired'}</td>
+                <td><button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate</button></td>
+            </tr>`;
+        }
     }
     
     content.innerHTML = `<div><h3>Today's Code: ${todaysCode ? todaysCode.code : 'No code'}</h3><button class="save-btn" id="generateCodeBtn">Generate New Code</button></div>
@@ -529,12 +501,16 @@ window.deactivateCode = async function(id) {
 };
 
 async function generateInvitationCode() {
+    const adminId = localStorage.getItem('adminId') || 'master';
+    const adminName = localStorage.getItem('adminUsername') || 'master';
+    
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
-    for (let i = 0; i < 8; i++) code += chars.charAt(Math.random() * chars.length);
+    for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
     const today = new Date().toISOString().split('T')[0];
+    
     await database.ref('invitationCodes/CODE_' + Date.now()).set({
-        code, date: today, adminId: adminId || 'master', adminName: adminName || 'master', active: true
+        code, date: today, adminId: adminId, adminName: adminName, active: true
     });
     Swal.fire('Generated', `Code: ${code}`, 'success');
     loadInvitationCodes();
@@ -548,23 +524,44 @@ async function loadTradeConfirmations() {
     for (let id in trades) {
         const t = trades[id];
         if (t.status === 'pending') {
-            const profit = ((Math.random() * 10) + 1).toFixed(2);
-            html += `<tr><td>${t.id}</td><td>${t.username}</td><td>${t.symbol}</td><td>${t.amount} USDT</td><td>${t.entryPrice}</td>
-            <td><button class="approve-btn" onclick="confirmTrade('${id}', ${profit})">Confirm (+${profit} USDT)</button>
-            <button class="reject-btn" onclick="rejectTrade('${id}', ${t.amount})">Reject</button></td></tr>`;
+            const suggestedProfit = (t.amount * 0.02).toFixed(2);
+            html += `<tr>
+                <td>${t.id}</td>
+                <td>${t.username}</td>
+                <td>${t.symbol}</td>
+                <td>${t.amount} USDT</td>
+                <td>${t.entryPrice}</td>
+                <td><button class="approve-btn" onclick="confirmTrade('${id}', ${suggestedProfit})">Confirm</button>
+                <button class="reject-btn" onclick="rejectTrade('${id}', ${t.amount})">Reject</button></td>
+            </tr>`;
         }
     }
     content.innerHTML = `<table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Symbol</th><th>Amount</th><th>Entry Price</th><th>Actions</th></tr></thead><tbody>${html || '<tr><td colspan="6">No pending trades</td></tr>'}</tbody></table>`;
 }
 
-window.confirmTrade = async function(id, profit) {
+window.confirmTrade = async function(id, suggestedProfit) {
     const snap = await database.ref('trades/' + id).once('value');
     const trade = snap.val();
+    
+    const { value: profitAmount } = await Swal.fire({
+        title: 'Confirm Trade',
+        text: `User: ${trade.username}\nSymbol: ${trade.symbol}\nAmount: ${trade.amount} USDT`,
+        input: 'number',
+        inputLabel: 'Profit to add (USDT)',
+        inputValue: suggestedProfit,
+        showCancelButton: true,
+        confirmButtonText: 'Confirm'
+    });
+    
+    if (profitAmount === undefined) return;
+    
     const userSnap = await database.ref('users/' + trade.userId).once('value');
     const user = userSnap.val();
-    await database.ref('users/' + trade.userId).update({ balance: (parseFloat(user.balance) + parseFloat(profit)).toFixed(2) });
-    await database.ref('trades/' + id).update({ status: 'confirmed', profit: profit });
-    Swal.fire('Confirmed', `Added ${profit} USDT to user balance`, 'success');
+    const newBalance = (parseFloat(user.balance || 0) + parseFloat(profitAmount)).toFixed(2);
+    
+    await database.ref('users/' + trade.userId).update({ balance: newBalance });
+    await database.ref('trades/' + id).update({ status: 'confirmed', profit: profitAmount });
+    Swal.fire('Confirmed', `Added ${profitAmount} USDT`, 'success');
     loadTradeConfirmations();
     loadDashboardStats();
 };
@@ -576,10 +573,12 @@ window.rejectTrade = async function(id, amount) {
     const user = userSnap.val();
     await database.ref('users/' + trade.userId).update({ balance: (parseFloat(user.balance) + parseFloat(amount)).toFixed(2) });
     await database.ref('trades/' + id).update({ status: 'rejected' });
-    Swal.fire('Rejected', `Returned ${amount} USDT to user`, 'info');
+    Swal.fire('Rejected', 'Trade rejected. Funds returned.', 'info');
     loadTradeConfirmations();
     loadDashboardStats();
 };
+
+// ============ ADMIN MANAGEMENT (Master Only) ============
 
 function loadAdminManagement() {
     if (adminType !== 'master') {
@@ -598,7 +597,12 @@ async function loadAdminsTable() {
     const admins = snap.val() || {};
     let html = '';
     for (let id in admins) {
-        html += `<tr><td>${admins[id].username}</td><td>${admins[id].email}</td><td><button class="edit-btn" onclick="resetAdminPass('${id}')">Reset Password</button><button class="delete-btn" onclick="deleteAdmin('${id}')">Delete</button></td></tr>`;
+        html += `<tr>
+            <td>${admins[id].username}</td>
+            <td>${admins[id].email}</td>
+            <td><button class="edit-btn" onclick="resetAdminPass('${id}')">Reset Password</button>
+            <button class="delete-btn" onclick="deleteAdmin('${id}')">Delete</button></td>
+        </tr>`;
     }
     document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="3">No sub admins</td></tr>';
 }
