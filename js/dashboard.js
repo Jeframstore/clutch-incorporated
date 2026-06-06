@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     attachUserDataListener();
+    loadMarketPrices();
     
     // Profile Menu
     const profileIcon = document.getElementById('profileIconBtn');
@@ -174,4 +175,82 @@ function attachUserDataListener() {
     } catch (error) {
         console.error('Error loading user data:', error);
     }
+}
+
+async function loadMarketPrices() {
+    try {
+        const coinsGrid = document.getElementById('coinsGrid');
+        if (!coinsGrid) return;
+
+        // Show only 4 coins: BTC, ETH, BNB, SOL
+        const displayCoins = ['BTC', 'ETH', 'BNB', 'SOL'];
+        
+        // Fetch prices from Binance
+        const response = await fetch('https://api.binance.com/api/v3/ticker/price');
+        const data = await response.json();
+        
+        const prices = {};
+        data.forEach(ticker => {
+            const symbol = ticker.symbol.replace('USDT', '');
+            if (displayCoins.includes(symbol)) {
+                prices[symbol] = parseFloat(ticker.price);
+            }
+        });
+
+        // Calculate profit (mock calculation - in real app this would come from database)
+        const profits = {
+            'BTC': 2.5,
+            'ETH': 1.8,
+            'BNB': 3.2,
+            'SOL': 4.1
+        };
+
+        let html = '';
+        displayCoins.forEach(coin => {
+            const price = prices[coin] || 0;
+            const profit = profits[coin] || 0;
+            const graphColor = profit > 0 ? '#00ff88' : '#ff4444';
+            
+            html += `
+                <div class="coin-card">
+                    <div class="coin-header">
+                        <span class="coin-name">${coin}</span>
+                        <span class="coin-price">$${price.toFixed(2)}</span>
+                    </div>
+                    <div class="coin-profit" style="color: ${graphColor}">
+                        ${profit > 0 ? '+' : ''}${profit}%
+                    </div>
+                    <div class="coin-graph">
+                        <svg width="100%" height="60" viewBox="0 0 200 60">
+                            <polyline
+                                fill="none"
+                                stroke="${graphColor}"
+                                stroke-width="2"
+                                points="${generateGraphPoints(profit)}"
+                            />
+                        </svg>
+                    </div>
+                </div>
+            `;
+        });
+        
+        coinsGrid.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading market prices:', error);
+    }
+}
+
+function generateGraphPoints(profit) {
+    // Generate simple graph points based on profit
+    const points = [];
+    const baseY = 30;
+    const amplitude = Math.abs(profit) * 5;
+    
+    for (let i = 0; i <= 10; i++) {
+        const x = i * 20;
+        const y = baseY + (profit > 0 ? -1 : 1) * Math.sin(i * 0.5) * amplitude;
+        points.push(`${x},${y}`);
+    }
+    
+    return points.join(' ');
 }

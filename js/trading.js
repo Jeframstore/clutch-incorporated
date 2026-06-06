@@ -11,7 +11,7 @@ let prices = {};
 let priceHistory = [];
 let selectedTimeFrame = '2h';
 
-const coins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC', 'LINK', 'AVAX', 'UNI', 'ATOM', 'LTC', 'BCH'];
+const coins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC', 'LINK', 'AVAX', 'UNI', 'ATOM', 'LTC', 'BCH', 'USDT', 'USDC'];
 
 document.addEventListener('DOMContentLoaded', async function() {
     userId = sessionStorage.getItem('userId');

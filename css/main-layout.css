@@ -306,16 +306,46 @@ body {
 /* Coin Cards Grid */
 .coins-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
-    margin-bottom: 24px;
 }
 
 .coin-card {
-    background: #FFFFFF;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
     border-radius: 16px;
     padding: 16px;
-    border: 1px solid #ECEAF7;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.coin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.coin-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.coin-price {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.coin-profit {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.coin-graph {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 8px;
 }
 
 .coin-card h4 {
