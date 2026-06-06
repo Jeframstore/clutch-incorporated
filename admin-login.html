@@ -97,13 +97,14 @@
             text-align: center;
         }
     </style>
+    <!-- Firebase SDK - Loaded once -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="login-card">
         <div class="logo-area">
-            <img src="assets/images/logo.svg" alt="Logo" style="width: 80px; height: 80px; margin-bottom: 10px;">
+            <div class="big-c">C</div>
             <h2>Clutch Revenue</h2>
             <p class="subtitle">Admin Panel</p>
         </div>
@@ -125,11 +126,10 @@
         <div id="loginMessage"></div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Firebase config - loaded once -->
     <script src="js/firebase-config.js"></script>
     <script>
-        const database = firebase.database();
+        // database is already defined in firebase-config.js - DO NOT redeclare
         
         const loginForm = document.getElementById('adminLoginForm');
         
@@ -172,7 +172,8 @@
                 messageDiv.innerHTML = '<div class="error-message">Invalid credentials</div>';
                 
             } catch (error) {
-                messageDiv.innerHTML = '<div class="error-message">Database error</div>';
+                console.error('Login error:', error);
+                messageDiv.innerHTML = '<div class="error-message">Database error: ' + error.message + '</div>';
             }
         });
     </script>
