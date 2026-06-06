@@ -222,11 +222,25 @@ async function loadMarketPrices() {
                     </div>
                     <div class="coin-graph">
                         <svg width="100%" height="60" viewBox="0 0 200 60">
+                            <defs>
+                                <linearGradient id="grad-${coin}" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:${graphColor};stop-opacity:0.3" />
+                                    <stop offset="100%" style="stop-color:${graphColor};stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <polygon
+                                fill="url(#grad-${coin})"
+                                points="10,60 ${generateGraphPoints(profit)} 190,60"
+                                style="opacity: 0.5"
+                            />
                             <polyline
                                 fill="none"
                                 stroke="${graphColor}"
-                                stroke-width="2"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
                                 points="${generateGraphPoints(profit)}"
+                                style="filter: drop-shadow(0 0 4px ${graphColor})"
                             />
                         </svg>
                     </div>
@@ -241,15 +255,24 @@ async function loadMarketPrices() {
 }
 
 function generateGraphPoints(profit) {
-    // Generate simple graph points based on profit
+    // Generate realistic-looking graph points based on profit
     const points = [];
-    const baseY = 30;
-    const amplitude = Math.abs(profit) * 5;
+    const baseY = 40;
+    const amplitude = Math.min(Math.abs(profit) * 3, 20); // Cap amplitude
+    const trend = profit > 0 ? -1 : 1; // Upward for profit, downward for loss
     
-    for (let i = 0; i <= 10; i++) {
-        const x = i * 20;
-        const y = baseY + (profit > 0 ? -1 : 1) * Math.sin(i * 0.5) * amplitude;
-        points.push(`${x},${y}`);
+    // Generate 12 points for smoother curve
+    for (let i = 0; i <= 12; i++) {
+        const x = (i / 12) * 180 + 10; // Spread across width with padding
+        const progress = i / 12;
+        
+        // Combine trend with some randomness for realistic look
+        const noise = Math.sin(progress * 3) * 3 + Math.cos(progress * 5) * 2;
+        const y = baseY + (trend * amplitude * progress) + noise;
+        
+        // Clamp y to stay within bounds
+        const clampedY = Math.max(5, Math.min(55, y));
+        points.push(`${x},${clampedY}`);
     }
     
     return points.join(' ');

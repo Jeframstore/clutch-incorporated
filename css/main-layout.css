@@ -313,39 +313,46 @@ body {
 .coin-card {
     background: linear-gradient(135deg, #1a1a2e, #16213e);
     border-radius: 16px;
-    padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .coin-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
-}
-
-.coin-name {
-    font-size: 18px;
-    font-weight: bold;
-    color: #ffd700;
-}
-
-.coin-price {
-    font-size: 16px;
-    font-weight: bold;
-    color: #ffffff;
-}
-
-.coin-profit {
-    font-size: 14px;
-    font-weight: bold;
     margin-bottom: 12px;
 }
 
-.coin-graph {
-    background: rgba(0, 0, 0, 0.3);
+.coin-name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.coin-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+.coin-profit {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    padding: 8px 12px;
     border-radius: 8px;
-    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.coin-graph {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .coin-card h4 {
