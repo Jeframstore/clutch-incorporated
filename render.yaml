@@ -3,6 +3,11 @@ services:
     name: clutch-incorporated
     env: static
     staticPublishDir: .
+    headers:
+      - source: /*
+        headers:
+          - key: Cache-Control
+            value: no-cache, no-store, must-revalidate
     routes:
       - type: rewrite
         source: /*
