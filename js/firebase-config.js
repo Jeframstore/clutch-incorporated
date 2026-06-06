@@ -9,8 +9,12 @@ const firebaseConfig = {
     databaseURL: "https://clutch-incorporated-default-rtdb.firebaseio.com"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+// Initialize Firebase if not already initialized
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
+// Use let instead of const to prevent redeclaration error
+let database = firebase.database();
 
 console.log("Firebase initialized successfully");
