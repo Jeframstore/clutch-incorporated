@@ -155,17 +155,16 @@ function watchBalance() {
 
 async function fetchLivePrices() {
     try {
-        const symbols = coins.map(coin => coin + 'USDT');
-        const responses = await Promise.all(
-            symbols.map(symbol => 
-                fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)
-                    .then(res => res.json())
-            )
-        );
+        // Use single API call to fetch all prices at once
+        const response = await fetch('https://api.binance.com/api/v3/ticker/price');
+        const data = await response.json();
         
-        responses.forEach(data => {
-            const coinSymbol = data.symbol.replace('USDT', '');
-            prices[coinSymbol] = parseFloat(data.price);
+        // Filter for our coins and update prices
+        data.forEach(ticker => {
+            const coinSymbol = ticker.symbol.replace('USDT', '');
+            if (coins.includes(coinSymbol)) {
+                prices[coinSymbol] = parseFloat(ticker.price);
+            }
         });
         
         document.getElementById('priceSource').innerHTML = `Live from Binance • Updated ${new Date().toLocaleTimeString()}`;
