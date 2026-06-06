@@ -103,7 +103,7 @@
             const userSnap = await database.ref('users/' + userId).once('value');
             const user = userSnap.val();
             const completed = user?.completedTasks || 0;
-            const total = user?.totalTasks || 40;
+            const total = user?.totalTasks || 24;
             const percent = (completed / total) * 100;
             
             document.getElementById('taskCount').textContent = `${completed}/${total}`;
@@ -138,17 +138,21 @@
                 `<img src="${images[0]}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 16px; margin-bottom: 16px;">` : 
                 `<div style="width: 100%; height: 150px; background: #2a2a3e; border-radius: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #888;">No Image</div>`;
             
-            const specialBadge = activeTask.isSpecial ? '<span style="background: #ff4444; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-left: 10px;">🔥 SPECIAL</span>' : '';
+            const premiumBadge = activeTask.isPremium ? '<span style="background: #ff4444; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-left: 10px;">🔥 PREMIUM</span>' : '';
             
             document.getElementById('taskContent').innerHTML = `
                 ${imageHtml}
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <h3 style="color: #ffd700;">${activeTask.productName || 'Task'}</h3>
-                    ${specialBadge}
+                    ${premiumBadge}
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
                     <span>Task ID: ${activeTask.taskId || 'N/A'}</span>
                     <span>Profit: +${activeTask.profit || '0'} USDT</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                    <span>Assigned: ${activeTask.assignedTime || 'N/A'}</span>
+                    <span>Next: ${activeTask.nextScheduledTime || 'N/A'}</span>
                 </div>
                 <button id="completeTaskBtn" style="width: 100%; background: linear-gradient(135deg, #ffd700, #ffaa00); border: none; border-radius: 30px; padding: 14px; font-weight: bold; cursor: pointer;">Complete Task</button>
             `;

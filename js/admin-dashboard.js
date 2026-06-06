@@ -198,7 +198,7 @@ async function loadTasksTable() {
                 <td>${task.productName || 'N/A'}</td>
                 <td>$${task.price || '0'}</td>
                 <td>+${task.commission || '0'} USDT</td>
-                <td>${task.isSpecial ? '🔥 SPECIAL' : '-'}</td>
+                <td>${task.isPremium ? '🔥 PREMIUM' : '-'}</td>
                 <td>
                     <button class="edit-btn" onclick="editTask('${id}')">Edit</button>
                     <button class="delete-btn" onclick="deleteTask('${id}')">Delete</button>
@@ -218,7 +218,13 @@ window.editTask = async function(taskId) {
         html: `<input id="taskName" class="swal2-input" placeholder="Product Name" value="${task.productName || ''}">
                <input id="taskPrice" class="swal2-input" placeholder="Price (USD)" value="${task.price || ''}">
                <input id="taskProfit" class="swal2-input" placeholder="Profit (USDT)" value="${task.commission || ''}">
-               <label><input type="checkbox" id="taskSpecial" ${task.isSpecial ? 'checked' : ''}> Special Task</label>
+               <input id="assignedTime" class="swal2-input" placeholder="Assigned Time (e.g., 10:00)" value="${task.assignedTime || ''}">
+               <input id="nextScheduledTime" class="swal2-input" placeholder="Next Scheduled Time (e.g., 14:00)" value="${task.nextScheduledTime || ''}">
+               <input id="timeLimit" class="swal2-input" placeholder="Time Limit (minutes)" value="${task.timeLimit || '60'}">
+               <label><input type="checkbox" id="taskPremium" ${task.isPremium ? 'checked' : ''}> Premium Task</label>
+               <div id="commissionSection" style="display:${task.isPremium ? 'block' : 'none'}; margin-top:10px;">
+                   <input id="commissionPercent" class="swal2-input" placeholder="Commission % for Premium Task" value="${task.commissionPercent || ''}">
+               </div>
                <div><label>Images (Max 3):</label></div>
                <input type="file" id="image1" accept="image/*">
                <input type="file" id="image2" accept="image/*">
@@ -228,8 +234,17 @@ window.editTask = async function(taskId) {
             name: document.getElementById('taskName').value,
             price: document.getElementById('taskPrice').value,
             profit: document.getElementById('taskProfit').value,
-            special: document.getElementById('taskSpecial').checked
-        })
+            assignedTime: document.getElementById('assignedTime').value,
+            nextScheduledTime: document.getElementById('nextScheduledTime').value,
+            timeLimit: document.getElementById('timeLimit').value,
+            premium: document.getElementById('taskPremium').checked,
+            commissionPercent: document.getElementById('commissionPercent').value
+        }),
+        didOpen: () => {
+            document.getElementById('taskPremium').addEventListener('change', function() {
+                document.getElementById('commissionSection').style.display = this.checked ? 'block' : 'none';
+            });
+        }
     });
     
     if (formValues) {
@@ -237,7 +252,11 @@ window.editTask = async function(taskId) {
             productName: formValues.name,
             price: formValues.price,
             commission: formValues.profit,
-            isSpecial: formValues.special
+            assignedTime: formValues.assignedTime,
+            nextScheduledTime: formValues.nextScheduledTime,
+            timeLimit: formValues.timeLimit,
+            isPremium: formValues.premium,
+            commissionPercent: formValues.commissionPercent
         };
         
         for (let i = 1; i <= 3; i++) {
@@ -274,15 +293,30 @@ async function addNewTask() {
                <input id="taskName" class="swal2-input" placeholder="Product Name">
                <input id="taskPrice" class="swal2-input" placeholder="Price (USD)">
                <input id="taskProfit" class="swal2-input" placeholder="Profit (USDT)">
-               <label><input type="checkbox" id="taskSpecial"> Special Task</label>`,
+               <input id="assignedTime" class="swal2-input" placeholder="Assigned Time (e.g., 10:00)">
+               <input id="nextScheduledTime" class="swal2-input" placeholder="Next Scheduled Time (e.g., 14:00)">
+               <input id="timeLimit" class="swal2-input" placeholder="Time Limit (minutes)">
+               <label><input type="checkbox" id="taskPremium"> Premium Task</label>
+               <div id="commissionSection" style="display:none; margin-top:10px;">
+                   <input id="commissionPercent" class="swal2-input" placeholder="Commission % for Premium Task">
+               </div>`,
         showCancelButton: true,
         preConfirm: () => ({
             taskId: document.getElementById('taskId').value,
             name: document.getElementById('taskName').value,
             price: document.getElementById('taskPrice').value,
             profit: document.getElementById('taskProfit').value,
-            special: document.getElementById('taskSpecial').checked
-        })
+            assignedTime: document.getElementById('assignedTime').value,
+            nextScheduledTime: document.getElementById('nextScheduledTime').value,
+            timeLimit: document.getElementById('timeLimit').value,
+            premium: document.getElementById('taskPremium').checked,
+            commissionPercent: document.getElementById('commissionPercent').value
+        }),
+        didOpen: () => {
+            document.getElementById('taskPremium').addEventListener('change', function() {
+                document.getElementById('commissionSection').style.display = this.checked ? 'block' : 'none';
+            });
+        }
     });
     
     if (formValues && formValues.name) {
@@ -291,7 +325,11 @@ async function addNewTask() {
             productName: formValues.name,
             price: formValues.price || '0',
             commission: formValues.profit || '0',
-            isSpecial: formValues.special || false
+            assignedTime: formValues.assignedTime || '',
+            nextScheduledTime: formValues.nextScheduledTime || '',
+            timeLimit: formValues.timeLimit || '60',
+            isPremium: formValues.premium || false,
+            commissionPercent: formValues.commissionPercent || '0'
         });
         Swal.fire('Success', 'Task created!', 'success');
         loadTasksTable();

@@ -68,6 +68,20 @@ async function loadCurrentTask() {
         const currentTaskData = user.currentTask || null;
         
         if (currentTaskData && !currentTaskData.completed) {
+            // Check if current task has expired
+            if (currentTaskData.assignedAt) {
+                const assignedAt = new Date(currentTaskData.assignedAt);
+                const timeLimit = currentTaskData.timeLimit || 60; // default 60 minutes
+                const now = new Date();
+                const elapsedMinutes = (now - assignedAt) / (1000 * 60);
+                
+                if (elapsedMinutes > timeLimit) {
+                    // Task expired, mark as completed and load next
+                    await database.ref('users/' + userId + '/currentTask').remove();
+                    loadCurrentTask();
+                    return;
+                }
+            }
             currentTask = currentTaskData;
         } else {
             const tasksSnap = await database.ref('tasks').once('value');
@@ -79,9 +93,13 @@ async function loadCurrentTask() {
                 const task = tasks[taskKey];
                 if (!task) continue;
                 if (completedTaskIds.includes(taskKey)) continue;
-                if (task.availableFrom) {
-                    const availableFrom = new Date(task.availableFrom);
-                    if (availableFrom > now) continue;
+                
+                // Check if task is within assigned time
+                if (task.assignedTime) {
+                    const assignedTime = parseTime(task.assignedTime);
+                    if (assignedTime && !isWithinTimeWindow(assignedTime, task.timeLimit || 60)) {
+                        continue;
+                    }
                 }
 
                 currentTask = {
@@ -93,19 +111,40 @@ async function loadCurrentTask() {
                     image1: task.image1 || '',
                     image2: task.image2 || '',
                     image3: task.image3 || '',
+                    assignedTime: task.assignedTime || '',
+                    nextScheduledTime: task.nextScheduledTime || '',
+                    timeLimit: task.timeLimit || '60',
+                    isPremium: task.isPremium || false,
+                    commissionPercent: task.commissionPercent || '0',
+                    assignedAt: new Date().toISOString(),
                     completed: false
                 };
                 await database.ref('users/' + userId).update({ currentTask: currentTask });
                 break;
             }
         }
+        
+        displayTask(currentTask);
+        loadImages(currentTask || {});
+        updateStartButtonState(currentTask);
     } catch (e) {
         console.error('Error loading task from Firebase:', e);
     }
+}
 
-    displayTask(currentTask);
-    loadImages(currentTask || {});
-    updateStartButtonState(currentTask);
+function parseTime(timeStr) {
+    if (!timeStr) return null;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const now = new Date();
+    const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+    return targetTime;
+}
+
+function isWithinTimeWindow(assignedTime, timeLimitMinutes) {
+    const now = new Date();
+    const windowStart = new Date(assignedTime);
+    const windowEnd = new Date(assignedTime.getTime() + timeLimitMinutes * 60000);
+    return now >= windowStart && now <= windowEnd;
 }
 
 function loadImages(task) {
@@ -250,7 +289,7 @@ async function loadTaskProgress() {
         const userSnap = await database.ref('users/' + userId).once('value');
         const user = userSnap.val() || {};
         let completedTasks = user.completedTasks || 0;
-        let totalTasks = user.totalTasksPerRound || 40;
+        let totalTasks = user.totalTasksPerRound || 24;
         
         const percentage = (completedTasks / totalTasks) * 100;
         
@@ -284,7 +323,7 @@ async function completeTask() {
         updateStartButtonState(currentTask);
 
         let completedTasks = user.completedTasks || 0;
-        let totalTasks = user.totalTasksPerRound || 40;
+        let totalTasks = user.totalTasksPerRound || 24;
         const completedTaskIds = user.completedTaskIds || [];
         
         let balance = parseFloat(user.balance || 0);
