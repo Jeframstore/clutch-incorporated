@@ -531,7 +531,22 @@ async function loadWithdrawalRequests() {
 }
 
 window.approveWithdrawal = async function(id) {
-    await database.ref('withdrawals/' + id).update({ status: 'confirmed', processedDate: new Date().toISOString() });
+    const snap = await database.ref('withdrawals/' + id).once('value');
+    const withdrawal = snap.val();
+    
+    // Update withdrawal status
+    await database.ref('withdrawals/' + id).update({ 
+        status: 'confirmed', 
+        processedDate: new Date().toISOString() 
+    });
+    
+    // Also create a record in user's activity history
+    await database.ref('withdrawals_history/' + id).set({
+        ...withdrawal,
+        status: 'confirmed',
+        processedDate: new Date().toISOString()
+    });
+    
     Swal.fire('Approved', 'Withdrawal approved', 'success');
     loadWithdrawalRequests();
     loadDashboardStats();
@@ -542,8 +557,25 @@ window.rejectWithdrawal = async function(id) {
     const w = snap.val();
     const userSnap = await database.ref('users/' + w.userId).once('value');
     const user = userSnap.val();
-    await database.ref('users/' + w.userId).update({ balance: (parseFloat(user.balance) + parseFloat(w.amount)).toFixed(2) });
-    await database.ref('withdrawals/' + id).update({ status: 'rejected', processedDate: new Date().toISOString() });
+    
+    // Return funds to user
+    await database.ref('users/' + w.userId).update({ 
+        balance: (parseFloat(user.balance) + parseFloat(w.amount)).toFixed(2) 
+    });
+    
+    // Update withdrawal status
+    await database.ref('withdrawals/' + id).update({ 
+        status: 'rejected', 
+        processedDate: new Date().toISOString() 
+    });
+    
+    // Create record in history
+    await database.ref('withdrawals_history/' + id).set({
+        ...w,
+        status: 'rejected',
+        processedDate: new Date().toISOString()
+    });
+    
     Swal.fire('Rejected', 'Withdrawal rejected. Funds returned.', 'info');
     loadWithdrawalRequests();
     loadDashboardStats();
@@ -552,7 +584,7 @@ window.rejectWithdrawal = async function(id) {
 async function loadDepositRecords() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="manualDepositBtn">+ Manual Deposit</button></div>
-        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th></tr></thead>
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><tr></thead>
         <tbody id="depositsTableBody"><tr><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     document.getElementById('manualDepositBtn').addEventListener('click', manualDeposit);
     await loadDepositsTable();
@@ -744,11 +776,11 @@ async function loadTradeConfirmations() {
         const t = trades[id];
         if (t.status === 'pending') {
             const suggestedProfit = (t.amount * 0.02).toFixed(2);
-            html += `</tr>
+            html += `<tr>
                 <td>${t.id}</td>
                 <td>${t.username}</td>
                 <td>${t.symbol}</td>
-                <td>${t.amount} USDT</div>
+                <td>${t.amount} USDT</td>
                 <td>${t.entryPrice}</td>
                 <td><button class="approve-btn" onclick="confirmTrade('${id}', ${suggestedProfit})">Confirm</button>
                 <button class="reject-btn" onclick="rejectTrade('${id}', ${t.amount})">Reject</button></td>
@@ -757,7 +789,7 @@ async function loadTradeConfirmations() {
     }
     content.innerHTML = `<h3 style="color:#ffd700;">📈 Pending Trades</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Symbol</th><th>Amount</th><th>Entry Price</th><th>Actions</th></tr></thead>
-        <tbody>${html || '<tr><td colspan="6">No pending trades</td><\/tr>'}<\/tbody><\/table><\/div>`;
+        <tbody>${html || '<tr><td colspan="6">No pending trades</td></tr>'}</tbody></table></div>`;
 }
 
 window.confirmTrade = async function(id, suggestedProfit) {
@@ -820,7 +852,7 @@ function loadAdminManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<button class="save-btn" id="createAdminBtn">+ Create Sub Admin</button>
         <div class="table-container"><table class="data-table"><thead><tr><th>Username</th><th>Email</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="adminsTableBody"></td><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
+        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>`;
     document.getElementById('createAdminBtn').addEventListener('click', createSubAdmin);
     loadAdminsTable();
 }
@@ -840,7 +872,7 @@ async function loadAdminsTable() {
             </td>
         </tr>`;
     }
-    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins</td><\/tr>';
+    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins</td></tr>';
 }
 
 window.resetAdminPass = async function(id) {
