@@ -3,13 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Admin Login - Clutch Incorporated</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23ffd700'/><text x='50' y='70' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script type="module" src="js/firebase-config.js"></script>
+    <title>Admin Login - Clutch Revenue</title>
     <style>
         * {
             margin: 0;
@@ -17,8 +11,8 @@
             box-sizing: border-box;
         }
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -27,11 +21,15 @@
         }
         .login-card {
             background: rgba(18, 18, 26, 0.95);
-            padding: 40px;
             border-radius: 24px;
+            padding: 40px;
             width: 100%;
             max-width: 400px;
             border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        .logo-area {
+            text-align: center;
+            margin-bottom: 30px;
         }
         .big-c {
             width: 60px;
@@ -43,20 +41,18 @@
             justify-content: center;
             font-size: 32px;
             font-weight: bold;
-            margin: 0 auto 15px;
             color: #0a0a0a;
+            margin: 0 auto 15px;
         }
         h2 {
             color: #ffd700;
             text-align: center;
-            font-size: 20px;
             margin-bottom: 5px;
         }
         .subtitle {
             color: #888;
             text-align: center;
             margin-bottom: 30px;
-            font-size: 13px;
         }
         .input-group {
             margin-bottom: 20px;
@@ -65,7 +61,6 @@
             display: block;
             color: #aaa;
             margin-bottom: 8px;
-            font-size: 13px;
         }
         input {
             width: 100%;
@@ -92,10 +87,6 @@
             margin-top: 10px;
             color: #0a0a0a;
         }
-        button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
-        }
         .error-message {
             background: rgba(255,0,0,0.1);
             border: 1px solid rgba(255,0,0,0.3);
@@ -104,23 +95,23 @@
             color: #ff6666;
             margin-top: 15px;
             text-align: center;
-            font-size: 13px;
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="js/firebase-config.js"></script>
 </head>
 <body>
     <div class="login-card">
-        <div class="big-c">C</div>
-        <h2>Clutch Incorporated</h2>
-        <p class="subtitle">Admin Panel</p>
+        <div class="logo-area">
+            <div class="big-c">C</div>
+            <h2>Clutch Revenue</h2>
+            <p class="subtitle">Admin Panel</p>
+        </div>
         
         <form id="adminLoginForm">
             <div class="input-group">
-                <label>Username or Email</label>
-                <input type="text" id="adminIdentifier" placeholder="Enter username or email" required>
+                <label>Username</label>
+                <input type="text" id="adminUsername" placeholder="Enter username" required>
             </div>
             
             <div class="input-group">
@@ -134,6 +125,64 @@
         <div id="loginMessage"></div>
     </div>
 
-    <script type="module" src="js/admin-login.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBwf-rkEWsNJRkh_TJeMSoNDc1iwO1c6tI",
+            authDomain: "clutch-incorporated.firebaseapp.com",
+            projectId: "clutch-incorporated",
+            storageBucket: "clutch-incorporated.firebasestorage.app",
+            messagingSenderId: "515595231583",
+            appId: "1:515595231583:web:73ff8c3cdc123dcbce16ea",
+            databaseURL: "https://clutch-incorporated-default-rtdb.firebaseio.com"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        const loginForm = document.getElementById('adminLoginForm');
+        
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+            
+            messageDiv.innerHTML = '';
+            
+            try {
+                const masterSnap = await database.ref('admins/master').once('value');
+                const master = masterSnap.val();
+                
+                if (master && master.username === username && master.password === password) {
+                    localStorage.setItem('isAdminLoggedIn', 'true');
+                    localStorage.setItem('adminType', 'master');
+                    localStorage.setItem('adminUsername', username);
+                    window.location.href = 'admin-dashboard.html';
+                    return;
+                }
+                
+                const subSnap = await database.ref('admins/sub').once('value');
+                const subs = subSnap.val() || {};
+                
+                for (let id in subs) {
+                    const admin = subs[id];
+                    if (admin.username === username && admin.password === password) {
+                        localStorage.setItem('isAdminLoggedIn', 'true');
+                        localStorage.setItem('adminType', 'sub');
+                        localStorage.setItem('adminUsername', username);
+                        localStorage.setItem('adminId', id);
+                        window.location.href = 'admin-dashboard.html';
+                        return;
+                    }
+                }
+                
+                messageDiv.innerHTML = '<div class="error-message">Invalid credentials</div>';
+                
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error-message">Database error</div>';
+            }
+        });
+    </script>
 </body>
 </html>

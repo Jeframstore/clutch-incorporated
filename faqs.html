@@ -2,116 +2,84 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clutch Incorporated - FAQs</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23ffd700'/><text x='50' y='70' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
-        
-        body { font-family: 'IBM Plex Sans', sans-serif; background-color: #0A0A0A; color: white; margin: 0; }
-        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        .glass-header { 
-            background: rgba(10, 10, 10, 0.85); 
-            backdrop-filter: blur(20px); 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .marquee-container { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .marquee-anim { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        
-        .nav-btn.active { color: #FFD800; }
-        .nav-indicator { box-shadow: 0 0 15px #FFD800; }
-        
-        ::-webkit-scrollbar { display: none; }
-
-        .pdf-viewer { background: #1B1B1B; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 32px; padding: 24px; min-height: 400px; }
-        .no-pdf-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: rgba(255, 255, 255, 0.3); }
-        .no-pdf-placeholder span { font-size: 48px; margin-bottom: 16px; }
-        .no-pdf-placeholder p { font-size: 14px; margin: 4px 0; }
-        .small-text { font-size: 12px; }
-        .pdf-frame { width: 100%; height: 500px; border: none; border-radius: 16px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>FAQS - Clutch Revenue</title>
+    <link rel="stylesheet" href="css/main-layout.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-[#0A0A0A] flex justify-center">
-    <div class="flex flex-col min-h-screen w-full max-w-[375px] bg-[#0A0A0A] text-white relative pb-[100px] border-x border-white/5">
-        
-        <!-- Header -->
-        <header class="sticky top-0 z-[60] glass-header px-6 py-5">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FFD800] shadow-[0_0_20px_rgba(255,216,0,0.3)]">
-                        <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/cog.svg" class="w-7 h-7" alt="Logo">
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-jakarta text-lg font-extrabold tracking-tighter leading-none">CLUTCH</span>
-                        <span class="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-0.5">Incorporated</span>
-                    </div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <button id="backBtn" class="w-11 h-11 rounded-full border-2 border-white/10 flex items-center justify-center hover:border-[#FFD800] transition-colors">
-                        <i class="ti ti-arrow-left text-white text-xl"></i>
-                    </button>
-                </div>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img id="siteLogo" src="assets/images/logo.png" alt="Logo" onerror="this.style.display='none'">
+                <span class="company-name">Clutch Incorporated</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">🏠 Home</a>
+                <a href="deposit.html">💳 Deposit</a>
+                <a href="withdraw.html">💰 Withdraw</a>
+                <a href="terms.html">📋 Terms & Conditions</a>
+                <a href="faqs.html">❓ FAQS</a>
+                <a href="about.html">ℹ️ About</a>
+                <div class="sidebar-divider"></div>
+                <a href="bind-wallet.html">🔗 Bind Wallet</a>
+                <a href="service.html">📞 Contact Us</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <button class="tasks-btn" onclick="location.href='starting.html'">TASKS</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Frequently Asked Questions</h1>
+                <p class="page-description">Find answers to common questions</p>
             </div>
             
-            <div class="overflow-hidden marquee-container rounded-lg py-1.5 mt-2">
-                <div class="marquee-anim text-[9px] font-black text-[#80FF00]/90 uppercase tracking-widest px-4">
-                    • Frequently Asked Questions • Get Help • Welcome <span id="usernameDisplay" class="text-white">User</span> •
-                </div>
-            </div>
-        </header>
-
-        <main class="flex-1 overflow-y-auto no-scrollbar px-5 py-6">
-            <div class="mb-8">
-                <h1 class="font-jakarta text-3xl font-extrabold tracking-tight">FAQs</h1>
-                <p class="text-white/40 text-xs mt-2">Find answers to common questions.</p>
-            </div>
-
-            <div class="faqs-content" id="faqsContent">
-                <div class="pdf-viewer" id="pdfViewer">
-                    <div class="no-pdf-placeholder" id="noPdfPlaceholder">
-                        <span>📋</span>
-                        <p>No FAQ document uploaded yet</p>
-                        <p class="small-text">Admin will upload FAQS here</p>
-                    </div>
-                    <iframe id="pdfFrame" class="pdf-frame" src=""></iframe>
+            <div class="card">
+                <div id="faqsViewer" style="min-height: 500px;">
+                    <div style="text-align: center; padding: 40px;">Loading FAQS...</div>
                 </div>
             </div>
         </main>
 
-        <!-- Bottom Tab Bar -->
-        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-2xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-home text-white text-2xl"></i>
+        <aside class="profile-panel">
+            <div class="profile-content">
+                <div class="avatar">👤</div>
+                <div class="username" id="profileUsername">Loading...</div>
+                <div class="section-title">ACCOUNT</div>
+                <div class="account-details">
+                    <p><span class="label">Joined:</span><span class="value" id="profileJoined">-</span></p>
+                    <p><span class="label">Invite Code:</span><span class="value" id="profileInviteCode">-</span></p>
+                    <p><span class="label">Balance:</span><span class="value" id="profileBalance">0 USDT</span></p>
                 </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
+                <div class="section-title">ASSETS</div>
+                <div class="coins-list" id="profileCoinsList"></div>
+                <div class="dropdown-trigger" id="dropdownTrigger">▼ More Coins</div>
+                <div class="dropdown-coins" id="dropdownCoins"></div>
             </div>
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-rocket text-white text-2xl"></i>
-                </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Start</span>
+            <div class="profile-bottom">
+                <button class="tradenow-btn" onclick="location.href='trading.html'">TRADE NOW</button>
             </div>
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-list text-white text-2xl"></i>
-                </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Records</span>
-            </div>
-        </nav>
+        </aside>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/main.js"></script>
-    <script type="module" src="js/faqs.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main-layout.js"></script>
+    <script>
+        async function loadFAQS() {
+            const snap = await database.ref('settings/faqsPDF').once('value');
+            const pdfUrl = snap.val();
+            const container = document.getElementById('faqsViewer');
+            
+            if (pdfUrl) {
+                container.innerHTML = `<iframe src="${pdfUrl}" style="width:100%; height:600px; border:none; border-radius:12px;"></iframe>`;
+            } else {
+                container.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">No FAQS document uploaded yet.</div>';
+            }
+        }
+        loadFAQS();
+    </script>
 </body>
 </html>

@@ -2,205 +2,190 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clutch Incorporated - Starting</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23ffd700'/><text x='50' y='70' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
-        
-        body { font-family: 'IBM Plex Sans', sans-serif; background-color: #0A0A0A; color: white; margin: 0; }
-        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        .glass-header { 
-            background: rgba(10, 10, 10, 0.85); 
-            backdrop-filter: blur(20px); 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .marquee-container { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .marquee-anim { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        
-        .nav-btn.active { color: #FFD800; }
-        .nav-indicator { box-shadow: 0 0 15px #FFD800; }
-        
-        ::-webkit-scrollbar { display: none; }
-
-        .stats-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        .stat-card { background: linear-gradient(135deg, #1B1B1B 0%, #0F0F0F 100%); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 20px; text-align: center; }
-        .stat-label { color: rgba(255, 255, 255, 0.4); font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-        .stat-value { font-size: 24px; font-weight: bold; color: #FFD800; margin-bottom: 4px; }
-        .stat-value span { font-size: 12px; color: rgba(255, 255, 255, 0.4); }
-        .stat-note { font-size: 10px; color: rgba(255, 255, 255, 0.3); }
-
-        .progress-section { padding: 0 20px 20px; }
-        .progress-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; font-weight: bold; }
-        .task-count { color: #FFD800; }
-        .progress-bar { height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #FFD800, #FFA500); transition: width 0.3s ease; }
-
-        .timer-section { padding: 0 20px 20px; }
-        .timer-card { background: rgba(139, 69, 19, 0.2); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 20px; padding: 20px; text-align: center; }
-        .countdown { font-size: 32px; font-weight: bold; color: #FFD800; margin: 10px 0; }
-        .next-task-time { font-size: 12px; color: rgba(255, 255, 255, 0.5); }
-
-        .task-card { background: #1B1B1B; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; margin: 0 20px 20px; overflow: hidden; }
-        .task-image-slider { position: relative; height: 200px; background: #0F0F0F; }
-        .slider-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-        .slider-image { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.5); border: none; color: white; padding: 10px 15px; cursor: pointer; z-index: 10; }
-        .slider-btn.prev { left: 10px; }
-        .slider-btn.next { right: 10px; }
-        .slider-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
-        .slider-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); cursor: pointer; }
-        .slider-dot.active { background: #FFD800; }
-
-        .task-info { padding: 20px; }
-        .product-name { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
-        .price-section { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .price-label { color: rgba(255, 255, 255, 0.5); font-size: 12px; }
-        .price-value { color: #FFD800; font-size: 18px; font-weight: bold; }
-        .task-meta { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; font-size: 12px; color: rgba(255, 255, 255, 0.5); }
-        .task-meta span { color: white; }
-        .task-status { margin-bottom: 15px; }
-        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .status-badge.available { background: rgba(0, 255, 0, 0.2); color: #00FF00; }
-        .status-badge.completed { background: rgba(255, 215, 0, 0.2); color: #FFD800; }
-        .status-badge.locked { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
-        .start-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #FFD800, #FFA500); border: none; border-radius: 12px; color: black; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
-        .start-btn:disabled { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.3); cursor: not-allowed; }
-
-        .notice { background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3); border-radius: 12px; margin: 0 20px 20px; padding: 15px; text-align: center; }
-        .notice p:first-child { color: #FF4444; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-        .notice p:last-child { font-size: 12px; color: rgba(255, 255, 255, 0.7); }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tasks - Clutch Revenue</title>
+    <link rel="stylesheet" href="css/main-layout.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="bg-[#0A0A0A] flex justify-center">
-    <div class="flex flex-col min-h-screen w-full max-w-[375px] bg-[#0A0A0A] text-white relative pb-[100px] border-x border-white/5">
-        
-        <!-- Header -->
-        <header class="sticky top-0 z-[60] glass-header px-6 py-5">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FFD800] shadow-[0_0_20px_rgba(255,216,0,0.3)]">
-                        <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/cog.svg" class="w-7 h-7" alt="Logo">
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-jakarta text-lg font-extrabold tracking-tighter leading-none">CLUTCH</span>
-                        <span class="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-0.5">Incorporated</span>
-                    </div>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img id="siteLogo" src="assets/images/logo.png" alt="Logo" onerror="this.style.display='none'">
+                <span class="company-name">Clutch Incorporated</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">🏠 Home</a>
+                <a href="deposit.html">💳 Deposit</a>
+                <a href="withdraw.html">💰 Withdraw</a>
+                <a href="terms.html">📋 Terms & Conditions</a>
+                <a href="faqs.html">❓ FAQS</a>
+                <a href="about.html">ℹ️ About</a>
+                <div class="sidebar-divider"></div>
+                <a href="bind-wallet.html">🔗 Bind Wallet</a>
+                <a href="service.html">📞 Contact Us</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <button class="tasks-btn active" onclick="location.href='starting.html'">TASKS</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Daily Tasks</h1>
+                <p class="page-description">Complete tasks to earn USDT</p>
+            </div>
+            
+            <!-- Progress -->
+            <div class="card">
+                <div class="card-title">📊 Progress</div>
+                <div class="progress-header" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Tasks Completed</span>
+                    <span id="taskCount">0/40</span>
                 </div>
-                <div class="flex items-center gap-4">
-                    <button id="backBtn" class="w-11 h-11 rounded-full border-2 border-white/10 flex items-center justify-center hover:border-[#FFD800] transition-colors">
-                        <i class="ti ti-arrow-left text-white text-xl"></i>
-                    </button>
+                <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
+                    <div id="progressFill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ffaa00); border-radius: 10px;"></div>
                 </div>
             </div>
             
-            <div class="overflow-hidden marquee-container rounded-lg py-1.5 mt-2">
-                <div class="marquee-anim text-[9px] font-black text-[#80FF00]/90 uppercase tracking-widest px-4">
-                    • Task Optimization Active • Complete Tasks to Earn Rewards • Welcome <span id="usernameDisplay" class="text-white">User</span> •
+            <!-- Current Task -->
+            <div class="card" id="taskCard">
+                <div class="card-title" id="taskTitle">Current Task</div>
+                <div id="taskContent">
+                    <div style="text-align: center; padding: 40px;">Loading task...</div>
                 </div>
             </div>
-        </header>
-
-        <main class="flex-1 overflow-y-auto no-scrollbar">
-            <div class="stats-cards">
-                <div class="stat-card">
-                    <p class="stat-label">Wallet Balance</p>
-                    <p class="stat-value" id="walletBalance">0.00 <span>USDT</span></p>
-                    <p class="stat-note">Profits will be added here</p>
-                </div>
-                <div class="stat-card">
-                    <p class="stat-label">Commission</p>
-                    <p class="stat-value" id="commission">0.00 <span>USDT</span></p>
-                    <p class="stat-note">Commission Earned</p>
-                </div>
-            </div>
-
-            <div class="progress-section">
-                <div class="progress-header">
-                    <span>Task Progress</span>
-                    <span class="task-count" id="taskCount">0/40</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <div class="timer-section" id="timerSection" style="display: none;">
-                <div class="timer-card">
-                    <p>⏰ Next Task Available In:</p>
-                    <div class="countdown" id="countdown">--:--:--</div>
-                    <p class="next-task-time" id="nextTaskTime"></p>
-                </div>
-            </div>
-
-            <div class="task-card" id="taskCard">
-                <div class="task-image-slider" id="taskImageSlider">
-                    <button class="slider-btn prev" id="prevBtn">❮</button>
-                    <div class="slider-container">
-                        <img id="sliderImage" class="slider-image" src="" alt="Product Image">
-                    </div>
-                    <button class="slider-btn next" id="nextBtn">❯</button>
-                    <div class="slider-dots" id="sliderDots"></div>
-                </div>
-                <div class="task-info">
-                    <h3 class="product-name" id="productName">Product Name</h3>
-                    <div class="price-section">
-                        <span class="price-label">Total Price:</span>
-                        <span class="price-value" id="productPrice">$0.00</span>
-                    </div>
-                    <div class="task-meta">
-                        <span>Task ID: <span id="taskId">TSK001</span></span>
-                        <span>Available: <span id="taskTime">--:-- --</span></span>
-                        <span>Profit: <span id="taskProfit">+0.00 USDT</span></span>
-                    </div>
-                    <div class="task-status" id="taskStatus">
-                        <span class="status-badge" id="statusBadge">Available</span>
-                    </div>
-                    <button class="start-btn" id="startTaskBtn" disabled>Start Optimization</button>
-                </div>
-            </div>
-
-            <div class="notice" id="noticeArea">
-                <p>NOTICE</p>
-                <p id="noticeText">Online Support Hours: 10:00 - 22:00</p>
+            
+            <!-- Notice -->
+            <div class="card" id="noticeCard">
+                <div class="card-title">📢 Notice</div>
+                <p id="noticeText" style="color: #aaa;">Loading...</p>
             </div>
         </main>
 
-        <!-- Bottom Tab Bar -->
-        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-2xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-home text-white text-2xl"></i>
+        <aside class="profile-panel">
+            <div class="profile-content">
+                <div class="avatar">👤</div>
+                <div class="username" id="profileUsername">Loading...</div>
+                <div class="section-title">ACCOUNT</div>
+                <div class="account-details">
+                    <p><span class="label">Joined:</span><span class="value" id="profileJoined">-</span></p>
+                    <p><span class="label">Invite Code:</span><span class="value" id="profileInviteCode">-</span></p>
+                    <p><span class="label">Balance:</span><span class="value" id="profileBalance">0 USDT</span></p>
                 </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
+                <div class="section-title">ASSETS</div>
+                <div class="coins-list" id="profileCoinsList"></div>
+                <div class="dropdown-trigger" id="dropdownTrigger">▼ More Coins</div>
+                <div class="dropdown-coins" id="dropdownCoins"></div>
             </div>
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn active" data-page="starting">
-                <div class="w-12 h-12 rounded-2xl bg-[#FFD800]/10 flex items-center justify-center relative">
-                    <i class="ti ti-rocket text-[#FFD800] text-2xl"></i>
-                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#FFD800] rounded-full nav-indicator"></div>
-                </div>
-                <span class="text-[#FFD800] text-[10px] font-black uppercase tracking-[0.2em]">Start</span>
+            <div class="profile-bottom">
+                <button class="tradenow-btn" onclick="location.href='trading.html'">TRADE NOW</button>
             </div>
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-list text-white text-2xl"></i>
-                </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Records</span>
-            </div>
-        </nav>
+        </aside>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/main.js"></script>
-    <script type="module" src="js/starting.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main-layout.js"></script>
+    <script>
+        const userId = localStorage.getItem('userId');
+        let currentTask = null;
+        let currentTaskId = null;
+        
+        async function loadNotice() {
+            const snap = await database.ref('settings/taskNotice').once('value');
+            const notice = snap.val() || 'Online Support Hours: 10:00 - 22:00';
+            document.getElementById('noticeText').textContent = notice;
+        }
+        
+        async function loadProgress() {
+            const userSnap = await database.ref('users/' + userId).once('value');
+            const user = userSnap.val();
+            const completed = user?.completedTasks || 0;
+            const total = user?.totalTasks || 40;
+            const percent = (completed / total) * 100;
+            
+            document.getElementById('taskCount').textContent = `${completed}/${total}`;
+            document.getElementById('progressFill').style.width = percent + '%';
+        }
+        
+        async function loadCurrentTask() {
+            const tasksSnap = await database.ref('tasks').once('value');
+            const tasks = tasksSnap.val() || {};
+            
+            let activeTask = null;
+            let activeId = null;
+            
+            for (let id in tasks) {
+                if (tasks[id].status !== 'completed' && tasks[id].active !== false) {
+                    activeTask = tasks[id];
+                    activeId = id;
+                    break;
+                }
+            }
+            
+            if (!activeTask) {
+                document.getElementById('taskContent').innerHTML = '<div style="text-align: center; padding: 40px;">No tasks available. Check back later!</div>';
+                return;
+            }
+            
+            currentTask = activeTask;
+            currentTaskId = activeId;
+            
+            const images = [activeTask.image1, activeTask.image2, activeTask.image3].filter(img => img);
+            const imageHtml = images.length > 0 ? 
+                `<img src="${images[0]}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 16px; margin-bottom: 16px;">` : 
+                `<div style="width: 100%; height: 150px; background: #2a2a3e; border-radius: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #888;">No Image</div>`;
+            
+            const specialBadge = activeTask.isSpecial ? '<span style="background: #ff4444; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-left: 10px;">🔥 SPECIAL</span>' : '';
+            
+            document.getElementById('taskContent').innerHTML = `
+                ${imageHtml}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="color: #ffd700;">${activeTask.productName || 'Task'}</h3>
+                    ${specialBadge}
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                    <span>Task ID: ${activeTask.taskId || 'N/A'}</span>
+                    <span>Profit: +${activeTask.profit || '0'} USDT</span>
+                </div>
+                <button id="completeTaskBtn" style="width: 100%; background: linear-gradient(135deg, #ffd700, #ffaa00); border: none; border-radius: 30px; padding: 14px; font-weight: bold; cursor: pointer;">Complete Task</button>
+            `;
+            
+            document.getElementById('completeTaskBtn').addEventListener('click', completeTask);
+        }
+        
+        async function completeTask() {
+            if (!currentTask) return;
+            
+            const userSnap = await database.ref('users/' + userId).once('value');
+            const user = userSnap.val();
+            
+            const profit = parseFloat(currentTask.profit || 0.10);
+            const newBalance = (parseFloat(user.balance || 0) + profit).toFixed(2);
+            const newCommission = (parseFloat(user.commission || 0) + profit).toFixed(2);
+            const completedTasks = (user.completedTasks || 0) + 1;
+            
+            await database.ref('users/' + userId).update({
+                balance: newBalance,
+                commission: newCommission,
+                completedTasks: completedTasks
+            });
+            
+            await database.ref('tasks/' + currentTaskId).update({ completed: true, completedAt: Date.now() });
+            
+            Swal.fire('Success!', `You earned +${profit} USDT!`, 'success');
+            
+            // Refresh
+            await loadProgress();
+            await loadCurrentTask();
+            await loadUserProfile();
+        }
+        
+        loadNotice();
+        loadProgress();
+        loadCurrentTask();
+    </script>
 </body>
 </html>

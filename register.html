@@ -1,68 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23ffd700'/><text x='50' y='70' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clutch Incorporated - Register</title>
-    <link rel="stylesheet" href="css/style.css">
-    <!-- Firebase SDK -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Register - Clutch Revenue</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .register-card {
+            background: rgba(18, 18, 26, 0.95);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        .logo-area {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .big-c {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #0a0a0a;
+            margin: 0 auto 15px;
+        }
+        h2 {
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            color: #0a0a0a;
+        }
+        .error-message {
+            background: rgba(255,0,0,0.1);
+            border: 1px solid rgba(255,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            color: #ff6666;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .success-message {
+            background: rgba(0,255,0,0.1);
+            border: 1px solid rgba(0,255,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            color: #00ff00;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+        }
+        .login-link a {
+            color: #ffd700;
+            text-decoration: none;
+        }
+    </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script type="module" src="js/firebase-config.js"></script>
-    <!-- EmailJS SDK -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
-    <div class="register-container">
-        <div class="register-card">
-            <div class="logo-section">
-                <div class="big-c">C</div>
-                <div class="logo-text">
-                    <span class="clutch">Clutch</span>
-                    <span class="incorporated">Incorporated</span>
-                </div>
+    <div class="register-card">
+        <div class="logo-area">
+            <div class="big-c">C</div>
+            <h2>Create Account</h2>
+        </div>
+        
+        <form id="registerForm">
+            <div class="input-group">
+                <label>Invitation Code</label>
+                <input type="text" id="inviteCode" placeholder="Enter invitation code" required>
             </div>
-            <h1 class="register-title">Create Account</h1>
             
-            <form id="registerForm">
-                <div class="input-group">
-                    <label>Invitation Code <span style="color:#ffd700;">*</span></label>
-                    <input type="text" id="regInviteCode" placeholder="Enter invitation code from your admin" required>
-                </div>
-                
-                <div class="input-group">
-                    <label>Username</label>
-                    <input type="text" id="regUsername" placeholder="Choose a username" required>
-                </div>
-                
-                <div class="input-group">
-                    <label>Email Address</label>
-                    <input type="email" id="regEmail" placeholder="Enter your email" required>
-                </div>
-                
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="regPassword" placeholder="Create a password" required>
-                </div>
-                
-                <div class="input-group">
-                    <label>Confirm Password</label>
-                    <input type="password" id="regConfirmPassword" placeholder="Confirm your password" required>
-                </div>
-                
-                <button type="submit" class="register-btn">Sign Up</button>
-            </form>
-            
-            <div class="login-link">
-                Already have an account? <a href="index.html">Sign in</a>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="Choose a username" required>
             </div>
+            
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Create a password" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+            </div>
+            
+            <button type="submit">Sign Up</button>
+        </form>
+        
+        <div id="message"></div>
+        
+        <div class="login-link">
+            Already have an account? <a href="index.html">Login</a>
         </div>
     </div>
 
-    <script src="js/email-service.js"></script>
-    <script type="module" src="js/register.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBwf-rkEWsNJRkh_TJeMSoNDc1iwO1c6tI",
+            authDomain: "clutch-incorporated.firebaseapp.com",
+            projectId: "clutch-incorporated",
+            storageBucket: "clutch-incorporated.firebasestorage.app",
+            messagingSenderId: "515595231583",
+            appId: "1:515595231583:web:73ff8c3cdc123dcbce16ea",
+            databaseURL: "https://clutch-incorporated-default-rtdb.firebaseio.com"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        const registerForm = document.getElementById('registerForm');
+        const messageDiv = document.getElementById('message');
+        
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const inviteCode = document.getElementById('inviteCode').value.trim().toUpperCase();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            messageDiv.innerHTML = '';
+            
+            if (!inviteCode) {
+                messageDiv.innerHTML = '<div class="error-message">Invitation code required</div>';
+                return;
+            }
+            
+            if (username.length < 3) {
+                messageDiv.innerHTML = '<div class="error-message">Username must be at least 3 characters</div>';
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                messageDiv.innerHTML = '<div class="error-message">Valid email required</div>';
+                return;
+            }
+            
+            if (password.length < 4) {
+                messageDiv.innerHTML = '<div class="error-message">Password must be at least 4 characters</div>';
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                messageDiv.innerHTML = '<div class="error-message">Passwords do not match</div>';
+                return;
+            }
+            
+            try {
+                const codesSnap = await database.ref('invitationCodes').once('value');
+                const codes = codesSnap.val() || {};
+                const today = new Date().toISOString().split('T')[0];
+                
+                let validCode = null;
+                for (let id in codes) {
+                    const code = codes[id];
+                    if (code.code === inviteCode && code.date === today && code.active === true) {
+                        validCode = code;
+                        break;
+                    }
+                }
+                
+                if (!validCode) {
+                    messageDiv.innerHTML = '<div class="error-message">Invalid or expired invitation code</div>';
+                    return;
+                }
+                
+                const usersSnap = await database.ref('users').once('value');
+                const users = usersSnap.val() || {};
+                
+                for (let id in users) {
+                    if (users[id].username === username || users[id].email === email) {
+                        messageDiv.innerHTML = '<div class="error-message">Username or email already exists</div>';
+                        return;
+                    }
+                }
+                
+                const userId = 'UID' + Date.now();
+                const newUser = {
+                    username: username,
+                    email: email,
+                    password: password,
+                    inviteCode: inviteCode,
+                    assignedAdminId: validCode.adminId,
+                    assignedAdminName: validCode.adminName,
+                    balance: '0.00',
+                    commission: '0.00',
+                    status: 'active',
+                    joinedDate: today,
+                    completedTasks: 0,
+                    totalTasks: 40
+                };
+                
+                await database.ref('users/' + userId).set(newUser);
+                messageDiv.innerHTML = '<div class="success-message">Registration successful! Redirecting to login...</div>';
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error-message">Database error. Please try again.</div>';
+            }
+        });
+    </script>
 </body>
 </html>

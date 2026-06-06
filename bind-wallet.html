@@ -2,160 +2,126 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clutch Incorporated - Bind Wallet</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23ffd700'/><text x='50' y='70' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
-        
-        body { font-family: 'IBM Plex Sans', sans-serif; background-color: #0A0A0A; color: white; margin: 0; }
-        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        .glass-header { 
-            background: rgba(10, 10, 10, 0.85); 
-            backdrop-filter: blur(20px); 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .marquee-container { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .marquee-anim { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        
-        .nav-btn.active { color: #FFD800; }
-        .nav-indicator { box-shadow: 0 0 15px #FFD800; }
-        
-        ::-webkit-scrollbar { display: none; }
-
-        .user-info-card { background: linear-gradient(145deg, #1B1B1B 0%, #121212 100%); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 32px; padding: 24px; margin: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .user-info p { margin: 4px 0; }
-        .user-name { font-size: 18px; font-weight: bold; }
-        .invite-code { font-size: 12px; color: rgba(255, 255, 255, 0.5); }
-        .personal-account { font-size: 10px; color: #FFD800; text-transform: uppercase; letter-spacing: 0.1em; }
-        .credit-score { text-align: center; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(128, 255, 0, 0.3); border-radius: 16px; padding: 12px 20px; }
-        .credit-score p:first-child { font-size: 8px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-        .score-value { font-size: 20px; font-weight: bold; color: #80FF00; }
-
-        .balance-card { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 20px 20px; }
-        .balance-item { background: #1B1B1B; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 20px; text-align: center; }
-        .balance-item p:first-child { font-size: 10px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-        .balance-amount, .profit-amount { font-size: 20px; font-weight: bold; color: #FFD800; }
-        .profit-amount { color: #80FF00; }
-
-        .bind-form { margin: 0 20px 20px; }
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 10px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-        .input-group input { width: 100%; padding: 16px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; color: white; outline: none; transition: border 0.3s; }
-        .input-group input:focus { border-color: #FFD800; background: rgba(0, 0, 0, 0.6); }
-        .submit-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #FFD800, #FFA500); border: none; border-radius: 16px; color: black; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bind Wallet - Clutch Revenue</title>
+    <link rel="stylesheet" href="css/main-layout.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="bg-[#0A0A0A] flex justify-center">
-    <div class="flex flex-col min-h-screen w-full max-w-[375px] bg-[#0A0A0A] text-white relative pb-[100px] border-x border-white/5">
-        
-        <!-- Header -->
-        <header class="sticky top-0 z-[60] glass-header px-6 py-5">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FFD800] shadow-[0_0_20px_rgba(255,216,0,0.3)]">
-                        <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/cog.svg" class="w-7 h-7" alt="Logo">
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-jakarta text-lg font-extrabold tracking-tighter leading-none">CLUTCH</span>
-                        <span class="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-0.5">Incorporated</span>
-                    </div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <button id="backBtn" class="w-11 h-11 rounded-full border-2 border-white/10 flex items-center justify-center hover:border-[#FFD800] transition-colors">
-                        <i class="ti ti-arrow-left text-white text-xl"></i>
-                    </button>
-                </div>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img id="siteLogo" src="assets/images/logo.png" alt="Logo" onerror="this.style.display='none'">
+                <span class="company-name">Clutch Incorporated</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">🏠 Home</a>
+                <a href="deposit.html">💳 Deposit</a>
+                <a href="withdraw.html">💰 Withdraw</a>
+                <a href="terms.html">📋 Terms & Conditions</a>
+                <a href="faqs.html">❓ FAQS</a>
+                <a href="about.html">ℹ️ About</a>
+                <div class="sidebar-divider"></div>
+                <a href="bind-wallet.html">🔗 Bind Wallet</a>
+                <a href="service.html">📞 Contact Us</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <button class="tasks-btn" onclick="location.href='starting.html'">TASKS</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Bind Wallet Address</h1>
+                <p class="page-description">Link your USDT wallet for withdrawals</p>
             </div>
             
-            <div class="overflow-hidden marquee-container rounded-lg py-1.5 mt-2">
-                <div class="marquee-anim text-[9px] font-black text-[#80FF00]/90 uppercase tracking-widest px-4">
-                    • Wallet Security • Bind Your USDT Address • Welcome <span id="usernameDisplay" class="text-white">User</span> •
-                </div>
-            </div>
-        </header>
-
-        <main class="flex-1 overflow-y-auto no-scrollbar">
-            <h1 class="font-jakarta text-3xl font-extrabold tracking-tight px-5 pt-6 pb-2">Bind <span class="text-[#FFD800]">Wallet</span></h1>
-            <p class="text-white/40 text-xs px-5 pb-6">Secure your withdrawal address for fund transfers.</p>
-
-            <div class="user-info-card">
-                <div class="user-info">
-                    <p class="user-name" id="userName">Loading...</p>
-                    <p class="invite-code">Invitation Code: <span id="inviteCode">Loading...</span></p>
-                    <p class="personal-account">Personal Account</p>
-                </div>
-                <div class="credit-score">
-                    <p>Credit score</p>
-                    <p class="score-value" id="creditScore">97%</p>
-                </div>
-            </div>
-
-            <div class="balance-card">
-                <div class="balance-item">
-                    <p>Account Balance</p>
-                    <p class="balance-amount" id="accountBalance">0.00 USDT</p>
-                </div>
-                <div class="balance-item">
-                    <p>Total Earning</p>
-                    <p class="profit-amount" id="totalProfits">0.00 USDT</p>
-                </div>
-            </div>
-
-            <div class="bind-form">
-                <div class="input-group">
-                    <label for="phoneNumber">Phone number with country code</label>
+            <div class="card">
+                <div class="form-group">
+                    <label>Phone Number (with country code)</label>
                     <input type="tel" id="phoneNumber" placeholder="+1 234 567 8900">
                 </div>
-
-                <div class="input-group">
-                    <label for="walletAddress">Wallet Address (USDT)</label>
-                    <input type="text" id="walletAddress" placeholder="Enter or paste your USDT wallet address">
+                
+                <div class="form-group">
+                    <label>USDT Wallet Address</label>
+                    <input type="text" id="walletAddress" placeholder="Enter your USDT wallet address">
                 </div>
-
-                <div class="input-group">
-                    <label for="withdrawPassword">Withdraw Password</label>
+                
+                <div class="form-group">
+                    <label>Withdraw Password</label>
                     <input type="password" id="withdrawPassword" placeholder="Set your withdraw password">
                 </div>
-
-                <button class="submit-btn" id="submitBindBtn">Submit</button>
+                
+                <button class="submit-btn" id="submitBtn">Save Wallet</button>
             </div>
         </main>
 
-        <!-- Bottom Tab Bar -->
-        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-2xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-home text-white text-2xl"></i>
+        <aside class="profile-panel">
+            <div class="profile-content">
+                <div class="avatar">👤</div>
+                <div class="username" id="profileUsername">Loading...</div>
+                <div class="section-title">ACCOUNT</div>
+                <div class="account-details">
+                    <p><span class="label">Joined:</span><span class="value" id="profileJoined">-</span></p>
+                    <p><span class="label">Invite Code:</span><span class="value" id="profileInviteCode">-</span></p>
+                    <p><span class="label">Balance:</span><span class="value" id="profileBalance">0 USDT</span></p>
                 </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
+                <div class="section-title">ASSETS</div>
+                <div class="coins-list" id="profileCoinsList"></div>
+                <div class="dropdown-trigger" id="dropdownTrigger">▼ More Coins</div>
+                <div class="dropdown-coins" id="dropdownCoins"></div>
             </div>
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-rocket text-white text-2xl"></i>
-                </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Start</span>
+            <div class="profile-bottom">
+                <button class="tradenow-btn" onclick="location.href='trading.html'">TRADE NOW</button>
             </div>
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-list text-white text-2xl"></i>
-                </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Records</span>
-            </div>
-        </nav>
+        </aside>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/main.js"></script>
-    <script type="module" src="js/bind-wallet.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main-layout.js"></script>
+    <script>
+        const userId = localStorage.getItem('userId');
+        
+        // Load existing data
+        async function loadExisting() {
+            const snap = await database.ref('users/' + userId).once('value');
+            const user = snap.val();
+            if (user) {
+                if (user.phone) document.getElementById('phoneNumber').value = user.phone;
+                if (user.walletAddress) document.getElementById('walletAddress').value = user.walletAddress;
+            }
+        }
+        loadExisting();
+        
+        document.getElementById('submitBtn').addEventListener('click', async () => {
+            const phone = document.getElementById('phoneNumber').value.trim();
+            const wallet = document.getElementById('walletAddress').value.trim();
+            const password = document.getElementById('withdrawPassword').value;
+            
+            if (!phone) {
+                Swal.fire('Error', 'Phone number required', 'error');
+                return;
+            }
+            if (!wallet || wallet.length < 20) {
+                Swal.fire('Error', 'Valid wallet address required', 'error');
+                return;
+            }
+            if (!password || password.length < 4) {
+                Swal.fire('Error', 'Withdraw password (min 4 characters)', 'error');
+                return;
+            }
+            
+            await database.ref('users/' + userId).update({
+                phone: phone,
+                walletAddress: wallet,
+                withdrawPassword: password
+            });
+            
+            Swal.fire('Success', 'Wallet information saved!', 'success');
+            document.getElementById('withdrawPassword').value = '';
+        });
+    </script>
 </body>
 </html>

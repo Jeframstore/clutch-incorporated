@@ -2,125 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clutch Incorporated - Deposit</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23ffd700'/><text x='50' y='70' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
-        
-        body { font-family: 'IBM Plex Sans', sans-serif; background-color: #0A0A0A; color: white; margin: 0; }
-        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        .glass-header { 
-            background: rgba(10, 10, 10, 0.85); 
-            backdrop-filter: blur(20px); 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .marquee-container { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .marquee-anim { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        
-        .nav-btn.active { color: #FFD800; }
-        .nav-indicator { box-shadow: 0 0 15px #FFD800; }
-        
-        ::-webkit-scrollbar { display: none; }
-
-        .qr-card { background: white; padding: 1.5rem; border-radius: 2rem; box-shadow: 0 20px 50px rgba(255, 216, 0, 0.15); }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Deposit - Clutch Revenue</title>
+    <link rel="stylesheet" href="css/main-layout.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-[#0A0A0A] flex justify-center">
-    <div class="flex flex-col min-h-screen w-full max-w-[375px] bg-[#0A0A0A] text-white relative pb-[100px] border-x border-white/5">
-        
-        <!-- Header -->
-        <header class="sticky top-0 z-[60] glass-header px-6 py-5">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FFD800] shadow-[0_0_20px_rgba(255,216,0,0.3)]">
-                        <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/cog.svg" class="w-7 h-7" alt="Logo">
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-jakarta text-lg font-extrabold tracking-tighter leading-none">CLUTCH</span>
-                        <span class="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-0.5">Incorporated</span>
-                    </div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <button id="backBtn" class="w-11 h-11 rounded-full border-2 border-white/10 flex items-center justify-center hover:border-[#FFD800] transition-colors">
-                        <i class="ti ti-arrow-left text-white text-xl"></i>
-                    </button>
-                </div>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <img id="siteLogo" src="assets/images/logo.png" alt="Logo" onerror="this.style.display='none'">
+                <span class="company-name">Clutch Incorporated</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">🏠 Home</a>
+                <a href="deposit.html">💳 Deposit</a>
+                <a href="withdraw.html">💰 Withdraw</a>
+                <a href="terms.html">📋 Terms & Conditions</a>
+                <a href="faqs.html">❓ FAQS</a>
+                <a href="about.html">ℹ️ About</a>
+                <div class="sidebar-divider"></div>
+                <a href="bind-wallet.html">🔗 Bind Wallet</a>
+                <a href="service.html">📞 Contact Us</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <button class="tasks-btn" onclick="location.href='starting.html'">TASKS</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Deposit Funds</h1>
+                <p class="page-description">Add funds to your account</p>
             </div>
             
-            <div class="overflow-hidden marquee-container rounded-lg py-1.5 mt-2">
-                <div class="marquee-anim text-[9px] font-black text-[#80FF00]/90 uppercase tracking-widest px-4">
-                    • Secure Deposit • Fund Your Portfolio • Welcome <span id="usernameDisplay" class="text-white">User</span> •
-                </div>
-            </div>
-        </header>
-
-        <main class="flex-1 overflow-y-auto no-scrollbar px-5 py-6 space-y-8">
-            <div>
-                <div class="inline-flex items-center gap-2 bg-[#FFD800]/10 border border-[#FFD800]/20 px-3 py-1 rounded-full mb-3">
-                    <div class="w-1.5 h-1.5 rounded-full bg-[#FFD800] animate-pulse"></div>
-                    <span class="text-[9px] font-black text-[#FFD800] uppercase tracking-widest">Instant Nodes</span>
-                </div>
-                <h1 class="font-jakarta text-4xl font-extrabold tracking-tight">Deposit</h1>
-                <p class="text-white/40 text-xs mt-2">Fund your high-performance portfolio via USDT.</p>
-            </div>
-
-            <section class="bg-[#1B1B1B] rounded-[40px] p-10 flex flex-col items-center border border-white/5 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFD800]/5 rounded-full blur-[40px] -mr-16 -mt-16"></div>
+            <div class="card">
+                <div class="card-title">💳 How to Deposit</div>
+                <p style="color:#aaa; margin-bottom: 20px;">Contact our customer service to get the current merchant wallet address.</p>
                 
-                <div class="text-center">
-                    <h4 class="font-jakarta font-bold text-lg text-[#FFD800] uppercase tracking-widest mb-2">Deposit Instructions</h4>
-                    <p class="text-white/60 text-xs text-center px-4">Please contact customer support to make your deposit. Your assigned agent will guide you through the process.</p>
+                <div class="contact-buttons" style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <button id="whatsappBtn" style="background: #25D366; border: none; border-radius: 30px; padding: 12px 24px; color: white; cursor: pointer; flex: 1;">📱 WhatsApp</button>
+                    <button id="telegramBtn" style="background: #0088cc; border: none; border-radius: 30px; padding: 12px 24px; color: white; cursor: pointer; flex: 1;">✈️ Telegram</button>
                 </div>
-            </section>
-
-            <div class="bg-gradient-to-br from-[#80FF00]/10 to-transparent p-6 rounded-[32px] border border-[#80FF00]/20 space-y-5">
-                <div class="flex gap-3">
-                    <button id="whatsappBtn" class="flex-1 flex flex-col items-center gap-2 bg-black/40 border border-white/5 p-4 rounded-2xl hover:border-[#80FF00]/40 transition-all">
-                        <i class="ti ti-brand-whatsapp text-[#80FF00] text-xl"></i>
-                        <span class="text-[9px] font-black uppercase tracking-tighter" id="whatsappNumber">Loading...</span>
-                    </button>
-                    <button id="telegramBtn" class="flex-1 flex flex-col items-center gap-2 bg-black/40 border border-white/5 p-4 rounded-2xl hover:border-[#80FF00]/40 transition-all">
-                        <i class="ti ti-brand-telegram text-[#80FF00] text-xl"></i>
-                        <span class="text-[9px] font-black uppercase tracking-tighter" id="telegramUsername">Loading...</span>
-                    </button>
+                
+                <div style="background: rgba(255,215,0,0.1); border-radius: 16px; padding: 16px;">
+                    <h4 style="color: #ffd700; margin-bottom: 10px;">📝 Deposit Steps:</h4>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li>1. Contact customer service via WhatsApp or Telegram</li>
+                        <li>2. Request the current merchant wallet address</li>
+                        <li>3. Send funds to the provided address</li>
+                        <li>4. Send payment confirmation to customer service</li>
+                        <li>5. Your balance will be updated after confirmation</li>
+                    </ul>
                 </div>
             </div>
         </main>
 
-        <!-- Bottom Tab Bar -->
-        <nav class="absolute bottom-0 left-0 w-full z-[100] bg-[#0A0A0A]/95 backdrop-blur-2xl border-t border-white/10 px-8 py-4 pb-8 flex justify-between items-center">
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="home">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-home text-white text-2xl"></i>
+        <aside class="profile-panel">
+            <div class="profile-content">
+                <div class="avatar">👤</div>
+                <div class="username" id="profileUsername">Loading...</div>
+                <div class="section-title">ACCOUNT</div>
+                <div class="account-details">
+                    <p><span class="label">Joined:</span><span class="value" id="profileJoined">-</span></p>
+                    <p><span class="label">Invite Code:</span><span class="value" id="profileInviteCode">-</span></p>
+                    <p><span class="label">Balance:</span><span class="value" id="profileBalance">0 USDT</span></p>
                 </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
+                <div class="section-title">ASSETS</div>
+                <div class="coins-list" id="profileCoinsList"></div>
+                <div class="dropdown-trigger" id="dropdownTrigger">▼ More Coins</div>
+                <div class="dropdown-coins" id="dropdownCoins"></div>
             </div>
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="starting">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-rocket text-white text-2xl"></i>
-                </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Start</span>
+            <div class="profile-bottom">
+                <button class="tradenow-btn" onclick="location.href='trading.html'">TRADE NOW</button>
             </div>
-            <div class="flex flex-col items-center gap-1.5 cursor-pointer nav-btn" data-page="records">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <i class="ti ti-list text-white text-2xl"></i>
-                </div>
-                <span class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Records</span>
-            </div>
-        </nav>
+        </aside>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/main.js"></script>
-    <script type="module" src="js/deposit.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main-layout.js"></script>
+    <script>
+        // Load contact info
+        async function loadContacts() {
+            const snap = await database.ref('settings/serviceContacts').once('value');
+            const contacts = snap.val() || { whatsapp: '+12345678900', telegram: '@ClutchSupport' };
+            
+            document.getElementById('whatsappBtn').onclick = () => {
+                window.open('https://wa.me/' + contacts.whatsapp.replace(/[^0-9]/g, ''), '_blank');
+            };
+            document.getElementById('telegramBtn').onclick = () => {
+                window.open('https://t.me/' + contacts.telegram.replace('@', ''), '_blank');
+            };
+        }
+        loadContacts();
+    </script>
 </body>
 </html>

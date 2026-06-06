@@ -2,41 +2,189 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clutch Incorporated - Sign In</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23ffd700'/><text x='50' y='70' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Login - Clutch Revenue</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-card {
+            background: rgba(18, 18, 26, 0.95);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        .logo-area {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .big-c {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #0a0a0a;
+            margin: 0 auto 15px;
+        }
+        h2 {
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            color: #0a0a0a;
+        }
+        .error-message {
+            background: rgba(255,0,0,0.1);
+            border: 1px solid rgba(255,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            color: #ff6666;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .signup-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+        }
+        .signup-link a {
+            color: #ffd700;
+            text-decoration: none;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
-<body class="d-flex justify-content-center align-items-center vh-100 overflow-hidden">
-    <div class="glow-sphere" style="top: -10%; right: -10%;"></div>
-    <div class="glow-sphere" style="bottom: -10%; left: -10%;"></div>
-
+<body>
     <div class="login-card">
-        <div class="d-flex flex-column align-items-center mb-5">
-            <div class="logo-circle mb-4 bg-[#FFD800]">
-                <span class="text-black text-4xl fw-black fst-italic">C</span>
-            </div>
-            <h1 class="text-2xl fw-black text-uppercase tracking-wider mb-0">CLUTCH</h1>
-            <p class="small fw-bold text-white-30 text-uppercase tracking-widest mt-2">High-Performance Ecosystem</p>
+        <div class="logo-area">
+            <div class="big-c">C</div>
+            <h2>Clutch Revenue</h2>
         </div>
-
+        
         <form id="loginForm">
-            <input type="text" id="loginIdentifier" class="form-control mb-3" placeholder="Username or Email" required>
-            <input type="password" id="loginPassword" class="form-control mb-3" placeholder="Security Key" required>
-            <button type="submit" class="signin-btn w-100">Authorize Entry</button>
+            <div class="input-group">
+                <label>Username or Email</label>
+                <input type="text" id="loginIdentifier" placeholder="Enter username or email" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" required>
+            </div>
+            
+            <button type="submit">Login</button>
         </form>
-
-        <div class="mt-4 d-flex flex-column align-items-center gap-3">
-            <a href="forgot-password.html" class="small text-warning-60 fw-black text-uppercase tracking-widest text-decoration-none">Forgot Password?</a>
-            <p class="small text-white-30 fw-bold text-uppercase tracking-widest mb-0">New Operator? <a href="register.html" class="text-warning text-decoration-none">Register</a></p>
+        
+        <div id="loginMessage"></div>
+        
+        <div class="signup-link">
+            New to Clutch? <a href="register.html">Sign up now</a>
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/main.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBwf-rkEWsNJRkh_TJeMSoNDc1iwO1c6tI",
+            authDomain: "clutch-incorporated.firebaseapp.com",
+            projectId: "clutch-incorporated",
+            storageBucket: "clutch-incorporated.firebasestorage.app",
+            messagingSenderId: "515595231583",
+            appId: "1:515595231583:web:73ff8c3cdc123dcbce16ea",
+            databaseURL: "https://clutch-incorporated-default-rtdb.firebaseio.com"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        const loginForm = document.getElementById('loginForm');
+        const messageDiv = document.getElementById('loginMessage');
+        
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const identifier = document.getElementById('loginIdentifier').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            messageDiv.innerHTML = '';
+            
+            try {
+                const usersSnap = await database.ref('users').once('value');
+                const users = usersSnap.val() || {};
+                
+                let foundUser = null;
+                let foundUserId = null;
+                
+                for (let id in users) {
+                    const user = users[id];
+                    if ((user.username === identifier || user.email === identifier) && user.password === password) {
+                        foundUser = user;
+                        foundUserId = id;
+                        break;
+                    }
+                }
+                
+                if (foundUser) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userId', foundUserId);
+                    localStorage.setItem('username', foundUser.username);
+                    window.location.href = 'dashboard.html';
+                } else {
+                    messageDiv.innerHTML = '<div class="error-message">Invalid username/email or password</div>';
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error-message">Database error. Please try again.</div>';
+            }
+        });
+    </script>
 </body>
 </html>
