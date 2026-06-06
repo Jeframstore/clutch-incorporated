@@ -1,4 +1,4 @@
-// Dashboard - Complete with Fixed Sign-In
+// Dashboard - User Data and Records Only
 
 let userId = null;
 
@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     await loadUserData();
-    loadMarketPrices();
     
     // Profile Menu
     const profileIcon = document.getElementById('profileIconBtn');
@@ -68,6 +67,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             else if (page === 'records') window.location.href = 'records.html';
         });
     });
+    
+    // Load records
+    loadRecords();
 });
 
 function logout() {
@@ -83,13 +85,11 @@ async function loadUserData() {
         const user = snapshot.val();
         
         if (user) {
-            // Update display from Firebase
             const usernameDisplay = document.getElementById('usernameDisplay');
             if (usernameDisplay) {
                 usernameDisplay.textContent = user.username || 'User';
             }
             
-            // Process sign-in streak
             const today = new Date().toISOString().split('T')[0];
             let streak = user.signInStreak || 0;
             let lastSignIn = user.lastSignIn || '';
@@ -99,18 +99,13 @@ async function loadUserData() {
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = yesterday.toISOString().split('T')[0];
             
-            // Check if user missed a day
             if (lastSignIn !== yesterdayStr && lastSignIn !== today && streak > 0) {
                 streak = 0;
                 baseSalary = 0;
-                await database.ref('users/' + userId).update({
-                    signInStreak: 0,
-                    baseSalary: 0
-                });
+                await database.ref('users/' + userId).update({ signInStreak: 0, baseSalary: 0 });
                 console.log('Streak reset - missed a day');
             }
             
-            // Check if completed 15 days - payout and reset
             if (streak >= 15 && lastSignIn !== today) {
                 const currentBalance = parseFloat(user.balance || 0);
                 await database.ref('users/' + userId).update({
@@ -123,7 +118,6 @@ async function loadUserData() {
                 console.log('15 days completed - payout and reset');
             }
             
-            // Check if signed in today
             if (lastSignIn !== today) {
                 streak++;
                 const todayReward = streak <= 15 ? (streak === 1 ? 150 : 50) : 0;
@@ -135,16 +129,11 @@ async function loadUserData() {
                     lastSignIn: today
                 });
                 
-                // Update display
                 const baseSalaryElement = document.getElementById('baseSalary');
-                if (baseSalaryElement) {
-                    baseSalaryElement.textContent = baseSalary.toFixed(2);
-                }
+                if (baseSalaryElement) baseSalaryElement.textContent = baseSalary.toFixed(2);
                 
                 const counterElement = document.querySelector('.signin-counter');
-                if (counterElement) {
-                    counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
-                }
+                if (counterElement) counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
                 
                 if (todayReward > 0) {
                     setTimeout(() => {
@@ -153,14 +142,10 @@ async function loadUserData() {
                 }
             } else {
                 const baseSalaryElement = document.getElementById('baseSalary');
-                if (baseSalaryElement) {
-                    baseSalaryElement.textContent = baseSalary.toFixed(2);
-                }
+                if (baseSalaryElement) baseSalaryElement.textContent = baseSalary.toFixed(2);
                 
                 const counterElement = document.querySelector('.signin-counter');
-                if (counterElement) {
-                    counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
-                }
+                if (counterElement) counterElement.textContent = `SIGN IN NOW (${streak}/15)`;
             }
         }
     } catch (error) {
@@ -168,79 +153,59 @@ async function loadUserData() {
     }
 }
 
-async function loadMarketPrices() {
+async function loadRecords() {
+    const tbody = document.getElementById('recordsBody');
+    if (!tbody) return;
+    
     try {
-        const coinsGrid = document.getElementById('coinsGrid');
-        if (!coinsGrid) return;
-
-        // Show coins: BTC, ETH, BNB, SOL, XRP, USDT
-        const displayCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'USDT'];
+        const withdrawalsSnap = await database.ref('withdrawals').once('value');
+        const depositsSnap = await database.ref('deposits').once('value');
+        const withdrawals = withdrawalsSnap.val() || {};
+        const deposits = depositsSnap.val() || {};
         
-        // CoinGecko IDs
-        const coinIds = {
-            'BTC': 'bitcoin',
-            'ETH': 'ethereum',
-            'BNB': 'binancecoin',
-            'SOL': 'solana',
-            'XRP': 'ripple',
-            'USDT': 'tether'
-        };
+        let records = [];
         
-        // Fetch prices from CoinGecko
-        const ids = Object.values(coinIds).join(',');
-        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
-        const data = await response.json();
-        
-        let html = '';
-        for (const coin of displayCoins) {
-            const coinId = coinIds[coin];
-            const priceData = data[coinId];
-            
-            if (priceData) {
-                const price = priceData.usd;
-                const change24h = priceData.usd_24h_change || 0;
-                const changeColor = change24h >= 0 ? '#00ff88' : '#ff4444';
-                const changeSymbol = change24h >= 0 ? '↑' : '↓';
-                
-                html += `
-                    <div class="coin-card">
-                        <div class="coin-header">
-                            <span class="coin-name">${coin}</span>
-                            <span class="coin-price">$${price.toFixed(2)}</span>
-                        </div>
-                        <div class="coin-profit" style="color: ${changeColor}">
-                            ${changeSymbol} ${Math.abs(change24h).toFixed(2)}%
-                        </div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="coin-card">
-                        <div class="coin-header">
-                            <span class="coin-name">${coin}</span>
-                            <span class="coin-price">$0.00</span>
-                        </div>
-                        <div class="coin-profit">Loading...</div>
-                    </div>
-                `;
+        for (let id in withdrawals) {
+            const w = withdrawals[id];
+            if (w.userId === userId) {
+                records.push({
+                    type: 'Withdraw',
+                    amount: '-' + w.amount + ' USDT',
+                    status: w.status,
+                    date: new Date(w.requestDate).toLocaleDateString()
+                });
             }
         }
         
-        coinsGrid.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error loading market prices:', error);
-        // Show fallback prices
-        const coinsGrid = document.getElementById('coinsGrid');
-        if (coinsGrid) {
-            coinsGrid.innerHTML = `
-                <div class="coin-card"><div class="coin-header"><span class="coin-name">BTC</span><span class="coin-price">$60,619</span></div><div class="coin-profit" style="color: #00ff88">↑ 2.5%</div></div>
-                <div class="coin-card"><div class="coin-header"><span class="coin-name">ETH</span><span class="coin-price">$1,553</span></div><div class="coin-profit" style="color: #00ff88">↑ 1.8%</div></div>
-                <div class="coin-card"><div class="coin-header"><span class="coin-name">BNB</span><span class="coin-price">$577</span></div><div class="coin-profit" style="color: #ff4444">↓ 0.5%</div></div>
-                <div class="coin-card"><div class="coin-header"><span class="coin-name">SOL</span><span class="coin-price">$64.76</span></div><div class="coin-profit" style="color: #00ff88">↑ 3.2%</div></div>
-                <div class="coin-card"><div class="coin-header"><span class="coin-name">XRP</span><span class="coin-price">$1.11</span></div><div class="coin-profit" style="color: #ff4444">↓ 1.2%</div></div>
-                <div class="coin-card"><div class="coin-header"><span class="coin-name">USDT</span><span class="coin-price">$1.00</span></div><div class="coin-profit" style="color: #00ff88">↑ 0.01%</div></div>
-            `;
+        for (let id in deposits) {
+            const d = deposits[id];
+            if (d.userId === userId) {
+                records.push({
+                    type: 'Deposit',
+                    amount: '+' + d.amount + ' USDT',
+                    status: d.status || 'Completed',
+                    date: d.date
+                });
+            }
         }
+        
+        records.sort((a, b) => new Date(b.date) - new Date(a.date));
+        records = records.slice(0, 10);
+        
+        if (records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">No records found<\/td><\/tr>';
+        } else {
+            tbody.innerHTML = records.map(r => `
+                <tr>
+                    <td>${r.type}<\/td>
+                    <td>${r.amount}<\/td>
+                    <td class="status-${(r.status || '').toLowerCase()}">${r.status}<\/td>
+                    <td>${r.date}<\/td>
+                </tr>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading records:', error);
+        tbody.innerHTML = '<tr><td colspan="4">Error loading records<\/td><\/tr>';
     }
 }

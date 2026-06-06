@@ -113,31 +113,8 @@ async function loadLogo() {
 }
 
 async function loadLivePrices() {
-    try {
-        const allIds = Object.values(COINGECKO_IDS);
-        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${allIds.join(',')}&vs_currencies=usd&include_24hr_change=true`);
-        const data = await response.json();
-        
-        const priceData = {};
-        for (const symbol of COINS) {
-            const coinId = COINGECKO_IDS[symbol];
-            if (data[coinId]) {
-                priceData[symbol] = {
-                    price: data[coinId].usd.toFixed(2),
-                    change: data[coinId].usd_24h_change.toFixed(2)
-                };
-            } else {
-                priceData[symbol] = { price: '0.00', change: '0.00' };
-            }
-        }
-        
-        displayCoinPrices(priceData);
-        displayProfileCoins(priceData);
-        
-    } catch (error) {
-        console.error('Error fetching prices:', error);
-        showFallbackPrices();
-    }
+    // Use fallback prices only (no API calls to avoid CORS)
+    showFallbackPrices();
 }
 
 function showFallbackPrices() {
@@ -147,20 +124,16 @@ function showFallbackPrices() {
         'BNB': { price: '577.00', change: '-0.5' },
         'SOL': { price: '64.76', change: '3.2' },
         'XRP': { price: '1.11', change: '-1.2' },
-        'ADA': { price: '0.45', change: '1.2' },
-        'DOGE': { price: '0.12', change: '-0.8' },
-        'USDT': { price: '1.00', change: '0.01' },
-        'USDC': { price: '1.00', change: '0.01' },
-        'MATIC': { price: '0.89', change: '2.1' },
-        'DOT': { price: '6.50', change: '-1.0' },
-        'AVAX': { price: '35.20', change: '4.5' },
-        'LINK': { price: '14.30', change: '1.5' },
-        'LTC': { price: '82.40', change: '-0.3' },
-        'UNI': { price: '7.80', change: '2.0' }
+        'USDT': { price: '1.00', change: '0.01' }
     };
     
-    displayCoinPrices(fallbackData);
-    displayProfileCoins(fallbackData);
+    // Call the display function from dashboard.html if available
+    if (typeof window.displayCoinPrices === 'function') {
+        window.displayCoinPrices(fallbackData);
+    } else {
+        displayCoinPrices(fallbackData);
+        displayProfileCoins(fallbackData);
+    }
     console.log('Using fallback price data');
 }
 
@@ -171,7 +144,7 @@ function displayCoinPrices(priceData) {
     containers.forEach(container => {
         container.innerHTML = '';
         
-        const topCoins = COINS.slice(0, 5);
+        const topCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'USDT'];
         for (const symbol of topCoins) {
             const data = priceData[symbol];
             if (!data) continue;
@@ -183,7 +156,7 @@ function displayCoinPrices(priceData) {
             const card = document.createElement('div');
             card.className = 'coin-card';
             card.innerHTML = `
-                <h4>${COIN_NAMES[symbol]}</h4>
+                <h4>${symbol}</h4>
                 <div class="price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                 <div class="change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
             `;
@@ -198,7 +171,7 @@ function displayProfileCoins(priceData) {
     
     coinsListContainer.innerHTML = '';
     
-    const topCoins = COINS.slice(0, 5);
+    const topCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP'];
     for (const symbol of topCoins) {
         const data = priceData[symbol];
         if (!data) continue;
@@ -210,22 +183,29 @@ function displayProfileCoins(priceData) {
         const coinItem = document.createElement('div');
         coinItem.className = 'coin-item';
         coinItem.innerHTML = `
-            <span class="coin-name">${COIN_NAMES[symbol]}</span>
+            <span class="coin-name">${symbol}</span>
             <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
         `;
         coinsListContainer.appendChild(coinItem);
     }
     
+    // Store all coins for dropdown
     allCoins = [];
-    for (const symbol of COINS.slice(5)) {
+    const moreCoins = ['ADA', 'DOGE', 'MATIC', 'DOT', 'AVAX', 'LINK', 'LTC', 'UNI'];
+    for (const symbol of moreCoins) {
         const data = priceData[symbol];
         if (data) {
             allCoins.push({
-                name: COIN_NAMES[symbol],
-                symbol: symbol,
+                name: symbol,
                 price: data.price,
                 change: data.change
+            });
+        } else {
+            allCoins.push({
+                name: symbol,
+                price: '0.00',
+                change: '0'
             });
         }
     }
@@ -237,10 +217,17 @@ function setupCoinDropdown() {
     
     if (!dropdownTrigger || !dropdownCoins) return;
     
-    dropdownTrigger.addEventListener('click', () => {
+    // Remove existing event listeners by cloning
+    const newTrigger = dropdownTrigger.cloneNode(true);
+    dropdownTrigger.parentNode.replaceChild(newTrigger, dropdownTrigger);
+    
+    newTrigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         dropdownCoins.classList.toggle('show');
         
-        if (dropdownCoins.classList.contains('show') && dropdownCoins.innerHTML === '') {
+        // Populate dropdown if empty
+        if (dropdownCoins.innerHTML === '' && allCoins.length > 0) {
             dropdownCoins.innerHTML = '';
             allCoins.forEach(coin => {
                 const changeNum = parseFloat(coin.change);
@@ -258,11 +245,18 @@ function setupCoinDropdown() {
             });
         }
     });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!newTrigger.contains(e.target) && !dropdownCoins.contains(e.target)) {
+            dropdownCoins.classList.remove('show');
+        }
+    });
 }
 
 function startPriceUpdates() {
-    loadLivePrices();
-    priceUpdateInterval = setInterval(loadLivePrices, 60000);
+    // No API updates needed - using static prices
+    // priceUpdateInterval = setInterval(loadLivePrices, 60000);
 }
 
 function setupMobileMenu() {
