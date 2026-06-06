@@ -12,7 +12,7 @@
     <div class="app-container">
         <aside class="sidebar">
             <div class="logo-area">
-                <img id="siteLogo" src="assets/images/logo.svg" alt="Logo" onerror="this.style.display='none'">
+                <img id="siteLogo" src="" alt="Logo" style="display: none;">
                 <span class="company-name">Clutch Incorporated</span>
             </div>
             <nav class="sidebar-nav">
@@ -34,7 +34,7 @@
         <main class="main-content">
             <div class="page-header">
                 <h1>Customer Service</h1>
-                <p class="page-description">Reach out to our support team</p>
+                <p class="page-description">Reach out to our general support team</p>
             </div>
             
             <div class="card">
@@ -49,8 +49,8 @@
                     </button>
                 </div>
                 
-                <div style="margin-top: 30px; padding: 16px; background: rgba(155,89,182,0.1); border-radius: 16px;">
-                    <p style="color: #9b59b6; margin-bottom: 10px;">📌 Support Hours:</p>
+                <div style="margin-top: 30px; padding: 16px; background: rgba(125,103,255,0.1); border-radius: 16px;">
+                    <p style="color: #7D67FF; margin-bottom: 10px;">📌 Support Hours:</p>
                     <p style="color: #aaa;">Monday - Sunday: 10:00 AM - 10:00 PM EST</p>
                     <p style="color: #aaa; margin-top: 5px;">Response time: Within 30 minutes</p>
                 </div>
@@ -81,18 +81,37 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/main-layout.js"></script>
     <script>
-        async function loadContacts() {
-            const snap = await database.ref('settings/serviceContacts').once('value');
-            const contacts = snap.val() || { whatsapp: '+12345678900', telegram: '@ClutchSupport' };
-            
-            document.getElementById('whatsappBtn').onclick = () => {
-                window.open('https://wa.me/' + contacts.whatsapp.replace(/[^0-9]/g, ''), '_blank');
-            };
-            document.getElementById('telegramBtn').onclick = () => {
-                window.open('https://t.me/' + contacts.telegram.replace('@', ''), '_blank');
-            };
+        // GENERAL customer service - NOT assigned agent
+        // This is for general support, not deposit-related
+        async function loadGeneralContacts() {
+            try {
+                const snap = await database.ref('settings/serviceContacts').once('value');
+                const contacts = snap.val() || { 
+                    whatsapp: '+12345678900', 
+                    telegram: '@ClutchSupport' 
+                };
+                
+                document.getElementById('whatsappBtn').onclick = () => {
+                    window.open('https://wa.me/' + contacts.whatsapp.replace(/[^0-9]/g, ''), '_blank');
+                };
+                document.getElementById('telegramBtn').onclick = () => {
+                    window.open('https://t.me/' + contacts.telegram.replace('@', ''), '_blank');
+                };
+                
+                console.log('General support contacts loaded');
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+                // Fallback contacts
+                document.getElementById('whatsappBtn').onclick = () => {
+                    window.open('https://wa.me/+12345678900', '_blank');
+                };
+                document.getElementById('telegramBtn').onclick = () => {
+                    window.open('https://t.me/ClutchSupport', '_blank');
+                };
+            }
         }
-        loadContacts();
+        
+        loadGeneralContacts();
     </script>
 </body>
 </html>

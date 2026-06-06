@@ -12,7 +12,7 @@
     <div class="app-container">
         <aside class="sidebar">
             <div class="logo-area">
-                <img id="siteLogo" src="assets/images/logo.svg" alt="Logo" onerror="this.style.display='none'">
+                <img id="siteLogo" src="" alt="Logo" style="display: none;">
                 <span class="company-name">Clutch Incorporated</span>
             </div>
             <nav class="sidebar-nav">
@@ -39,15 +39,15 @@
             
             <div class="card">
                 <div class="card-title">💳 How to Deposit</div>
-                <p style="color:#aaa; margin-bottom: 20px;">Contact our customer service to get the current merchant wallet address.</p>
+                <p style="color:#aaa; margin-bottom: 20px;">Contact your assigned customer service agent to get the current merchant wallet address.</p>
                 
                 <div class="contact-buttons" style="display: flex; gap: 15px; margin-bottom: 20px;">
                     <button id="whatsappBtn" style="background: #25D366; border: none; border-radius: 30px; padding: 12px 24px; color: white; cursor: pointer; flex: 1;">📱 WhatsApp</button>
                     <button id="telegramBtn" style="background: #0088cc; border: none; border-radius: 30px; padding: 12px 24px; color: white; cursor: pointer; flex: 1;">✈️ Telegram</button>
                 </div>
                 
-                <div style="background: rgba(155,89,182,0.1); border-radius: 16px; padding: 16px;">
-                    <h4 style="color: #9b59b6; margin-bottom: 10px;">📝 Deposit Steps:</h4>
+                <div style="background: rgba(125,103,255,0.1); border-radius: 16px; padding: 16px;">
+                    <h4 style="color: #7D67FF; margin-bottom: 10px;">📝 Deposit Steps:</h4>
                     <ul style="color: #aaa; margin-left: 20px;">
                         <li>1. Contact customer service via WhatsApp or Telegram</li>
                         <li>2. Request the current merchant wallet address</li>
@@ -83,19 +83,48 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/main-layout.js"></script>
     <script>
-        // Load contact info
-        async function loadContacts() {
-            const snap = await database.ref('settings/serviceContacts').once('value');
-            const contacts = snap.val() || { whatsapp: '+12345678900', telegram: '@ClutchSupport' };
-            
-            document.getElementById('whatsappBtn').onclick = () => {
-                window.open('https://wa.me/' + contacts.whatsapp.replace(/[^0-9]/g, ''), '_blank');
-            };
-            document.getElementById('telegramBtn').onclick = () => {
-                window.open('https://t.me/' + contacts.telegram.replace('@', ''), '_blank');
-            };
+        const userId = localStorage.getItem('userId');
+        
+        // Load user's assigned customer service agent
+        async function loadAssignedContacts() {
+            try {
+                // Get user's assigned contacts from their profile
+                const userSnap = await database.ref('users/' + userId).once('value');
+                const user = userSnap.val();
+                
+                // Get default contacts from settings
+                const settingsSnap = await database.ref('settings/serviceContacts').once('value');
+                const defaultContacts = settingsSnap.val() || { 
+                    whatsapp: '+12345678900', 
+                    telegram: '@ClutchSupport' 
+                };
+                
+                // Use assigned contacts if available, otherwise use default
+                const whatsappNumber = user?.assignedWhatsapp || defaultContacts.whatsapp;
+                const telegramUsername = user?.assignedTelegram || defaultContacts.telegram;
+                
+                // Set button actions
+                document.getElementById('whatsappBtn').onclick = () => {
+                    window.open('https://wa.me/' + whatsappNumber.replace(/[^0-9]/g, ''), '_blank');
+                };
+                document.getElementById('telegramBtn').onclick = () => {
+                    window.open('https://t.me/' + telegramUsername.replace('@', ''), '_blank');
+                };
+                
+                console.log('Deposit contacts loaded - Assigned agent:', { whatsappNumber, telegramUsername });
+            } catch (error) {
+                console.error('Error loading assigned contacts:', error);
+                // Fallback to default contacts
+                document.getElementById('whatsappBtn').onclick = () => {
+                    window.open('https://wa.me/+12345678900', '_blank');
+                };
+                document.getElementById('telegramBtn').onclick = () => {
+                    window.open('https://t.me/ClutchSupport', '_blank');
+                };
+            }
         }
-        loadContacts();
+        
+        loadAssignedContacts();
     </script>
 </body>
 </html>

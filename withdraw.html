@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .wallet-info {
-            background: rgba(255,215,0,0.08);
+            background: rgba(125, 103, 255, 0.08);
             border-radius: 12px;
             padding: 10px 15px;
             margin-bottom: 20px;
@@ -25,13 +25,14 @@
             font-size: 12px;
         }
         .wallet-value {
-            color: #ffd700;
+            color: #7D67FF;
             font-family: monospace;
             word-break: break-all;
             font-size: 13px;
+            font-weight: bold;
         }
         .wallet-change {
-            color: #ffd700;
+            color: #7D67FF;
             font-size: 12px;
             cursor: pointer;
             text-decoration: underline;
@@ -71,7 +72,7 @@
                 <div class="card-title">💰 Withdrawal Request</div>
                 
                 <!-- Display current balance -->
-                <div class="wallet-info" style="background: rgba(0,255,0,0.1); margin-bottom: 20px;">
+                <div class="wallet-info" style="background: rgba(125, 103, 255, 0.1); margin-bottom: 20px;">
                     <span class="wallet-label">💰 Available Balance:</span>
                     <span class="wallet-value" id="displayBalance">0.00 USDT</span>
                 </div>
@@ -202,11 +203,6 @@
             try {
                 // Save withdrawal request
                 await database.ref('withdrawals/' + withdrawId).set(withdrawalData);
-                
-                // Deduct balance (optional - can also deduct after admin approves)
-                // Uncomment if you want to deduct immediately:
-                // const newBalance = currentBalance - parseFloat(amount);
-                // await database.ref('users/' + userId).update({ balance: newBalance.toFixed(2) });
                 
                 Swal.fire('Success', 'Withdrawal request submitted! Awaiting admin approval.', 'success');
                 
