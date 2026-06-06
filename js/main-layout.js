@@ -4,16 +4,37 @@ let currentUserId = null;
 let priceUpdateInterval = null;
 let allCoins = [];
 
+// CoinGecko IDs mapping
+const COINGECKO_IDS = {
+    'BTCUSDT': 'bitcoin',
+    'ETHUSDT': 'ethereum',
+    'BNBUSDT': 'binancecoin',
+    'SOLUSDT': 'solana',
+    'XRPUSDT': 'ripple',
+    'ADAUSDT': 'cardano',
+    'DOGEUSDT': 'dogecoin',
+    'USDT': 'tether',
+    'USDC': 'usd-coin',
+    'MATICUSDT': 'matic-network',
+    'DOTUSDT': 'polkadot',
+    'AVAXUSDT': 'avalanche-2',
+    'LINKUSDT': 'chainlink',
+    'LTCUSDT': 'litecoin',
+    'UNIUSDT': 'uniswap',
+    'ATOMUSDT': 'cosmos',
+    'ALGOUSDT': 'algorand'
+};
+
 const COINS = [
     'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT',
-    'ADAUSDT', 'DOGEUSDT', 'MATICUSDT', 'DOTUSDT', 'AVAXUSDT',
-    'LINKUSDT', 'LTCUSDT', 'UNIUSDT', 'ATOMUSDT', 'ALGOUSDT'
+    'ADAUSDT', 'DOGEUSDT', 'USDT', 'USDC', 'MATICUSDT',
+    'DOTUSDT', 'AVAXUSDT', 'LINKUSDT', 'LTCUSDT', 'UNIUSDT'
 ];
 
 const COIN_NAMES = {
     'BTCUSDT': 'BTC', 'ETHUSDT': 'ETH', 'BNBUSDT': 'BNB', 'SOLUSDT': 'SOL', 'XRPUSDT': 'XRP',
-    'ADAUSDT': 'ADA', 'DOGEUSDT': 'DOGE', 'MATICUSDT': 'MATIC', 'DOTUSDT': 'DOT', 'AVAXUSDT': 'AVAX',
-    'LINKUSDT': 'LINK', 'LTCUSDT': 'LTC', 'UNIUSDT': 'UNI', 'ATOMUSDT': 'ATOM', 'ALGOUSDT': 'ALGO'
+    'ADAUSDT': 'ADA', 'DOGEUSDT': 'DOGE', 'USDT': 'USDT', 'USDC': 'USDC', 'MATICUSDT': 'MATIC',
+    'DOTUSDT': 'DOT', 'AVAXUSDT': 'AVAX', 'LINKUSDT': 'LINK', 'LTCUSDT': 'LTC', 'UNIUSDT': 'UNI'
 };
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -32,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     await loadUserProfile();
-    await loadLogo();           // ← ADDED: Load logo from Firebase
+    await loadLogo();
     await loadLivePrices();
     
     startPriceUpdates();
@@ -76,7 +97,6 @@ async function loadUserProfile() {
     }
 }
 
-// Load logo from Firebase (admin uploaded)
 async function loadLogo() {
     try {
         const snapshot = await database.ref('settings/logoURL').once('value');
@@ -96,22 +116,56 @@ async function loadLogo() {
 
 async function loadLivePrices() {
     try {
-        const priceData = {};
+        // Build query string for all coins
+        const allIds = Object.values(COINGECKO_IDS);
+        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${allIds.join(',')}&vs_currencies=usd&include_24hr_change=true`);
+        const data = await response.json();
+        
+        // Build full price data for all coins
+        const fullPriceData = {};
         for (const symbol of COINS) {
-            const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
-            const data = await response.json();
-            priceData[symbol] = {
-                price: parseFloat(data.lastPrice).toFixed(2),
-                change: parseFloat(data.priceChangePercent).toFixed(2)
-            };
+            const coinId = COINGECKO_IDS[symbol];
+            if (data[coinId]) {
+                fullPriceData[symbol] = {
+                    price: data[coinId].usd.toFixed(2),
+                    change: data[coinId].usd_24h_change.toFixed(2)
+                };
+            } else {
+                fullPriceData[symbol] = { price: '0.00', change: '0.00' };
+            }
         }
         
-        displayCoinPrices(priceData);
-        displayProfileCoins(priceData);
+        displayCoinPrices(fullPriceData);
+        displayProfileCoins(fullPriceData);
         
     } catch (error) {
         console.error('Error fetching prices:', error);
+        showFallbackPrices();
     }
+}
+
+function showFallbackPrices() {
+    const fallbackData = {
+        'BTCUSDT': { price: '61333.99', change: '2.5' },
+        'ETHUSDT': { price: '1594.94', change: '1.8' },
+        'BNBUSDT': { price: '577.00', change: '-0.5' },
+        'SOLUSDT': { price: '64.76', change: '3.2' },
+        'XRPUSDT': { price: '1.11', change: '-1.2' },
+        'ADAUSDT': { price: '0.45', change: '1.2' },
+        'DOGEUSDT': { price: '0.12', change: '-0.8' },
+        'USDT': { price: '1.00', change: '0.01' },
+        'USDC': { price: '1.00', change: '0.01' },
+        'MATICUSDT': { price: '0.89', change: '2.1' },
+        'DOTUSDT': { price: '6.50', change: '-1.0' },
+        'AVAXUSDT': { price: '35.20', change: '4.5' },
+        'LINKUSDT': { price: '14.30', change: '1.5' },
+        'LTCUSDT': { price: '82.40', change: '-0.3' },
+        'UNIUSDT': { price: '7.80', change: '2.0' }
+    };
+    
+    displayCoinPrices(fallbackData);
+    displayProfileCoins(fallbackData);
+    console.log('Using fallback price data');
 }
 
 function displayCoinPrices(priceData) {
@@ -126,15 +180,16 @@ function displayCoinPrices(priceData) {
             const data = priceData[symbol];
             if (!data) continue;
             
-            const changeClass = data.change >= 0 ? 'positive' : 'negative';
-            const changeSign = data.change >= 0 ? '▲' : '▼';
+            const changeNum = parseFloat(data.change);
+            const changeClass = changeNum >= 0 ? 'positive' : 'negative';
+            const changeSign = changeNum >= 0 ? '▲' : '▼';
             
             const card = document.createElement('div');
             card.className = 'coin-card';
             card.innerHTML = `
                 <h4>${COIN_NAMES[symbol]}</h4>
-                <div class="price">$${data.price}</div>
-                <div class="change ${changeClass}">${changeSign} ${Math.abs(data.change)}%</div>
+                <div class="price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                <div class="change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
             `;
             container.appendChild(card);
         }
@@ -152,15 +207,16 @@ function displayProfileCoins(priceData) {
         const data = priceData[symbol];
         if (!data) continue;
         
-        const changeClass = data.change >= 0 ? 'positive' : 'negative';
-        const changeSign = data.change >= 0 ? '▲' : '▼';
+        const changeNum = parseFloat(data.change);
+        const changeClass = changeNum >= 0 ? 'positive' : 'negative';
+        const changeSign = changeNum >= 0 ? '▲' : '▼';
         
         const coinItem = document.createElement('div');
         coinItem.className = 'coin-item';
         coinItem.innerHTML = `
             <span class="coin-name">${COIN_NAMES[symbol]}</span>
-            <span class="coin-price">$${data.price}</span>
-            <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(data.change)}%</span>
+            <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
         `;
         coinsListContainer.appendChild(coinItem);
     }
@@ -191,15 +247,16 @@ function setupCoinDropdown() {
         if (dropdownCoins.classList.contains('show') && dropdownCoins.innerHTML === '') {
             dropdownCoins.innerHTML = '';
             allCoins.forEach(coin => {
-                const changeClass = coin.change >= 0 ? 'positive' : 'negative';
-                const changeSign = coin.change >= 0 ? '▲' : '▼';
+                const changeNum = parseFloat(coin.change);
+                const changeClass = changeNum >= 0 ? 'positive' : 'negative';
+                const changeSign = changeNum >= 0 ? '▲' : '▼';
                 
                 const coinItem = document.createElement('div');
                 coinItem.className = 'coin-item';
                 coinItem.innerHTML = `
                     <span class="coin-name">${coin.name}</span>
-                    <span class="coin-price">$${coin.price}</span>
-                    <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(coin.change)}%</span>
+                    <span class="coin-price">$${parseFloat(coin.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
                 `;
                 dropdownCoins.appendChild(coinItem);
             });
@@ -209,7 +266,7 @@ function setupCoinDropdown() {
 
 function startPriceUpdates() {
     loadLivePrices();
-    priceUpdateInterval = setInterval(loadLivePrices, 30000);
+    priceUpdateInterval = setInterval(loadLivePrices, 60000); // Update every 60 seconds
 }
 
 function setupMobileMenu() {
