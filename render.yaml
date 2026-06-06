@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: clutch-incorporated
+    env: static
+    buildCommand: echo "No build command needed for static site"
+    publishDir: .
+    staticPublishDir: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: "18"
