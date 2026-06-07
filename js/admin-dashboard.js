@@ -1,4 +1,4 @@
-// Admin Dashboard - Complete with All Features
+// Admin Dashboard - Complete with Email Notifications
 
 let adminType = '';
 let adminId = '';
@@ -155,10 +155,10 @@ async function loadUsersTable() {
                 <td>${id.substring(0, 15)}...<\/td>
                 <td><strong>${user.username}<\/strong><\/td>
                 <td>${user.email || 'N/A'}<\/td>
-                <td style="color:#ffd700;">${balance} USDT<\/td>
+                <td style="color:#7D67FF;">${balance} USDT<\/td>
                 <td style="color:#ff6666;">${frozen} USDT<\/td>
                 <td style="color:#00ff00;">${available} USDT<\/td>
-                <td style="color:#ffd700;">${user.inviteCode || 'N/A'}<\/td>
+                <td style="color:#7D67FF;">${user.inviteCode || 'N/A'}<\/td>
                 <td>${user.status || 'active'}<\/td>
                 <td>
                     <button class="edit-btn" onclick="viewUserDetails('${id}')">👁️ View<\/button>
@@ -200,7 +200,7 @@ window.viewUserDetails = async function(userId) {
             <p><strong>Assigned Telegram:</strong> ${user.assignedTelegram || 'Default'}</p>
         </div>`,
         icon: 'info',
-        confirmButtonColor: '#ffd700'
+        confirmButtonColor: '#7D67FF'
     });
 };
 
@@ -211,7 +211,7 @@ window.addFunds = async function(userId) {
         inputLabel: 'Amount in USDT',
         inputPlaceholder: '0.00',
         showCancelButton: true,
-        confirmButtonColor: '#ffd700'
+        confirmButtonColor: '#7D67FF'
     });
     if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
         const snap = await database.ref('users/' + userId).once('value');
@@ -231,7 +231,7 @@ window.subtractFunds = async function(userId) {
         inputLabel: 'Amount to subtract',
         inputPlaceholder: '0.00',
         showCancelButton: true,
-        confirmButtonColor: '#ffd700'
+        confirmButtonColor: '#7D67FF'
     });
     if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
         const snap = await database.ref('users/' + userId).once('value');
@@ -262,7 +262,7 @@ window.freezeAmount = async function(userId) {
         inputLabel: `Available to freeze: ${available.toFixed(2)} USDT`,
         inputPlaceholder: '0.00',
         showCancelButton: true,
-        confirmButtonColor: '#ffd700'
+        confirmButtonColor: '#7D67FF'
     });
     
     if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
@@ -288,7 +288,7 @@ window.unfreezeAmount = async function(userId) {
         inputLabel: `Currently frozen: ${currentFrozen.toFixed(2)} USDT (0 = all)`,
         inputPlaceholder: '0',
         showCancelButton: true,
-        confirmButtonColor: '#ffd700'
+        confirmButtonColor: '#7D67FF'
     });
     
     if (amount !== null) {
@@ -315,7 +315,7 @@ window.assignCustomerService = async function(userId) {
                <input id="swalTelegram" class="swal2-input" placeholder="Telegram Username" value="${user.assignedTelegram || ''}">`,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonColor: '#ffd700',
+        confirmButtonColor: '#7D67FF',
         preConfirm: () => {
             return {
                 whatsapp: document.getElementById('swalWhatsapp').value,
@@ -401,7 +401,7 @@ window.editTask = async function(taskId) {
         showCancelButton: true,
         confirmButtonText: 'Save Changes',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: '#ffd700',
+        confirmButtonColor: '#7D67FF',
         width: '650px',
         preConfirm: () => {
             return {
@@ -464,7 +464,7 @@ async function addNewTask() {
                <label style="display:flex; align-items:center; gap:10px; margin:10px 0;"><input type="checkbox" id="isSpecial"> <span style="color:#ffd700;">🔥 Special Task</span></label>`,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonColor: '#ffd700',
+        confirmButtonColor: '#7D67FF',
         width: '550px',
         preConfirm: () => {
             return {
@@ -521,10 +521,10 @@ async function loadWithdrawalRequests() {
                 <\/tr>`;
             }
         }
-        content.innerHTML = `<h3 style="color:#ffd700;">💰 Pending Withdrawals</h3>
+        content.innerHTML = `<h3 style="color:#7D67FF;">💰 Pending Withdrawals</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead>
         <tbody>${pending || '<td><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>
-        <h3 style="color:#ffd700; margin-top:30px;">📜 Withdrawal History</h3>
+        <h3 style="color:#7D67FF; margin-top:30px;">📜 Withdrawal History</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
         <tbody>${history || '<td><td colspan="5">None<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
     } catch(e) { console.error(e); }
@@ -534,20 +534,34 @@ window.approveWithdrawal = async function(id) {
     const snap = await database.ref('withdrawals/' + id).once('value');
     const withdrawal = snap.val();
     
+    // Get user email for notification
+    const userSnap = await database.ref('users/' + withdrawal.userId).once('value');
+    const user = userSnap.val();
+    
     // Update withdrawal status
     await database.ref('withdrawals/' + id).update({ 
         status: 'confirmed', 
         processedDate: new Date().toISOString() 
     });
     
-    // Also create a record in user's activity history
+    // Create record in user's activity history
     await database.ref('withdrawals_history/' + id).set({
         ...withdrawal,
         status: 'confirmed',
         processedDate: new Date().toISOString()
     });
     
-    Swal.fire('Approved', 'Withdrawal approved', 'success');
+    // Send email notification to user
+    try {
+        if (typeof sendWithdrawalStatusEmail === 'function') {
+            await sendWithdrawalStatusEmail(user.email, user.username, withdrawal.amount, 'confirmed', id);
+            console.log('Withdrawal confirmation email sent to', user.email);
+        }
+    } catch(emailError) {
+        console.error('Failed to send email:', emailError);
+    }
+    
+    Swal.fire('Approved', 'Withdrawal approved. Email notification sent to user.', 'success');
     loadWithdrawalRequests();
     loadDashboardStats();
 };
@@ -576,7 +590,17 @@ window.rejectWithdrawal = async function(id) {
         processedDate: new Date().toISOString()
     });
     
-    Swal.fire('Rejected', 'Withdrawal rejected. Funds returned.', 'info');
+    // Send email notification to user
+    try {
+        if (typeof sendWithdrawalStatusEmail === 'function') {
+            await sendWithdrawalStatusEmail(user.email, user.username, w.amount, 'rejected', id);
+            console.log('Withdrawal rejection email sent to', user.email);
+        }
+    } catch(emailError) {
+        console.error('Failed to send email:', emailError);
+    }
+    
+    Swal.fire('Rejected', 'Withdrawal rejected. Email notification sent to user. Funds returned.', 'info');
     loadWithdrawalRequests();
     loadDashboardStats();
 };
@@ -584,7 +608,7 @@ window.rejectWithdrawal = async function(id) {
 async function loadDepositRecords() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<div style="margin-bottom:20px;"><button class="save-btn" id="manualDepositBtn">+ Manual Deposit</button></div>
-        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th><tr></thead>
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Date</th></td></thead>
         <tbody id="depositsTableBody"><tr><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     document.getElementById('manualDepositBtn').addEventListener('click', manualDeposit);
     await loadDepositsTable();
@@ -596,14 +620,14 @@ async function loadDepositsTable() {
         const deposits = depositsSnap.val() || {};
         let html = '';
         for (let id in deposits) {
-            html += `<tr>
+            html += `<td>
                 <td>${deposits[id].id}<\/td>
                 <td>${deposits[id].username}<\/td>
                 <td>${deposits[id].amount} USDT<\/td>
                 <td>${deposits[id].date}<\/td>
             <\/tr>`;
         }
-        document.getElementById('depositsTableBody').innerHTML = html || '<td><td colspan="4">No deposits<\/td><\/tr>';
+        document.getElementById('depositsTableBody').innerHTML = html || '<tr><td colspan="4">No deposits<\/td><\/tr>';
     } catch(e) { console.error(e); }
 }
 
@@ -725,7 +749,7 @@ async function loadInvitationCodes() {
         if (adminType === 'master' || code.adminId === adminId) {
             historyHtml += `<tr>
                 <td>${code.date}<\/td>
-                <td style="color:#ffd700;">${code.code}<\/td>
+                <td style="color:#7D67FF;">${code.code}<\/td>
                 <td>${code.adminName}<\/td>
                 <td>${code.active ? '✅ Active' : '❌ Expired'}<\/td>
                 <td>${code.active ? `<button class="delete-btn" onclick="deactivateCode('${id}')">Deactivate<\/button>` : '-'}<\/td>
@@ -733,14 +757,14 @@ async function loadInvitationCodes() {
         }
     }
     
-    content.innerHTML = `<div style="background:rgba(255,215,0,0.1); padding:20px; border-radius:16px; margin-bottom:20px; text-align:center;">
-            <h3 style="color:#ffd700;">📋 Today's Invitation Code</h3>
-            <p style="font-size:36px; font-weight:bold; color:#ffd700; margin:15px 0;">${todaysCode ? todaysCode.code : 'No code'}</p>
+    content.innerHTML = `<div style="background:rgba(125,103,255,0.1); padding:20px; border-radius:16px; margin-bottom:20px; text-align:center;">
+            <h3 style="color:#7D67FF;">📋 Today's Invitation Code</h3>
+            <p style="font-size:36px; font-weight:bold; color:#7D67FF; margin:15px 0;">${todaysCode ? todaysCode.code : 'No code'}</p>
             <button class="save-btn" id="generateCodeBtn">🔑 Generate New Code</button>
         </div>
-        <h3 style="color:#ffd700;">📜 Code History</h3>
+        <h3 style="color:#7D67FF;">📜 Code History</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>Date</th><th>Code</th><th>Admin</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>${historyHtml || '</td><td colspan="5">No codes found<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
+        <tbody>${historyHtml || '<table><td colspan="5">No codes found<\/td><\/tr>'}<\/tbody><\/table><\/div>`;
     
     document.getElementById('generateCodeBtn').addEventListener('click', generateInvitationCode);
 }
@@ -780,16 +804,16 @@ async function loadTradeConfirmations() {
                 <td>${t.id}</td>
                 <td>${t.username}</td>
                 <td>${t.symbol}</td>
-                <td>${t.amount} USDT</td>
+                <td>${t.amount} USDT</div>
                 <td>${t.entryPrice}</td>
                 <td><button class="approve-btn" onclick="confirmTrade('${id}', ${suggestedProfit})">Confirm</button>
                 <button class="reject-btn" onclick="rejectTrade('${id}', ${t.amount})">Reject</button></td>
             </tr>`;
         }
     }
-    content.innerHTML = `<h3 style="color:#ffd700;">📈 Pending Trades</h3>
+    content.innerHTML = `<h3 style="color:#7D67FF;">📈 Pending Trades</h3>
         <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Symbol</th><th>Amount</th><th>Entry Price</th><th>Actions</th></tr></thead>
-        <tbody>${html || '<tr><td colspan="6">No pending trades</td></tr>'}</tbody></table></div>`;
+        <tbody>${html || '<tr><td colspan="6">No pending trades</td><\/tr>'}<\/tbody><\/table><\/div>`;
 }
 
 window.confirmTrade = async function(id, suggestedProfit) {
@@ -804,7 +828,7 @@ window.confirmTrade = async function(id, suggestedProfit) {
         inputValue: suggestedProfit,
         showCancelButton: true,
         confirmButtonText: 'Confirm & Add Profit',
-        confirmButtonColor: '#ffd700'
+        confirmButtonColor: '#7D67FF'
     });
     
     if (profitAmount === undefined) return;
@@ -852,7 +876,7 @@ function loadAdminManagement() {
     const content = document.getElementById('adminContent');
     content.innerHTML = `<button class="save-btn" id="createAdminBtn">+ Create Sub Admin</button>
         <div class="table-container"><table class="data-table"><thead><tr><th>Username</th><th>Email</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="adminsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>`;
+        <tbody id="adminsTableBody"><td><td colspan="4">Loading...<\/td><\/tr><\/tbody><\/table><\/div>`;
     document.getElementById('createAdminBtn').addEventListener('click', createSubAdmin);
     loadAdminsTable();
 }
@@ -862,7 +886,7 @@ async function loadAdminsTable() {
     const admins = snap.val() || {};
     let html = '';
     for (let id in admins) {
-        html += `<tr>
+        html += `<td>
             <td>${admins[id].username}</td>
             <td>${admins[id].email}</td>
             <td>${admins[id].created ? new Date(admins[id].created).toLocaleDateString() : 'Unknown'}</td>
@@ -872,7 +896,7 @@ async function loadAdminsTable() {
             </td>
         </tr>`;
     }
-    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins</td></tr>';
+    document.getElementById('adminsTableBody').innerHTML = html || '<tr><td colspan="4">No sub admins</td><\/tr>';
 }
 
 window.resetAdminPass = async function(id) {

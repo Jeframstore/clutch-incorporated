@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Register - Clutch Incorporated</title>
+    <title>Register - Clutch Revenue</title>
     <style>
         * {
             margin: 0;
@@ -25,7 +25,7 @@
             padding: 40px;
             width: 100%;
             max-width: 450px;
-            border: 1px solid rgba(155, 89, 182, 0.3);
+            border: 1px solid rgba(125, 103, 255, 0.3);
         }
         .logo-area {
             text-align: center;
@@ -34,7 +34,7 @@
         .big-c {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            background: linear-gradient(135deg, #7D67FF, #8F7AFF);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -45,7 +45,7 @@
             margin: 0 auto 15px;
         }
         h2 {
-            color: #9b59b6;
+            color: #7D67FF;
             text-align: center;
             margin-bottom: 30px;
         }
@@ -68,12 +68,12 @@
         }
         input:focus {
             outline: none;
-            border-color: #9b59b6;
+            border-color: #7D67FF;
         }
         button {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            background: linear-gradient(135deg, #7D67FF, #8F7AFF);
             border: none;
             border-radius: 30px;
             font-size: 16px;
@@ -106,13 +106,15 @@
             color: #888;
         }
         .login-link a {
-            color: #9b59b6;
+            color: #7D67FF;
             text-decoration: none;
         }
     </style>
-    <!-- Firebase SDK - loaded once -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
 </head>
 <body>
     <div class="register-card">
@@ -157,10 +159,14 @@
         </div>
     </div>
 
-    <!-- Firebase config - loaded once -->
+    <!-- Firebase config -->
     <script src="js/firebase-config.js"></script>
+    <!-- EmailJS config and templates -->
+    <script src="js/email-config.js"></script>
+    <script src="js/email-templates.js"></script>
+    
     <script>
-        // database is already defined in firebase-config.js - DO NOT redeclare
+        // database is already defined in firebase-config.js
         
         const registerForm = document.getElementById('registerForm');
         const messageDiv = document.getElementById('message');
@@ -243,10 +249,22 @@
                     status: 'active',
                     joinedDate: today,
                     completedTasks: 0,
-                    totalTasks: 24
+                    totalTasks: 24,
+                    signInStreak: 0,
+                    frozenBonus: 0,
+                    lastSignIn: null
                 };
                 
                 await database.ref('users/' + userId).set(newUser);
+                
+                // Send Welcome Email
+                try {
+                    await sendWelcomeEmail(email, username);
+                    console.log('Welcome email sent to', email);
+                } catch(emailError) {
+                    console.error('Failed to send welcome email:', emailError);
+                }
+                
                 messageDiv.innerHTML = '<div class="success-message">Registration successful! Redirecting to login...</div>';
                 
                 setTimeout(() => {

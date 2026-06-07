@@ -226,17 +226,16 @@ function updateGraphs() {
     cards.forEach((card, index) => {
         const symbol = topCoins[index];
         if (symbol && priceHistory[symbol]) {
-            const changeNum = parseFloat(card.querySelector('.change')?.textContent?.replace(/[▲▼%]/g, '') || 0);
-            const changeClass = changeNum >= 0 ? 'positive' : 'negative';
-            const graphHtml = generateSparkline(symbol, changeClass);
-            const existingGraph = card.querySelector('.coin-graph');
-            if (existingGraph) {
-                existingGraph.innerHTML = graphHtml;
-            } else {
-                const graphDiv = document.createElement('div');
-                graphDiv.className = 'coin-graph';
-                graphDiv.innerHTML = graphHtml;
-                card.appendChild(graphDiv);
+            const changeElement = card.querySelector('.coin-profit');
+            if (changeElement) {
+                const changeText = changeElement.textContent;
+                const isPositive = changeText.includes('▲');
+                const changeClass = isPositive ? 'positive' : 'negative';
+                const graphHtml = generateSparkline(symbol, changeClass);
+                const existingGraph = card.querySelector('.coin-graph');
+                if (existingGraph) {
+                    existingGraph.innerHTML = graphHtml;
+                }
             }
         }
     });
@@ -252,8 +251,10 @@ function displayCoinPrices(priceData) {
             const data = priceData[symbol];
             if (data) {
                 const changeNum = parseFloat(data.change);
-                const changeClass = changeNum >= 0 ? 'positive' : 'negative';
-                const changeSign = changeNum >= 0 ? '▲' : '▼';
+                const isPositive = changeNum >= 0;
+                const changeClass = isPositive ? 'positive' : 'negative';
+                const changeSign = isPositive ? '▲' : '▼';
+                const changeColor = isPositive ? '#45D483' : '#FF6B6B';
                 
                 // Update price history
                 updatePriceHistory(symbol, data.price);
@@ -265,7 +266,7 @@ function displayCoinPrices(priceData) {
                         <span class="coin-name">${symbol}</span>
                         <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </div>
-                    <div class="coin-profit ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
+                    <div class="coin-profit" style="color: ${changeColor}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
                     <div class="coin-graph" id="graph-${symbol}">${generateSparkline(symbol, changeClass)}</div>
                 `;
                 mainGrid.appendChild(card);
@@ -283,8 +284,10 @@ function displayCoinPrices(priceData) {
                 if (!data) continue;
                 
                 const changeNum = parseFloat(data.change);
-                const changeClass = changeNum >= 0 ? 'positive' : 'negative';
-                const changeSign = changeNum >= 0 ? '▲' : '▼';
+                const isPositive = changeNum >= 0;
+                const changeClass = isPositive ? 'positive' : 'negative';
+                const changeSign = isPositive ? '▲' : '▼';
+                const changeColor = isPositive ? '#45D483' : '#FF6B6B';
                 
                 updatePriceHistory(symbol, data.price);
                 
@@ -295,7 +298,7 @@ function displayCoinPrices(priceData) {
                         <span class="coin-name">${symbol}</span>
                         <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </div>
-                    <div class="coin-profit ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
+                    <div class="coin-profit" style="color: ${changeColor}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
                     <div class="coin-graph">${generateSparkline(symbol, changeClass)}</div>
                 `;
                 container.appendChild(card);
@@ -318,15 +321,17 @@ function displayProfileCoins(priceData) {
         const data = priceData[symbol];
         if (data) {
             const changeNum = parseFloat(data.change);
-            const changeClass = changeNum >= 0 ? 'positive' : 'negative';
-            const changeSign = changeNum >= 0 ? '▲' : '▼';
+            const isPositive = changeNum >= 0;
+            const changeClass = isPositive ? 'positive' : 'negative';
+            const changeSign = isPositive ? '▲' : '▼';
+            const changeColor = isPositive ? '#45D483' : '#FF6B6B';
             
             const coinItem = document.createElement('div');
             coinItem.className = 'coin-item';
             coinItem.innerHTML = `
                 <span class="coin-name">${symbol}</span>
                 <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
+                <span class="coin-change ${changeClass}" style="color: ${changeColor}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
             `;
             coinsListContainer.appendChild(coinItem);
         }
@@ -382,15 +387,17 @@ function setupCoinDropdown() {
             dropdownCoins.innerHTML = '';
             allCoins.forEach(coin => {
                 const changeNum = parseFloat(coin.change);
-                const changeClass = changeNum >= 0 ? 'positive' : 'negative';
-                const changeSign = changeNum >= 0 ? '▲' : '▼';
+                const isPositive = changeNum >= 0;
+                const changeClass = isPositive ? 'positive' : 'negative';
+                const changeSign = isPositive ? '▲' : '▼';
+                const changeColor = isPositive ? '#45D483' : '#FF6B6B';
                 
                 const coinItem = document.createElement('div');
                 coinItem.className = 'coin-item';
                 coinItem.innerHTML = `
                     <span class="coin-name">${coin.name}</span>
                     <span class="coin-price">$${parseFloat(coin.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                    <span class="coin-change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
+                    <span class="coin-change ${changeClass}" style="color: ${changeColor}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</span>
                 `;
                 dropdownCoins.appendChild(coinItem);
             });
