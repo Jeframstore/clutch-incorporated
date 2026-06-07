@@ -3,6 +3,7 @@
 let currentUserId = null;
 let priceUpdateInterval = null;
 let allCoins = [];
+let priceHistory = {};
 
 // CoinGecko IDs mapping
 const COINGECKO_IDS = {
@@ -34,6 +35,15 @@ const COIN_NAMES = {
     'ADA': 'ADA', 'DOGE': 'DOGE', 'USDT': 'USDT', 'USDC': 'USDC', 'MATIC': 'MATIC',
     'DOT': 'DOT', 'AVAX': 'AVAX', 'LINK': 'LINK', 'LTC': 'LTC', 'UNI': 'UNI'
 };
+
+// Initialize price history for each coin
+const topCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'USDT'];
+topCoins.forEach(coin => {
+    priceHistory[coin] = [];
+    for (let i = 0; i < 20; i++) {
+        priceHistory[coin].push(0);
+    }
+});
 
 document.addEventListener('DOMContentLoaded', async function() {
     currentUserId = localStorage.getItem('userId');
@@ -119,6 +129,46 @@ async function loadLivePrices() {
     showFallbackPrices();
 }
 
+// Generate random price movement for live graph
+function updatePriceHistory(symbol, currentPrice) {
+    if (!priceHistory[symbol]) {
+        priceHistory[symbol] = [];
+    }
+    priceHistory[symbol].push(parseFloat(currentPrice));
+    if (priceHistory[symbol].length > 20) {
+        priceHistory[symbol].shift();
+    }
+}
+
+// Generate sparkline SVG
+function generateSparkline(symbol, changeClass) {
+    const prices = priceHistory[symbol] || [];
+    if (prices.length < 2) return '';
+    
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const range = maxPrice - minPrice;
+    const width = 100;
+    const height = 30;
+    const step = width / (prices.length - 1);
+    
+    let points = '';
+    for (let i = 0; i < prices.length; i++) {
+        const x = i * step;
+        let y = height - ((prices[i] - minPrice) / range) * height;
+        if (isNaN(y)) y = height / 2;
+        y = Math.min(Math.max(y, 2), height - 2);
+        points += `${x},${y} `;
+    }
+    
+    const strokeColor = changeClass === 'positive' ? '#45D483' : '#FF6B6B';
+    
+    return `<svg width="100%" height="35" viewBox="0 0 100 35" preserveAspectRatio="none" style="margin-top: 8px;">
+        <polyline fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${points}"/>
+        <polygon fill="${strokeColor}20" points="${points} ${width},${height} 0,${height}"/>
+    </svg>`;
+}
+
 function showFallbackPrices() {
     const fallbackData = {
         'BTC': { price: '60619.00', change: '2.5' },
@@ -137,11 +187,59 @@ function showFallbackPrices() {
         'UNI': { price: '7.80', change: '2.0' }
     };
     
+    // Initialize price history with random movements
+    for (const symbol of topCoins) {
+        const basePrice = parseFloat(fallbackData[symbol]?.price || 100);
+        for (let i = 0; i < 20; i++) {
+            const variation = (Math.random() - 0.5) * basePrice * 0.02;
+            priceHistory[symbol].push(basePrice + variation);
+        }
+    }
+    
     // Display prices in main content and profile
     displayCoinPrices(fallbackData);
     displayProfileCoins(fallbackData);
     
-    console.log('Fallback prices displayed');
+    // Update graphs every 3 seconds to simulate live movement
+    if (window.graphInterval) clearInterval(window.graphInterval);
+    window.graphInterval = setInterval(() => {
+        updateGraphs();
+    }, 3000);
+    
+    console.log('Fallback prices displayed with live graphs');
+}
+
+function updateGraphs() {
+    // Update price history with random movement
+    for (const symbol of topCoins) {
+        const lastPrice = priceHistory[symbol][priceHistory[symbol].length - 1] || 100;
+        const variation = (Math.random() - 0.5) * lastPrice * 0.01;
+        const newPrice = lastPrice + variation;
+        priceHistory[symbol].push(newPrice);
+        if (priceHistory[symbol].length > 20) {
+            priceHistory[symbol].shift();
+        }
+    }
+    
+    // Refresh the graphs
+    const cards = document.querySelectorAll('.coin-card');
+    cards.forEach((card, index) => {
+        const symbol = topCoins[index];
+        if (symbol && priceHistory[symbol]) {
+            const changeNum = parseFloat(card.querySelector('.change')?.textContent?.replace(/[▲▼%]/g, '') || 0);
+            const changeClass = changeNum >= 0 ? 'positive' : 'negative';
+            const graphHtml = generateSparkline(symbol, changeClass);
+            const existingGraph = card.querySelector('.coin-graph');
+            if (existingGraph) {
+                existingGraph.innerHTML = graphHtml;
+            } else {
+                const graphDiv = document.createElement('div');
+                graphDiv.className = 'coin-graph';
+                graphDiv.innerHTML = graphHtml;
+                card.appendChild(graphDiv);
+            }
+        }
+    });
 }
 
 function displayCoinPrices(priceData) {
@@ -150,7 +248,6 @@ function displayCoinPrices(priceData) {
     if (mainGrid) {
         mainGrid.innerHTML = '';
         
-        const topCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'USDT'];
         for (const symbol of topCoins) {
             const data = priceData[symbol];
             if (data) {
@@ -158,12 +255,18 @@ function displayCoinPrices(priceData) {
                 const changeClass = changeNum >= 0 ? 'positive' : 'negative';
                 const changeSign = changeNum >= 0 ? '▲' : '▼';
                 
+                // Update price history
+                updatePriceHistory(symbol, data.price);
+                
                 const card = document.createElement('div');
                 card.className = 'coin-card';
                 card.innerHTML = `
-                    <h4>${symbol}</h4>
-                    <div class="price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                    <div class="change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
+                    <div class="coin-header">
+                        <span class="coin-name">${symbol}</span>
+                        <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>
+                    <div class="coin-profit ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
+                    <div class="coin-graph" id="graph-${symbol}">${generateSparkline(symbol, changeClass)}</div>
                 `;
                 mainGrid.appendChild(card);
             }
@@ -175,7 +278,6 @@ function displayCoinPrices(priceData) {
     if (containers.length > 0 && !mainGrid) {
         containers.forEach(container => {
             container.innerHTML = '';
-            const topCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'USDT'];
             for (const symbol of topCoins) {
                 const data = priceData[symbol];
                 if (!data) continue;
@@ -184,12 +286,17 @@ function displayCoinPrices(priceData) {
                 const changeClass = changeNum >= 0 ? 'positive' : 'negative';
                 const changeSign = changeNum >= 0 ? '▲' : '▼';
                 
+                updatePriceHistory(symbol, data.price);
+                
                 const card = document.createElement('div');
                 card.className = 'coin-card';
                 card.innerHTML = `
-                    <h4>${symbol}</h4>
-                    <div class="price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                    <div class="change ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
+                    <div class="coin-header">
+                        <span class="coin-name">${symbol}</span>
+                        <span class="coin-price">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>
+                    <div class="coin-profit ${changeClass}">${changeSign} ${Math.abs(changeNum).toFixed(2)}%</div>
+                    <div class="coin-graph">${generateSparkline(symbol, changeClass)}</div>
                 `;
                 container.appendChild(card);
             }
@@ -206,8 +313,8 @@ function displayProfileCoins(priceData) {
     
     coinsListContainer.innerHTML = '';
     
-    const topCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP'];
-    for (const symbol of topCoins) {
+    const topProfileCoins = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP'];
+    for (const symbol of topProfileCoins) {
         const data = priceData[symbol];
         if (data) {
             const changeNum = parseFloat(data.change);
@@ -225,7 +332,7 @@ function displayProfileCoins(priceData) {
         }
     }
     
-    // Store all coins for dropdown - ALWAYS populate regardless of priceData
+    // Store all coins for dropdown
     allCoins = [];
     const moreCoinsList = [
         { name: 'ADA', price: '0.45', change: '1.2' },
@@ -301,7 +408,7 @@ function setupCoinDropdown() {
 }
 
 function startPriceUpdates() {
-    // No API updates needed - using static prices
+    // No API updates needed - using static prices with live graphs
 }
 
 function setupMobileMenu() {
