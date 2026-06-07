@@ -800,20 +800,46 @@ async function loadTradeConfirmations() {
         const t = trades[id];
         if (t.status === 'pending') {
             const suggestedProfit = (t.amount * 0.02).toFixed(2);
-            html += `<tr>
+            html += `<tr id="trade-row-${id}">
                 <td>${t.id}</td>
                 <td>${t.username}</td>
                 <td>${t.symbol}</td>
-                <td>${t.amount} USDT</div>
+                <td>${t.amount} USDT</td>
                 <td>${t.entryPrice}</td>
+                <td class="trade-countdown" data-end="${t.endTime}" id="countdown-${id}">Loading...</td>
                 <td><button class="approve-btn" onclick="confirmTrade('${id}', ${suggestedProfit})">Confirm</button>
                 <button class="reject-btn" onclick="rejectTrade('${id}', ${t.amount})">Reject</button></td>
             </tr>`;
         }
     }
     content.innerHTML = `<h3 style="color:#7D67FF;">📈 Pending Trades</h3>
-        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Symbol</th><th>Amount</th><th>Entry Price</th><th>Actions</th></tr></thead>
-        <tbody>${html || '<tr><td colspan="6">No pending trades</td><\/tr>'}<\/tbody><\/table><\/div>`;
+        <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Symbol</th><th>Amount</th><th>Entry Price</th><th>Time Remaining</th><th>Actions</th></tr></thead>
+        <tbody>${html || '<tr><td colspan="7">No pending trades</td><\/tr>'}<\/tbody><\/table><\/div>`;
+    
+    // Start countdown updates
+    updateTradeCountdowns();
+    if (window.tradeCountdownInterval) clearInterval(window.tradeCountdownInterval);
+    window.tradeCountdownInterval = setInterval(updateTradeCountdowns, 1000);
+}
+
+function updateTradeCountdowns() {
+    const countdownElements = document.querySelectorAll('.trade-countdown');
+    countdownElements.forEach(el => {
+        const endTime = parseInt(el.getAttribute('data-end'));
+        const remaining = endTime - Date.now();
+        
+        if (remaining <= 0) {
+            el.textContent = 'Expired';
+            el.style.color = '#ff6666';
+            el.style.fontWeight = 'bold';
+        } else {
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            el.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            el.style.color = remaining < 60000 ? '#ff6666' : '#7D67FF';
+            el.style.fontWeight = remaining < 60000 ? 'bold' : 'normal';
+        }
+    });
 }
 
 window.confirmTrade = async function(id, suggestedProfit) {
